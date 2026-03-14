@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # Install script – https://github.com/Donwaztok/hyprland-quickshell
-# Instala pacotes (app.lst), temas (SDDM, GRUB, GTK/ícones), serviços e setup.
+# Installs packages (app.lst), themes (SDDM, GRUB, GTK/icons), services and setup.
 #
-# Uso: ./install.sh
+# Usage: ./install.sh
 # =============================================================================
 
 set -e
@@ -13,7 +13,7 @@ REPO_ROOT="$(cd "$(dirname "$0")" && pwd)"
 # 1. Pacman
 # -----------------------------------------------------------------------------
 if [ -f /etc/pacman.conf ] && [ ! -f /etc/pacman.conf.t2.bkp ]; then
-  echo -e "\033[0;32m[PACMAN]\033[0m Configurando pacman..."
+  echo -e "\033[0;32m[PACMAN]\033[0m Configuring pacman..."
   sudo cp /etc/pacman.conf /etc/pacman.conf.t2.bkp
   sudo sed -i "/^#Color/c\Color\nILoveCandy/" /etc/pacman.conf
   sudo sed -i "/^#VerbosePkgLists/c\VerbosePkgLists/" /etc/pacman.conf
@@ -30,34 +30,34 @@ if [ -f /etc/pacman.conf ] && [ ! -f /etc/pacman.conf.t2.bkp ]; then
   sudo pacman -Syyu --noconfirm
   sudo pacman -Fy
 else
-  echo -e "\033[0;33m[SKIP]\033[0m Pacman já configurado."
+  echo -e "\033[0;33m[SKIP]\033[0m Pacman already configured."
 fi
 
 # -----------------------------------------------------------------------------
 # 2. Yay (AUR)
 # -----------------------------------------------------------------------------
 if ! command -v yay &>/dev/null; then
-  echo -e "\033[0;32m[YAY]\033[0m Instalando yay..."
+  echo -e "\033[0;32m[YAY]\033[0m Installing yay..."
   sudo pacman -S --needed --noconfirm git base-devel
   git clone https://aur.archlinux.org/yay-bin.git /tmp/buildyay
   ( cd /tmp/buildyay && makepkg -si --noconfirm )
   rm -rf /tmp/buildyay
 else
-  echo -e "\033[0;33m[SKIP]\033[0m yay já instalado."
+  echo -e "\033[0;33m[SKIP]\033[0m yay already installed."
 fi
 
 # -----------------------------------------------------------------------------
 # 3. Pacotes (app.lst)
 # -----------------------------------------------------------------------------
-echo -e "\033[0;32m[PACOTES]\033[0m Instalando app.lst..."
+echo -e "\033[0;32m[PACKAGES]\033[0m Installing app.lst..."
 if [ -f "$REPO_ROOT/app.lst" ]; then
   yay --removemake --cleanafter -S $(awk '!/^#/ {print $1}' "$REPO_ROOT/app.lst") || true
 else
-  echo -e "\033[0;33m[SKIP]\033[0m app.lst não encontrado."
+  echo -e "\033[0;33m[SKIP]\033[0m app.lst not found."
 fi
 
 # -----------------------------------------------------------------------------
-# 4. Temas e aparência (cursor, SDDM, GTK, ícones, GRUB)
+# 4. Themes and appearance (cursor, SDDM, GTK, icons, GRUB)
 # -----------------------------------------------------------------------------
 mkdir -p "$HOME/.icons/default"
 if ! grep -q 'Xcursor.theme' "$HOME/.Xresources" 2>/dev/null; then
@@ -70,7 +70,7 @@ if [ ! -f "$HOME/.icons/default/index.theme" ]; then
 fi
 
 if [ -f "$REPO_ROOT/hypr/source/Sddm_Candy.tar.gz" ]; then
-  echo -e "\033[0;32m[SDDM]\033[0m Instalando tema Candy..."
+  echo -e "\033[0;32m[SDDM]\033[0m Installing Candy theme..."
   sudo mkdir -p /usr/share/sddm/themes
   sudo tar -xzf "$REPO_ROOT/hypr/source/Sddm_Candy.tar.gz" -C /usr/share/sddm/themes/
   sudo mkdir -p /etc/sddm.conf.d
@@ -107,7 +107,7 @@ if [ ! -d /boot/grub/themes/Particle-circle ] 2>/dev/null; then
 fi
 
 # -----------------------------------------------------------------------------
-# 5. Desktop files (launchers customizados)
+# 5. Desktop files (custom launchers)
 # -----------------------------------------------------------------------------
 mkdir -p "$HOME/.local/share/applications"
 for f in "$REPO_ROOT/hypr/source/"*.desktop; do
@@ -115,7 +115,7 @@ for f in "$REPO_ROOT/hypr/source/"*.desktop; do
 done
 
 # -----------------------------------------------------------------------------
-# 6. Grupos de usuário e serviços (backlight, ydotool, bluetooth)
+# 6. User groups and services (backlight, ydotool, bluetooth)
 # -----------------------------------------------------------------------------
 if command -v systemctl &>/dev/null; then
   if ! getent group i2c &>/dev/null; then
@@ -136,8 +136,8 @@ if command -v systemctl &>/dev/null; then
 fi
 
 echo ""
-echo -e "\033[0;32m[OK]\033[0m Instalação concluída."
+echo -e "\033[0;32m[OK]\033[0m Installation complete."
 echo "  - Repo: https://github.com/Donwaztok/hyprland-quickshell"
 echo "  - Configs: ~/.config (hypr, quickshell, fish, etc.)"
 echo "  - Super+/ = keybinds, Super+Enter = terminal"
-echo "  - SDDM/GRUB/GTK/ícones aplicados"
+echo "  - SDDM/GRUB/GTK/icons applied"
