@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# Script to create pop-up notification when volume changes.
+main() {
+
+	# Create a delay so the change in volume can be registered:
+	sleep 0.05
+
+	# Get the volume and check if muted or not (STATE):
+    VOLUME=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}')
+    STATE=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED &> /dev/null && echo true || echo false)
+	# Have a different symbol for varying volume levels:
+	if [[ $STATE != 'true' ]]; then
+		if [ "${VOLUME}" == "0" ]; then
+			ICON=󰝟
+		elif [ "${VOLUME}" -lt "33" ] && [ "$VOLUME" -gt "0" ]; then
+			ICON=
+		elif [ "${VOLUME}" -lt "90" ] && [ "$VOLUME" -ge "33" ]; then
+			ICON=󰕾
+		else
+			ICON=
+		fi
+
+		notify-send "${ICON}   Volume: $VOLUME%" \
+			-h int:value:"${VOLUME}" \
+			-h string:x-canonical-private-synchronous:volume
+
+	# If volume is muted, display the mute sybol:
+	else
+		notify-send "󰖁   (Volume: $VOLUME%)" \
+			-h int:value:"${VOLUME}"\
+			-h string:x-canonical-private-synchronous:volume
+	fi
+}
+pidof gBar || main

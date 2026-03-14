@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Cursor
+Exec=env OZONE_PLATFORM=x11 /usr/bin/cursor --enable-features=UseOzonePlatform --ozone-platform=x11 --no-sandbox %U
+Terminal=false
+Type=Application
+Icon=cursor
+# Change the class below to "Cursor" when on X11
+StartupWMClass=cursor
+X-AppImage-Version=1.3.0
+MimeType=x-scheme-handler/cursor;
+Categories=Utility;TextEditor;Development;IDE

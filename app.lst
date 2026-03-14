@@ -1,0 +1,105 @@
+# =============================================================================
+# Lista única de pacotes – instalados pelo install.sh (yay).
+# =============================================================================
+
+# --------------------------------------------------- // Audio
+cava
+pavucontrol-qt
+wireplumber
+pipewire-pulse
+libdbusmenu-gtk3
+playerctl
+
+# --------------------------------------------------- // Backlight / display
+geoclue
+brightnessctl
+ddcutil
+
+# --------------------------------------------------- // Basic
+bc
+coreutils
+cliphist
+cmake
+curl
+wget
+ripgrep
+jq
+xdg-user-dirs
+rsync
+go-yq
+
+# --------------------------------------------------- // Fonts & themes
+adw-gtk-theme-git
+breeze
+breeze-plus
+darkly-bin
+eza
+fish
+fontconfig
+kitty
+matugen-bin
+otf-space-grotesk
+starship
+ttf-jetbrains-mono-nerd
+ttf-material-symbols-variable-git
+ttf-readex-pro
+ttf-rubik-vf
+ttf-twemoji
+
+# --------------------------------------------------- // Hyprland
+hyprland
+hyprsunset
+wl-clipboard
+
+# --------------------------------------------------- // KDE / system
+bluedevil
+gnome-keyring
+networkmanager
+plasma-nm
+polkit-kde-agent
+dolphin
+systemsettings
+
+# --------------------------------------------------- // XDG portals
+xdg-desktop-portal
+xdg-desktop-portal-kde
+xdg-desktop-portal-gtk
+xdg-desktop-portal-hyprland
+
+# --------------------------------------------------- // Python / build
+clang
+uv
+gtk4
+libadwaita
+libsoup3
+libportal-gtk4
+gobject-introspection
+
+# --------------------------------------------------- // Screenshot / capture
+hyprshot
+slurp
+swappy
+tesseract
+tesseract-data-eng
+wf-recorder
+
+# --------------------------------------------------- // Toolkit
+upower
+wtype
+ydotool
+
+# --------------------------------------------------- // Widgets / launcher
+fuzzel
+glib2
+imagemagick
+hypridle
+hyprlock
+hyprpicker
+songrec
+translate-shell
+wlogout
+libqalculate
+
+# --------------------------------------------------- // Bar e cursor (padrão)
+quickshell-git
+bibata-cursor-theme

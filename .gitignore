@@ -1,0 +1,81 @@
+# Ignora tudo
+*
+
+# Excetua as pastas desejadas
+!hypr/
+!hypr/*
+!hypr/*/*
+!kitty/
+!kitty/*
+!wlogout/
+!wlogout/*
+!fastfetch/
+!fastfetch/*
+!fastfetch/*/*
+!mako/
+!mako/*
+!btop/
+!btop/*
+
+# end-4/dots-hyprland (illogical-impulse)
+!fish/
+!fish/**
+!quickshell/
+!quickshell/**
+!fontconfig/
+!fontconfig/**
+!fuzzel/
+!fuzzel/**
+!foot/
+!foot/**
+!matugen/
+!matugen/**
+!Kvantum/
+!Kvantum/**
+!kde-material-you-colors/
+!kde-material-you-colors/**
+!xdg-desktop-portal/
+!xdg-desktop-portal/**
+!zshrc.d/
+!zshrc.d/**
+!mpv/
+!mpv/**
+
+# Arquivos soltos em .config (end-4)
+!starship.toml
+!kdeglobals
+!dolphinrc
+!konsolerc
+!darklyrc
+!chrome-flags.conf
+!code-flags.conf
+!thorium-flags.conf
+
+# Raiz do repo
+!.gitignore
+!app.lst
+!README.md
+!install.sh
+!.zshrc
+
+# -----------------------------------------------------------------------------
+# Re-ignorar dentro das pastas rastreadas (cache, estado, gerados)
+# -----------------------------------------------------------------------------
+# Fish: variáveis por máquina / histórico
+fish/fish_variables
+fish_history
+
+# Python / Quickshell
+**/__pycache__/
+**/.venv/
+**/*.pyc
+
+# Cache e logs em qualquer pasta rastreada
+**/cache/
+**/Cache/
+**/*.log
+**/*.bak
+**/*.old
+**/*.tmp
+**/*.swp
+**/*~
