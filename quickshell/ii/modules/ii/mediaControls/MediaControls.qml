@@ -83,6 +83,7 @@ Scope {
         sourceComponent: PanelWindow {
             id: panelWindow
             visible: true
+            screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
 
             exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
@@ -94,13 +95,13 @@ Scope {
             anchors {
                 top: !Config.options.bar.bottom || Config.options.bar.vertical
                 bottom: Config.options.bar.bottom && !Config.options.bar.vertical
-                left: !(Config.options.bar.vertical && Config.options.bar.bottom)
-                right: Config.options.bar.vertical && Config.options.bar.bottom
+                left: Config.options.bar.vertical && !Config.options.bar.bottom
+                right: Config.options.bar.vertical && Config.options.bar.bottom || !Config.options.bar.vertical
             }
             margins {
                 top: Config.options.bar.vertical ? ((panelWindow.screen.height / 2) - widgetHeight * 1.5) : Appearance.sizes.barHeight
                 bottom: Appearance.sizes.barHeight
-                left: Config.options.bar.vertical ? Appearance.sizes.barHeight : ((panelWindow.screen.width / 2) - (osdWidth / 2) - widgetWidth)
+                left: Config.options.bar.vertical ? Appearance.sizes.barHeight : 0
                 right: Appearance.sizes.barHeight
             }
 

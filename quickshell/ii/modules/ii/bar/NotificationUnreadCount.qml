@@ -7,7 +7,7 @@ MaterialSymbol {
     id: root
     readonly property bool showUnreadCount: Config.options.bar.indicators.notifications.showUnreadCount
     text: Notifications.silent ? "notifications_paused" : "notifications"
-    iconSize: Appearance.font.pixelSize.larger
+    iconSize: Appearance.font.barPixelSize.larger
     color: rightSidebarButton.colText
 
     Rectangle {
@@ -30,7 +30,7 @@ MaterialSymbol {
             id: notificationCounterText
             visible: root.showUnreadCount
             anchors.centerIn: parent
-            font.pixelSize: Appearance.font.pixelSize.smallest
+            font.pixelSize: Appearance.font.barPixelSize.smallest
             color: Appearance.colors.colLayer0
             text: Notifications.unread
         }

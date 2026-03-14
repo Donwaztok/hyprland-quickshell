@@ -246,6 +246,19 @@ Singleton {
             property int hugeass: 23
             property int title: huge
         }
+        property QtObject barPixelSize: QtObject {
+            readonly property real f: root.sizes.barSizeFactor
+            property int smallest: Math.max(8, Math.round(10 * f))
+            property int smaller: Math.max(10, Math.round(12 * f))
+            property int smallie: Math.max(11, Math.round(13 * f))
+            property int small: Math.max(12, Math.round(15 * f))
+            property int normal: Math.max(13, Math.round(16 * f))
+            property int large: Math.max(14, Math.round(17 * f))
+            property int larger: Math.max(16, Math.round(19 * f))
+            property int huge: Math.max(18, Math.round(22 * f))
+            property int hugeass: Math.max(19, Math.round(23 * f))
+            property int title: huge
+        }
     }
 
     animationCurves: QtObject {
@@ -371,7 +384,8 @@ Singleton {
     }
 
     sizes: QtObject {
-        property real baseBarHeight: 40
+        readonly property real barSizeFactor: (Config && Config.options && Config.options.bar && typeof Config.options.bar.size === "number" && Config.options.bar.size > 0) ? Config.options.bar.size : 1.0
+        property real baseBarHeight: Math.round(40 * barSizeFactor)
         property real barHeight: Config.options.bar.cornerStyle === 1 ? 
             (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
         property real barCenterSideModuleWidth: Config.options?.bar.verbose ? 360 : 140

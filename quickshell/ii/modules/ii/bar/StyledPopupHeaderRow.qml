@@ -14,7 +14,7 @@ Row {
         fill: 0
         font.weight: Font.DemiBold
         text: root.icon
-        iconSize: Appearance.font.pixelSize.large
+        iconSize: Appearance.font.barPixelSize.large
         color: Appearance.colors.colOnSurfaceVariant
     }
 
@@ -23,7 +23,7 @@ Row {
         text: root.label
         font {
             weight: Font.DemiBold
-            pixelSize: Appearance.font.pixelSize.normal
+            pixelSize: Appearance.font.barPixelSize.normal
         }
         color: Appearance.colors.colOnSurfaceVariant
     }

@@ -25,19 +25,19 @@ Rectangle {
             MaterialSymbol {
                 id: symbol
                 fill: 0
-                iconSize: Appearance.font.pixelSize.normal
+                iconSize: Appearance.font.barPixelSize.normal
                 color: Appearance.colors.colOnSurfaceVariant
             }
             StyledText {
                 id: title
-                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.pixelSize: Appearance.font.barPixelSize.smaller
                 color: Appearance.colors.colOnSurfaceVariant
             }
         }
         StyledText {
             id: value
             Layout.alignment: Qt.AlignHCenter
-            font.pixelSize: Appearance.font.pixelSize.small
+            font.pixelSize: Appearance.font.barPixelSize.small
             color: Appearance.colors.colOnSurfaceVariant
         }
     }

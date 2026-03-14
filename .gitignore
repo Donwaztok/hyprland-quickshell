@@ -3,21 +3,17 @@
 
 # Excetua as pastas desejadas
 !hypr/
-!hypr/*
-!hypr/*/*
-!hypr/*/*/*
-!hypr/*/*/*/*
+!hypr/**
 !kitty/
-!kitty/*
+!kitty/**
 !wlogout/
-!wlogout/*
+!wlogout/**
 !fastfetch/
-!fastfetch/*
-!fastfetch/*/*
+!fastfetch/**
 !mako/
-!mako/*
+!mako/**
 !btop/
-!btop/*
+!btop/**
 
 # end-4/dots-hyprland (illogical-impulse)
 !fish/

@@ -54,9 +54,8 @@ Item { // Bar content region
             top: parent.top
             bottom: parent.bottom
             left: parent.left
-            right: middleSection.left
         }
-        implicitWidth: leftSectionRowLayout.implicitWidth
+        width: leftSectionRowLayout.implicitWidth
         implicitHeight: Appearance.sizes.baseBarHeight
 
         onScrollDown: root.brightnessMonitor.setBrightness(root.brightnessMonitor.brightness - 0.05)
@@ -94,23 +93,74 @@ Item { // Bar content region
                 Layout.rightMargin: Appearance.rounding.screenRounding
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                visible: root.useShortenedForm === 0
+                visible: false
             }
         }
     }
 
-    Row { // Middle section
+    // Middle section: Workspaces | Clima | <Space> | [Relógio no centro] | <Space> | System/Media
+    RowLayout {
         id: middleSection
         anchors {
             top: parent.top
             bottom: parent.bottom
-            horizontalCenter: parent.horizontalCenter
+            left: barLeftSideMouseArea.right
+            right: barRightSideMouseArea.left
         }
         spacing: 4
 
+        // Left: Workspaces | Clima
         BarGroup {
             id: leftCenterGroup
-            anchors.verticalCenter: parent.verticalCenter
+            Layout.alignment: Qt.AlignVCenter
+            padding: workspacesWidget.widgetPadding
+
+            Workspaces {
+                id: workspacesWidget
+                Layout.fillHeight: true
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    onPressed: event => {
+                        if (event.button === Qt.RightButton) {
+                            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+                        }
+                    }
+                }
+            }
+        }
+
+        Loader {
+            Layout.alignment: Qt.AlignVCenter
+            Layout.leftMargin: 4
+            active: Config.options.bar.weather.enable
+            sourceComponent: BarGroup {
+                WeatherBar {}
+            }
+        }
+
+        VerticalBarSeparator {
+            visible: Config.options?.bar.borderless
+        }
+
+        Item { Layout.fillWidth: true } // Space left of center
+
+        // Placeholder for center (clock is overlay below)
+        Item {
+            Layout.preferredWidth: centerClockContent.implicitWidth
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Item { Layout.fillWidth: true } // Space right of center
+
+        VerticalBarSeparator {
+            visible: Config.options?.bar.borderless
+        }
+
+        // Right: System/Media (Resources + Media)
+        BarGroup {
+            id: rightCenterGroup
+            Layout.alignment: Qt.AlignVCenter
             implicitWidth: root.centerSideModuleWidth
 
             Resources {
@@ -123,67 +173,32 @@ Item { // Bar content region
                 Layout.fillWidth: true
             }
         }
+    }
 
-        VerticalBarSeparator {
-            visible: Config.options?.bar.borderless
+    // Clock: absolutely centered on the bar
+    BarGroup {
+        id: centerClockContent
+        anchors {
+            verticalCenter: parent.verticalCenter
+            horizontalCenter: parent.horizontalCenter
+        }
+        padding: workspacesWidget.widgetPadding
+
+        ClockWidget {
+            id: centerClock
+            showDate: (Config.options.bar.verbose && root.useShortenedForm < 2)
+            Layout.alignment: Qt.AlignVCenter
+            Layout.fillWidth: true
         }
 
-        BarGroup {
-            id: middleCenterGroup
-            anchors.verticalCenter: parent.verticalCenter
-            padding: workspacesWidget.widgetPadding
-
-            Workspaces {
-                id: workspacesWidget
-                Layout.fillHeight: true
-                MouseArea {
-                    // Right-click to toggle overview
-                    anchors.fill: parent
-                    acceptedButtons: Qt.RightButton
-
-                    onPressed: event => {
-                        if (event.button === Qt.RightButton) {
-                            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
-                        }
-                    }
-                }
-            }
+        UtilButtons {
+            visible: (Config.options.bar.verbose && root.useShortenedForm === 0)
+            Layout.alignment: Qt.AlignVCenter
         }
 
-        VerticalBarSeparator {
-            visible: Config.options?.bar.borderless
-        }
-
-        MouseArea {
-            id: rightCenterGroup
-            anchors.verticalCenter: parent.verticalCenter
-            implicitWidth: root.centerSideModuleWidth
-            implicitHeight: rightCenterGroupContent.implicitHeight
-
-            onPressed: {
-                GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
-            }
-
-            BarGroup {
-                id: rightCenterGroupContent
-                anchors.fill: parent
-
-                ClockWidget {
-                    showDate: (Config.options.bar.verbose && root.useShortenedForm < 2)
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.fillWidth: true
-                }
-
-                UtilButtons {
-                    visible: (Config.options.bar.verbose && root.useShortenedForm === 0)
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                BatteryIndicator {
-                    visible: (root.useShortenedForm < 2 && Battery.available)
-                    Layout.alignment: Qt.AlignVCenter
-                }
-            }
+        BatteryIndicator {
+            visible: (root.useShortenedForm < 2 && Battery.available)
+            Layout.alignment: Qt.AlignVCenter
         }
     }
 
@@ -193,10 +208,9 @@ Item { // Bar content region
         anchors {
             top: parent.top
             bottom: parent.bottom
-            left: middleSection.right
             right: parent.right
         }
-        implicitWidth: rightSectionRowLayout.implicitWidth
+        width: rightSectionRowLayout.implicitWidth
         implicitHeight: Appearance.sizes.baseBarHeight
 
         onScrollDown: Audio.decrementVolume();
@@ -267,7 +281,7 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: "volume_off"
-                            iconSize: Appearance.font.pixelSize.larger
+                            iconSize: Appearance.font.barPixelSize.larger
                             color: rightSidebarButton.colText
                         }
                     }
@@ -280,7 +294,7 @@ Item { // Bar content region
                         }
                         MaterialSymbol {
                             text: "mic_off"
-                            iconSize: Appearance.font.pixelSize.larger
+                            iconSize: Appearance.font.barPixelSize.larger
                             color: rightSidebarButton.colText
                         }
                     }
@@ -304,14 +318,14 @@ Item { // Bar content region
                     }
                     MaterialSymbol {
                         text: Network.materialSymbol
-                        iconSize: Appearance.font.pixelSize.larger
+                        iconSize: Appearance.font.barPixelSize.larger
                         color: rightSidebarButton.colText
                     }
                     MaterialSymbol {
                         Layout.leftMargin: indicatorsRowLayout.realSpacing
                         visible: BluetoothStatus.available
                         text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
-                        iconSize: Appearance.font.pixelSize.larger
+                        iconSize: Appearance.font.barPixelSize.larger
                         color: rightSidebarButton.colText
                     }
                 }
@@ -327,16 +341,6 @@ Item { // Bar content region
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-            }
-
-            // Weather
-            Loader {
-                Layout.leftMargin: 4
-                active: Config.options.bar.weather.enable
-
-                sourceComponent: BarGroup {
-                    WeatherBar {}
-                }
             }
         }
     }

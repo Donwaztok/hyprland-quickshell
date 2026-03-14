@@ -66,7 +66,7 @@ Item {
                     anchors.centerIn: parent
                     fill: 1
                     text: activePlayer?.isPlaying ? "pause" : "music_note"
-                    iconSize: Appearance.font.pixelSize.normal
+                    iconSize: Appearance.font.barPixelSize.normal
                     color: Appearance.m3colors.m3onSecondaryContainer
                 }
             }
