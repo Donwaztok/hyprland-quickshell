@@ -1,125 +1,121 @@
 # =============================================================================
-# Lista única de pacotes – instalados pelo install.sh (yay).
+#  Lista única de pacotes – instalados pelo install.sh (yay).
 # =============================================================================
 
 # --------------------------------------------------- // Audio
-cava
-pavucontrol-qt
-wireplumber
-pipewire-pulse
-libdbusmenu-gtk3
-playerctl
+cava                              # audio spectrum visualizer
+libdbusmenu-gtk3                  # dbus menu for gtk3
+pavucontrol-qt                    # PulseAudio volume control (Qt)
+pipewire-pulse                    # PipeWire PulseAudio compatibility
+playerctl                         # media player control (play/pause/next)
+wireplumber                       # session manager for PipeWire
 
 # --------------------------------------------------- // Backlight / display
-geoclue
-brightnessctl
-ddcutil
+brightnessctl                     # screen backlight control
+ddcutil                           # DDC/CI monitor control
+geoclue                           # geolocation service
 
 # --------------------------------------------------- // Basic
-bc
-coreutils
-cliphist
-cmake
-curl
-wget
-ripgrep
-jq
-xdg-user-dirs
-rsync
-go-yq
+bc                                # arbitrary precision calculator
+cliphist                          # clipboard history (Wayland)
+cmake                             # build system
+coreutils                         # GNU core utilities
+curl                              # URL transfer tool
+go-yq                             # YAML processor (jq for YAML)
+jq                                # JSON processor
+ripgrep                           # fast recursive grep
+rsync                             # file sync over network
+wget                              # download files
+xdg-user-dirs                     # user dirs (Desktop, Documents, etc.)
 
 # --------------------------------------------------- // Fonts & themes
-adw-gtk-theme-git
-breeze
-breeze-plus
-darkly-bin
-eza
-fish
-fontconfig
-kitty
-matugen-bin
-otf-space-grotesk
-starship
-ttf-jetbrains-mono-nerd
-ttf-material-symbols-variable-git
-ttf-readex-pro
-ttf-rubik-vf
-ttf-twemoji
+adw-gtk-theme-git                 # libadwaita theme for GTK3
+bibata-cursor-theme               # cursor theme
+breeze                            # KDE default theme
+breeze-plus                       # Breeze theme variants
+darkly-bin                        # dark color scheme generator
+fontconfig                        # font configuration
+gtk4                              # GTK4 toolkit
+libadwaita                        # GNOME design library (GTK4)
+matugen-bin                       # Material You color generator
+otf-space-grotesk                 # Space Grotesk font
+ttf-cascadia-code-nerd            # coding font (Nerd Font)
+ttf-jetbrains-mono-nerd           # JetBrains Mono (Nerd Font)
+ttf-material-symbols-variable-git # Material Symbols icons
+ttf-readex-pro                    # Readex Pro font
+ttf-rubik-vf                      # Rubik variable font
+ttf-twemoji                       # Twitter/Unicode emoji font
 
 # --------------------------------------------------- // Hyprland
-hyprland
-hyprsunset
-wl-clipboard
+hyprland                          # Wayland compositor
+hyprsunset                        # day/night screen temperature
+wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
 
 # --------------------------------------------------- // KDE / system
-bluedevil
-gnome-keyring
-networkmanager
-plasma-nm
-polkit-kde-agent
-dolphin
-systemsettings
-sddm
+bluedevil                         # KDE Bluetooth
+dolphin                           # KDE file manager
+gnome-keyring                     # password and key storage
+networkmanager                    # network management
+plasma-nm                         # NetworkManager applet for Plasma
+polkit-kde-agent                  # Polkit authentication agent
+sddm                              # display manager (login)
+systemsettings                    # KDE system settings
 
 # --------------------------------------------------- // XDG portals
-xdg-desktop-portal
-xdg-desktop-portal-kde
-xdg-desktop-portal-gtk
-xdg-desktop-portal-hyprland
+xdg-desktop-portal                # desktop integration portal
+xdg-desktop-portal-gtk            # GTK portal backend
+xdg-desktop-portal-hyprland       # Hyprland portal
+xdg-desktop-portal-kde            # KDE portal backend
 
 # --------------------------------------------------- // Python / build
-clang
-uv
-gtk4
-libadwaita
-libsoup3
-libportal-gtk4
-gobject-introspection
+clang                             # C/C++ compiler (LLVM)
+gobject-introspection             # GObject introspection
+libportal-gtk4                    # flatpak portal lib (GTK4)
+libsoup3                          # HTTP client/server library
+uv                                # fast Python package installer
 
 # --------------------------------------------------- // Screenshot / capture
-hyprshot
-slurp
-swappy
-tesseract
-tesseract-data-eng
-wf-recorder
+hyprshot                          # Hyprland screenshot tool
+slurp                             # region selector (Wayland)
+swappy                            # screenshot annotation
+tesseract                         # OCR engine
+tesseract-data-eng                # English language data for Tesseract
+wf-recorder                       # Wayland screen recorder
 
 # --------------------------------------------------- // Toolkit
-upower
-wtype
-ydotool
+upower                            # power management (battery, etc.)
+wtype                             # Wayland keyboard input (xdotool-like)
+ydotool                           # keyboard/mouse automation
 
 # --------------------------------------------------- // Widgets / launcher
-fuzzel
-glib2
-imagemagick
-hypridle
-hyprlock
-hyprpicker
-songrec
-translate-shell
-wlogout
-libqalculate
-
-# --------------------------------------------------- // Bar e cursor (padrão)
-quickshell-git
-bibata-cursor-theme
+fuzzel                            # Wayland app launcher (rofi-like)
+glib2                             # GLib library
+hypridle                          # Hyprland idle daemon
+hyprlock                          # Hyprland lock screen
+hyprpicker                        # Hyprland color picker
+imagemagick                       # image manipulation
+libqalculate                      # calculator library
+quickshell-git                    # Hyprland widget/bar
+songrec                           # music recognition (Shazam-like)
+translate-shell                   # translate in terminal
+wlogout                           # Wayland logout screen
 
 # --------------------------------------------------- // Gaming
-gamemode                                               # daemon and library for game optimizations
+gamemode                          # game optimizations daemon
 
 # --------------------------------------------------- // Applications
-zen-browser-bin                                        # browser
-kitty                                                  # terminal
-nautilus                                               # gnome file manager
-cursor-bin                                             # ide text editor
-thunderbird                                            # email
-zapzap                                                 # whatsapp client
-solaar                                                 # logitech battery notifier
-eog                                                    # Image Viewer
+cursor-bin                        # Cursor IDE
+eog                               # Eye of GNOME (image viewer)
+kitty                             # GPU-accelerated terminal
+nautilus                          # GNOME file manager
+solaar                            # Logitech device manager (battery, etc.)
+thunderbird                       # email client
+zapzap                            # WhatsApp client
+zen-browser-bin                   # privacy-focused browser (Firefox fork)
 
 # --------------------------------------------------- // Shell
-zsh                                                    # zsh
-eza                                                    # file lister for zsh
-fastfetch                                              # system information fetch tool
-pokeget                                                # display pokemon sprites
+eza                               # modern ls (colors, git status)
+fastfetch                         # system info (neofetch-like)
+pokeget                           # Pokemon sprites in terminal
+starship                          # shell prompt
+zsh                               # Z shell

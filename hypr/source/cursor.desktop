@@ -1,6 +1,8 @@
 [Desktop Entry]
 Name=Cursor
-Exec=env OZONE_PLATFORM=x11 /usr/bin/cursor --enable-features=UseOzonePlatform --ozone-platform=x11 --no-sandbox %U
+# Wayland: dead keys ('+c = ç) work. If you need X11, use the line below and cedilla may not work in Cursor.
+Exec=/usr/bin/cursor --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox %U
+# Exec=env OZONE_PLATFORM=x11 /usr/bin/cursor --enable-features=UseOzonePlatform --ozone-platform=x11 --no-sandbox %U
 Terminal=false
 Type=Application
 Icon=cursor
