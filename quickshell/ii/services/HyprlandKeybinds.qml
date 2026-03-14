@@ -40,7 +40,7 @@ Singleton {
     Process {
         id: getDefaultKeybinds
         running: true
-        command: [root.keybindParserPath, "--path", root.defaultKeybindConfigPath]
+        command: ["python3", root.keybindParserPath, "--path", root.defaultKeybindConfigPath]
         
         stdout: SplitParser {
             onRead: data => {
@@ -56,7 +56,7 @@ Singleton {
     Process {
         id: getUserKeybinds
         running: true
-        command: [root.keybindParserPath, "--path", root.userKeybindConfigPath]
+        command: ["python3", root.keybindParserPath, "--path", root.userKeybindConfigPath]
         
         stdout: SplitParser {
             onRead: data => {
