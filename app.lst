@@ -59,6 +59,7 @@ plasma-nm
 polkit-kde-agent
 dolphin
 systemsettings
+sddm
 
 # --------------------------------------------------- // XDG portals
 xdg-desktop-portal
@@ -103,3 +104,22 @@ libqalculate
 # --------------------------------------------------- // Bar e cursor (padrão)
 quickshell-git
 bibata-cursor-theme
+
+# --------------------------------------------------- // Gaming
+gamemode                                               # daemon and library for game optimizations
+
+# --------------------------------------------------- // Applications
+zen-browser-bin                                        # browser
+kitty                                                  # terminal
+nautilus                                               # gnome file manager
+cursor-bin                                             # ide text editor
+thunderbird                                            # email
+zapzap                                                 # whatsapp client
+solaar                                                 # logitech battery notifier
+eog                                                    # Image Viewer
+
+# --------------------------------------------------- // Shell
+zsh                                                    # zsh
+eza                                                    # file lister for zsh
+fastfetch                                              # system information fetch tool
+pokeget                                                # display pokemon sprites
