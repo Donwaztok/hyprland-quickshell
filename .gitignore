@@ -5,6 +5,8 @@
 !hypr/
 !hypr/*
 !hypr/*/*
+!hypr/*/*/*
+!hypr/*/*/*/*
 !kitty/
 !kitty/*
 !wlogout/
