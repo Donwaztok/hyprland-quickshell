@@ -29,10 +29,10 @@ StyledOverlayWidget {
             "maxAvailableString": ResourceUsage.maxAvailableMemoryString
         },
         {
-            "icon": "swap_horiz",
-            "name": Translation.tr("Swap"),
-            "history": ResourceUsage.swapUsageHistory,
-            "maxAvailableString": ResourceUsage.maxAvailableSwapString
+            "icon": "developer_board",
+            "name": Translation.tr("GPU"),
+            "history": ResourceUsage.gpuUsageHistory,
+            "maxAvailableString": ResourceUsage.maxAvailableGpuString
         },
     ]
 

@@ -9,6 +9,12 @@ Singleton {
     id: root
     property string filePath: Directories.shellConfigPath
     property alias options: configOptionsJsonAdapter
+    // 0: Pills (capsules) | 1: Line-separated | 2: Empty (no divider); respects legacy borderless
+    property int barGroupStyle: (function() {
+        var b = root.options.bar;
+        if (typeof b.groupStyle === "number") return b.groupStyle;
+        return b.borderless ? 1 : 0;
+    })()
     property bool ready: false
     property int readWriteDelay: 50 // milliseconds
     property bool blockWrites: false
@@ -237,16 +243,17 @@ Singleton {
                 property bool bottom: false // Instead of top
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
-                property bool borderless: false // true for no grouping of items
+                property bool borderless: false // legacy: no grouping (kept for compat)
+                property int groupStyle: 0 // 0: Pills | 1: Line-separated | 2: Empty (no divider)
                 property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
                 property bool showBackground: true
                 property bool verbose: true
                 property bool vertical: false
                 property JsonObject resources: JsonObject {
-                    property bool alwaysShowSwap: true
+                    property bool alwaysShowGpu: true
                     property bool alwaysShowCpu: true
                     property int memoryWarningThreshold: 95
-                    property int swapWarningThreshold: 85
+                    property int gpuWarningThreshold: 90
                     property int cpuWarningThreshold: 90
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command

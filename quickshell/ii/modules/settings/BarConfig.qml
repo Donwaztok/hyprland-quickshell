@@ -120,20 +120,26 @@ ContentPage {
                 Layout.fillWidth: false
 
                 ConfigSelectionArray {
-                    currentValue: Config.options.bar.borderless
+                    currentValue: Config.barGroupStyle
                     onSelected: newValue => {
-                        Config.options.bar.borderless = newValue; // Update local copy
+                        Config.options.bar.groupStyle = newValue;
+                        Config.options.bar.borderless = (newValue !== 0);
                     }
                     options: [
                         {
                             displayName: Translation.tr("Pills"),
                             icon: "location_chip",
-                            value: false
+                            value: 0
                         },
                         {
                             displayName: Translation.tr("Line-separated"),
                             icon: "split_scene",
-                            value: true
+                            value: 1
+                        },
+                        {
+                            displayName: Translation.tr("Empty"),
+                            icon: "space_dashboard",
+                            value: 2
                         }
                     ]
                 }

@@ -26,13 +26,14 @@ MouseArea {
         }
 
         Resource {
-            iconName: "swap_horiz"
-            percentage: ResourceUsage.swapUsedPercentage
-            shown: (Config.options.bar.resources.alwaysShowSwap && percentage > 0) || 
+            iconName: "developer_board"
+            percentage: ResourceUsage.gpuUsage
+            shown: ResourceUsage.gpuAvailable && (
+                Config.options.bar.resources.alwaysShowGpu ||
                 (MprisController.activePlayer?.trackTitle == null) ||
-                root.alwaysShowAllResources
+                root.alwaysShowAllResources)
             Layout.leftMargin: shown ? 6 : 0
-            warningThreshold: Config.options.bar.resources.swapWarningThreshold
+            warningThreshold: Config.options.bar.resources.gpuWarningThreshold
         }
 
         Resource {

@@ -102,7 +102,7 @@ Item { // Bar content region
         }
 
         HorizontalBarSeparator {
-            visible: Config.options?.bar.borderless
+            visible: Config.barGroupStyle === 1
         }
 
         Bar.BarGroup {
@@ -128,7 +128,7 @@ Item { // Bar content region
         }
 
         HorizontalBarSeparator {
-            visible: Config.options?.bar.borderless
+            visible: Config.barGroupStyle === 1
         }
 
         Bar.BarGroup {

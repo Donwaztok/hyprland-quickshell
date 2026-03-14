@@ -140,7 +140,7 @@ Item { // Bar content region
         }
 
         VerticalBarSeparator {
-            visible: Config.options?.bar.borderless
+            visible: Config.barGroupStyle === 1
         }
 
         Item { Layout.fillWidth: true } // Space left of center
@@ -154,7 +154,7 @@ Item { // Bar content region
         Item { Layout.fillWidth: true } // Space right of center
 
         VerticalBarSeparator {
-            visible: Config.options?.bar.borderless
+            visible: Config.barGroupStyle === 1
         }
 
         // Right: System/Media (Resources + Media)

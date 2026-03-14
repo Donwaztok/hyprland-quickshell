@@ -25,9 +25,10 @@ MouseArea {
 
         Resource {
             Layout.alignment: Qt.AlignHCenter
-            iconName: "swap_horiz"
-            percentage: ResourceUsage.swapUsedPercentage
-            warningThreshold: Config.options.bar.resources.swapWarningThreshold
+            iconName: "developer_board"
+            percentage: ResourceUsage.gpuUsage
+            visible: ResourceUsage.gpuAvailable
+            warningThreshold: Config.options.bar.resources.gpuWarningThreshold
         }
 
         Resource {

@@ -45,30 +45,20 @@ StyledPopup {
         }
 
         Column {
-            visible: ResourceUsage.swapTotal > 0
+            visible: ResourceUsage.gpuAvailable
             anchors.top: parent.top
             spacing: 8
 
             StyledPopupHeaderRow {
-                icon: "swap_horiz"
-                label: "Swap"
+                icon: "developer_board"
+                label: "GPU"
             }
             Column {
                 spacing: 4
                 StyledPopupValueRow {
-                    icon: "clock_loader_60"
-                    label: Translation.tr("Used:")
-                    value: root.formatKB(ResourceUsage.swapUsed)
-                }
-                StyledPopupValueRow {
-                    icon: "check_circle"
-                    label: Translation.tr("Free:")
-                    value: root.formatKB(ResourceUsage.swapFree)
-                }
-                StyledPopupValueRow {
-                    icon: "empty_dashboard"
-                    label: Translation.tr("Total:")
-                    value: root.formatKB(ResourceUsage.swapTotal)
+                    icon: "bolt"
+                    label: Translation.tr("Load:")
+                    value: `${Math.round(ResourceUsage.gpuUsage * 100)}%`
                 }
             }
         }

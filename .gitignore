@@ -14,8 +14,6 @@
 !mako/**
 !btop/
 !btop/**
-
-# end-4/dots-hyprland (illogical-impulse)
 !fish/
 !fish/**
 !quickshell/
@@ -38,6 +36,8 @@
 !zshrc.d/**
 !mpv/
 !mpv/**
+!illogical-impulse/
+!illogical-impulse/**
 
 # Arquivos soltos em .config (end-4)
 !starship.toml

@@ -7,7 +7,7 @@ import Quickshell
 import Quickshell.Io
 
 /**
- * Simple polled resource usage service with RAM, Swap, and CPU usage.
+ * Simple polled resource usage service with RAM, Swap, CPU, and GPU usage.
  */
 Singleton {
     id: root
@@ -20,16 +20,20 @@ Singleton {
 	property real swapUsed: swapTotal - swapFree
     property real swapUsedPercentage: swapTotal > 0 ? (swapUsed / swapTotal) : 0
     property real cpuUsage: 0
+    property real gpuUsage: 0
+    property bool gpuAvailable: false
     property var previousCpuStats
 
     property string maxAvailableMemoryString: kbToGbString(ResourceUsage.memoryTotal)
     property string maxAvailableSwapString: kbToGbString(ResourceUsage.swapTotal)
     property string maxAvailableCpuString: "--"
+    property string maxAvailableGpuString: "100%"
 
     readonly property int historyLength: Config?.options.resources.historyLength ?? 60
     property list<real> cpuUsageHistory: []
     property list<real> memoryUsageHistory: []
     property list<real> swapUsageHistory: []
+    property list<real> gpuUsageHistory: []
 
     function kbToGbString(kb) {
         return (kb / (1024 * 1024)).toFixed(1) + " GB";
@@ -47,6 +51,12 @@ Singleton {
             swapUsageHistory.shift()
         }
     }
+    function updateGpuUsageHistory() {
+        gpuUsageHistory = [...gpuUsageHistory, gpuUsage]
+        if (gpuUsageHistory.length > historyLength) {
+            gpuUsageHistory.shift()
+        }
+    }
     function updateCpuUsageHistory() {
         cpuUsageHistory = [...cpuUsageHistory, cpuUsage]
         if (cpuUsageHistory.length > historyLength) {
@@ -56,6 +66,7 @@ Singleton {
     function updateHistories() {
         updateMemoryUsageHistory()
         updateSwapUsageHistory()
+        updateGpuUsageHistory()
         updateCpuUsageHistory()
     }
 
@@ -99,6 +110,38 @@ Singleton {
 
 	FileView { id: fileMeminfo; path: "/proc/meminfo" }
     FileView { id: fileStat; path: "/proc/stat" }
+
+    Process {
+        id: gpuProcess
+        running: false
+        command: ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"]
+        stdout: StdioCollector {
+            id: gpuOutputCollector
+            onStreamFinished: {
+                const raw = gpuOutputCollector.text.trim()
+                const value = parseInt(raw, 10)
+                if (!Number.isNaN(value)) {
+                    root.gpuUsage = Math.min(1, Math.max(0, value / 100))
+                    root.gpuAvailable = true
+                    root.updateGpuUsageHistory()
+                }
+                gpuProcess.running = false
+            }
+        }
+    }
+
+    Timer {
+        id: gpuPollTimer
+        interval: Config.options?.resources?.updateInterval ?? 3000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (!gpuProcess.running)
+                gpuProcess.running = true
+        }
+    }
+
+    Component.onCompleted: gpuProcess.running = true
 
     Process {
         id: findCpuMaxFreqProc
