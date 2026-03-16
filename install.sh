@@ -57,7 +57,44 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 4. Themes and appearance (cursor, SDDM, GTK, icons, GRUB)
+# 4. Zsh (Oh My Zsh, Powerlevel10k, plugins)
+# -----------------------------------------------------------------------------
+ZSH="${HOME}/.oh-my-zsh"
+ZSH_CUSTOM="${ZSH}/custom"
+if [ -d "$ZSH" ] || ! command -v zsh &>/dev/null; then
+  if [ ! -d "$ZSH" ]; then
+    echo -e "\033[0;33m[SKIP]\033[0m zsh not installed; skip Oh My Zsh."
+  else
+    echo -e "\033[0;33m[SKIP]\033[0m Oh My Zsh already installed."
+  fi
+else
+  echo -e "\033[0;32m[ZSH]\033[0m Installing Oh My Zsh and plugins..."
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  mkdir -p "${ZSH_CUSTOM}/themes" "${ZSH_CUSTOM}/plugins"
+  if [ ! -d "${ZSH_CUSTOM}/themes/powerlevel10k" ]; then
+    git clone --depth 1 https://github.com/romkatv/powerlevel10k.git "${ZSH_CUSTOM}/themes/powerlevel10k"
+  fi
+  if [ ! -d "${ZSH_CUSTOM}/plugins/zsh-autosuggestions" ]; then
+    git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions "${ZSH_CUSTOM}/plugins/zsh-autosuggestions"
+  fi
+  if [ ! -d "${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting" ]; then
+    git clone --depth 1 https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting"
+  fi
+  echo -e "\033[0;32m[ZSH]\033[0m Oh My Zsh, Powerlevel10k, and plugins installed."
+fi
+
+# Fuzzy finder (fzf) – key bindings and completion for zsh
+if command -v zsh &>/dev/null && [ ! -d "${HOME}/.fzf" ]; then
+  echo -e "\033[0;32m[ZSH]\033[0m Installing fzf..."
+  git clone --depth 1 https://github.com/junegunn/fzf.git "${HOME}/.fzf"
+  "${HOME}/.fzf/install" --all --no-bash --no-fish --no-update-rc
+  echo -e "\033[0;32m[ZSH]\033[0m fzf installed (~/.fzf.zsh)."
+elif [ -d "${HOME}/.fzf" ]; then
+  echo -e "\033[0;33m[SKIP]\033[0m fzf already installed."
+fi
+
+# -----------------------------------------------------------------------------
+# 5. Themes and appearance (cursor, SDDM, GTK, icons, GRUB)
 # -----------------------------------------------------------------------------
 mkdir -p "$HOME/.icons/default"
 if ! grep -q 'Xcursor.theme' "$HOME/.Xresources" 2>/dev/null; then
@@ -107,7 +144,7 @@ if [ ! -d /boot/grub/themes/Particle-circle ] 2>/dev/null; then
 fi
 
 # -----------------------------------------------------------------------------
-# 5. Desktop files (custom launchers)
+# 6. Desktop files (custom launchers)
 # -----------------------------------------------------------------------------
 mkdir -p "$HOME/.local/share/applications"
 for f in "$REPO_ROOT/hypr/source/"*.desktop; do
@@ -115,7 +152,7 @@ for f in "$REPO_ROOT/hypr/source/"*.desktop; do
 done
 
 # -----------------------------------------------------------------------------
-# 6. User groups and services (backlight, ydotool, bluetooth)
+# 7. User groups and services (backlight, ydotool, bluetooth)
 # -----------------------------------------------------------------------------
 if command -v systemctl &>/dev/null; then
   if ! getent group i2c &>/dev/null; then
