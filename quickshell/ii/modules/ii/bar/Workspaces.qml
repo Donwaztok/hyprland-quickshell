@@ -18,71 +18,146 @@ Item {
     property bool borderless: Config.options.bar.borderless
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
-    readonly property int effectiveActiveWorkspaceId: monitor?.activeWorkspace?.id ?? 1
-    
-    readonly property int workspacesShown: Config.options.bar.workspaces.shown
-    readonly property int workspaceGroup: Math.floor((effectiveActiveWorkspaceId - 1) / root.workspacesShown)
-    property list<bool> workspaceOccupied: []
-    property int widgetPadding: 4
-    property int workspaceButtonWidth: 26
-    property real activeWorkspaceMargin: 2
-    property real workspaceIconSize: workspaceButtonWidth * 0.69
-    property real workspaceIconSizeShrinked: workspaceButtonWidth * 0.55
-    property real workspaceIconOpacityShrinked: 1
-    property real workspaceIconMarginShrinked: -4
-    property int workspaceIndexInGroup: (effectiveActiveWorkspaceId - 1) % root.workspacesShown
+    property int effectiveActiveWorkspaceId: 1
 
-    property bool showNumbers: false
-    Timer {
-        id: showNumbersTimer
-        interval: (Config?.options.bar.autoHide.showWhenPressingSuper.delay ?? 100)
-        repeat: false
-        onTriggered: {
-            root.showNumbers = true
+    readonly property string workspaceStyle: Config.options.bar.workspaces.style || "gnome"
+    readonly property bool isGnomeStyle: root.workspaceStyle === "gnome"
+
+    readonly property int workspacesShown: Math.max(1, Config.options.bar.workspaces.shown)
+    readonly property bool isDynamicMode: root.isGnomeStyle && (Config.options.bar.workspaces.shown === 0)
+
+    readonly property int workspaceGroup: Math.floor((effectiveActiveWorkspaceId - 1) / Math.max(1, root.workspacesShown))
+    readonly property int workspaceIndexInGroup: root.workspacesShown > 0 ? ((effectiveActiveWorkspaceId - 1) % root.workspacesShown) : 0
+
+    property var openWorkspaceIds: [1]
+    property int activeIndex: 0
+    property list<bool> workspaceOccupied: []
+
+    property int widgetPadding: 4
+    property int workspaceButtonWidth: (Config.options.bar.workspaces.workspaceButtonWidth ?? 11)
+    property int activeSlotWidth: (Config.options.bar.workspaces.activeSlotWidth ?? 24)
+    property real activeWorkspaceMargin: 1
+    property real dashWidthFactor: (Config.options.bar.workspaces.dashWidthFactor ?? 2.0)
+    property real dashMargin: (Config.options.bar.workspaces.dashMargin ?? 1)
+    readonly property real indicatorSize: (Config.options.bar.workspaces.indicatorSize ?? Config.options.bar.workspaces.dotSize ?? Config.options.bar.workspaces.pillHeight ?? 6)
+    readonly property real pillWidth: (root.activeSlotWidth - root.dashMargin * 2) * root.dashWidthFactor
+    readonly property real dotSize: root.indicatorSize
+    readonly property real pillHeight: root.indicatorSize
+    readonly property real maxDashWidth: root.activeSlotWidth - root.dashMargin * 2
+    property int classicSlotWidth: Config.options.bar.workspaces.classicSlotWidth ?? 26
+
+    function updateOpenWorkspaces() {
+        var monName = root.monitor?.name
+        if (!monName) {
+            root.openWorkspaceIds = [1]
+            return
         }
+        var list = Hyprland.workspaces.values.filter(function(ws) {
+            return ws.monitor && ws.monitor.name === monName && ws.id >= 1 && ws.id < 1000000
+        })
+        list.sort(function(a, b) { return a.id - b.id })
+        root.openWorkspaceIds = list.map(function(ws) { return ws.id })
+        if (root.openWorkspaceIds.length === 0)
+            root.openWorkspaceIds = [1]
     }
-    Connections {
-        target: GlobalStates
-        function onSuperDownChanged() {
-            if (!Config?.options.bar.autoHide.showWhenPressingSuper.enable) return;
-            if (GlobalStates.superDown) showNumbersTimer.restart();
-            else {
-                showNumbersTimer.stop();
-                root.showNumbers = false;
+
+    function syncActiveFromHyprland() {
+        var monName = root.monitor?.name
+        if (!monName) {
+            root.effectiveActiveWorkspaceId = 1
+            root.activeIndex = 0
+            return
+        }
+        if (root.isGnomeStyle) {
+            var list = Hyprland.workspaces.values
+            for (var i = 0; i < list.length; i++) {
+                var ws = list[i]
+                if (ws.monitor && ws.monitor.name === monName && ws.active) {
+                    root.effectiveActiveWorkspaceId = ws.id
+                    root.activeIndex = root.openWorkspaceIds.indexOf(ws.id)
+                    if (root.activeIndex < 0) root.activeIndex = 0
+                    return
+                }
             }
         }
-        function onSuperReleaseMightTriggerChanged() { 
-            showNumbersTimer.stop()
+        root.effectiveActiveWorkspaceId = root.monitor?.activeWorkspace?.id ?? 1
+        if (root.isGnomeStyle) {
+            root.activeIndex = root.openWorkspaceIds.indexOf(root.effectiveActiveWorkspaceId)
+            if (root.activeIndex < 0) root.activeIndex = 0
         }
     }
 
-    // Function to update workspaceOccupied
     function updateWorkspaceOccupied() {
-        workspaceOccupied = Array.from({ length: root.workspacesShown }, (_, i) => {
-            return Hyprland.workspaces.values.some(ws => ws.id === workspaceGroup * root.workspacesShown + i + 1);
-        })
+        if (!root.isGnomeStyle) {
+            root.workspaceOccupied = Array.from({ length: root.workspacesShown }, function(_, i) {
+                return Hyprland.workspaces.values.some(function(ws) {
+                    return ws.id === root.workspaceGroup * root.workspacesShown + i + 1
+                })
+            })
+        }
     }
 
-    // Occupied workspace updates
-    Component.onCompleted: updateWorkspaceOccupied()
+    function updateActiveIndex() {
+        root.activeIndex = root.openWorkspaceIds.indexOf(root.effectiveActiveWorkspaceId)
+        if (root.activeIndex < 0) root.activeIndex = 0
+    }
+
     Connections {
         target: Hyprland.workspaces
         function onValuesChanged() {
-            updateWorkspaceOccupied();
+            updateOpenWorkspaces()
+            syncActiveFromHyprland()
+            if (!root.isGnomeStyle) updateWorkspaceOccupied()
         }
     }
     Connections {
         target: Hyprland
         function onFocusedWorkspaceChanged() {
-            updateWorkspaceOccupied();
+            updateOpenWorkspaces()
+            syncActiveFromHyprland()
         }
     }
-    onWorkspaceGroupChanged: {
-        updateWorkspaceOccupied();
+    onOpenWorkspaceIdsChanged: {
+        updateActiveIndex()
+        if (root.isDynamicMode) updateSlotWorkspaceIds()
     }
 
-    implicitWidth: root.vertical ? Appearance.sizes.verticalBarWidth : (root.workspaceButtonWidth * root.workspacesShown)
-    implicitHeight: root.vertical ? (root.workspaceButtonWidth * root.workspacesShown) : Appearance.sizes.barHeight
+    readonly property int openCount: openWorkspaceIds.length
+    property var slotWorkspaceIds: [1]
+
+    function updateSlotWorkspaceIds() {
+        if (root.isDynamicMode) {
+            root.slotWorkspaceIds = root.openWorkspaceIds.length ? root.openWorkspaceIds : [1]
+        } else {
+            var n = root.workspacesShown
+            var group = root.workspaceGroup
+            var arr = []
+            for (var i = 0; i < n; i++)
+                arr.push(group * n + i + 1)
+            root.slotWorkspaceIds = arr
+        }
+    }
+
+    readonly property int slotCount: root.isDynamicMode ? Math.max(1, root.openCount) : root.workspacesShown
+    readonly property int dashIndex: root.isDynamicMode ? root.activeIndex : root.workspaceIndexInGroup
+
+    Component.onCompleted: {
+        updateOpenWorkspaces()
+        syncActiveFromHyprland()
+        updateSlotWorkspaceIds()
+        if (!root.isGnomeStyle) updateWorkspaceOccupied()
+    }
+    onIsDynamicModeChanged: updateSlotWorkspaceIds()
+    onWorkspaceGroupChanged: {
+        if (!root.isDynamicMode) updateSlotWorkspaceIds()
+        if (!root.isGnomeStyle) updateWorkspaceOccupied()
+    }
+    onWorkspacesShownChanged: updateSlotWorkspaceIds()
+
+    readonly property real totalWidth: root.vertical ? root.workspaceButtonWidth : (root.isGnomeStyle ? ((Math.max(1, root.slotCount) - 1) * root.workspaceButtonWidth + root.activeSlotWidth) : (root.workspacesShown * root.classicSlotWidth))
+    readonly property real totalHeight: root.vertical ? (root.isGnomeStyle ? ((Math.max(1, root.slotCount) - 1) * root.workspaceButtonWidth + root.activeSlotWidth) : (root.workspacesShown * root.classicSlotWidth)) : root.workspaceButtonWidth
+    implicitWidth: root.vertical ? Appearance.sizes.verticalBarWidth : root.totalWidth
+    implicitHeight: root.vertical ? root.totalHeight : Appearance.sizes.barHeight
 
     // Scroll to switch workspaces
     WheelHandler {
@@ -101,220 +176,227 @@ Item {
         onPressed: (event) => {
             if (event.button === Qt.BackButton) {
                 Hyprland.dispatch(`togglespecialworkspace`);
-            } 
-        }
-    }
-
-    // Workspaces - background
-    Grid {
-        z: 1
-        anchors.centerIn: parent
-
-        rowSpacing: 0
-        columnSpacing: 0
-        columns: root.vertical ? 1 : root.workspacesShown
-        rows: root.vertical ? root.workspacesShown : 1
-
-        Repeater {
-            model: root.workspacesShown
-
-            Rectangle {
-                z: 1
-                implicitWidth: workspaceButtonWidth
-                implicitHeight: workspaceButtonWidth
-                radius: (width / 2)
-                property var previousOccupied: (workspaceOccupied[index-1] && !(!activeWindow?.activated && root.effectiveActiveWorkspaceId === index))
-                property var rightOccupied: (workspaceOccupied[index+1] && !(!activeWindow?.activated && root.effectiveActiveWorkspaceId === index+2))
-                property var radiusPrev: previousOccupied ? 0 : (width / 2)
-                property var radiusNext: rightOccupied ? 0 : (width / 2)
-
-                topLeftRadius: radiusPrev
-                bottomLeftRadius: root.vertical ? radiusNext : radiusPrev
-                topRightRadius: root.vertical ? radiusPrev : radiusNext
-                bottomRightRadius: radiusNext
-                
-                color: ColorUtils.transparentize(Appearance.m3colors.m3secondaryContainer, 0.4)
-                opacity: (workspaceOccupied[index] && !(!activeWindow?.activated && root.effectiveActiveWorkspaceId === index+1)) ? 1 : 0
-
-                Behavior on opacity {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                }
-                Behavior on radiusPrev {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                }
-
-                Behavior on radiusNext {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                }
-
             }
-
         }
-
     }
 
-    // Active workspace
-    Rectangle {
-        z: 2
-        // Make active ws indicator, which has a brighter color, smaller to look like it is of the same size as ws occupied highlight
-        radius: Appearance.rounding.full
-        color: Appearance.colors.colPrimary
-
-        anchors {
-            verticalCenter: vertical ? undefined : parent.verticalCenter
-            horizontalCenter: vertical ? parent.horizontalCenter : undefined
+    property bool showNumbers: false
+    Timer {
+        id: showNumbersTimer
+        interval: Config?.options.bar.autoHide.showWhenPressingSuper.delay ?? 100
+        repeat: false
+        onTriggered: root.showNumbers = true
+    }
+    Connections {
+        target: GlobalStates
+        function onSuperDownChanged() {
+            if (!Config?.options.bar.autoHide.showWhenPressingSuper.enable) return
+            if (GlobalStates.superDown) showNumbersTimer.restart()
+            else { showNumbersTimer.stop(); root.showNumbers = false }
         }
-
-        AnimatedTabIndexPair {
-            id: idxPair
-            index: root.workspaceIndexInGroup
-        }
-        property real indicatorPosition: Math.min(idxPair.idx1, idxPair.idx2) * workspaceButtonWidth + root.activeWorkspaceMargin
-        property real indicatorLength: Math.abs(idxPair.idx1 - idxPair.idx2) * workspaceButtonWidth + workspaceButtonWidth - root.activeWorkspaceMargin * 2
-        property real indicatorThickness: workspaceButtonWidth - root.activeWorkspaceMargin * 2
-
-        x: root.vertical ? null : indicatorPosition
-        implicitWidth: root.vertical ? indicatorThickness : indicatorLength
-        y: root.vertical ? indicatorPosition : null
-        implicitHeight: root.vertical ? indicatorLength : indicatorThickness
-
+        function onSuperReleaseMightTriggerChanged() { showNumbersTimer.stop() }
     }
 
-    // Workspaces - numbers
-    Grid {
-        z: 3
-
-        columns: root.vertical ? 1 : root.workspacesShown
-        rows: root.vertical ? root.workspacesShown : 1
-        columnSpacing: 0
-        rowSpacing: 0
-
+    // --- GNOME style ---
+    Item {
+        visible: root.isGnomeStyle
         anchors.fill: parent
-
+    Row {
+        z: 1
+        visible: !root.vertical
+        anchors.centerIn: parent
+        spacing: 0
         Repeater {
-            model: root.workspacesShown
+            model: root.slotWorkspaceIds
 
+            Item {
+                width: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
+                height: root.workspaceButtonWidth
+                property int workspaceValue: modelData
+                property bool isOpen: root.openWorkspaceIds.indexOf(workspaceValue) >= 0
+                property bool isActive: root.dashIndex === index
+                property bool showDot: !isActive && (root.isDynamicMode || isOpen)
+
+                Rectangle {
+                    id: indicator
+                    anchors.centerIn: parent
+                    width: parent.isActive ? Math.min(root.maxDashWidth, Math.max(root.pillHeight, root.pillWidth - root.dashMargin * 2)) : (parent.showDot ? root.dotSize : 0)
+                    height: parent.isActive ? root.pillHeight : (parent.showDot ? root.dotSize : 0)
+                    radius: parent.isActive ? (root.pillHeight / 2) : (parent.showDot ? root.dotSize / 2 : 0)
+                    color: parent.isActive ? Appearance.colors.colPrimary : Appearance.m3colors.m3onSurfaceVariant
+                    opacity: (parent.isActive || parent.showDot) ? (parent.isActive ? 1 : 0.7) : 0
+                    visible: opacity > 0
+
+                    Behavior on width {
+                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on height {
+                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on radius {
+                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    }
+                    Behavior on color {
+                        ColorAnimation { duration: 180 }
+                    }
+                    Behavior on opacity {
+                        NumberAnimation { duration: 150 }
+                    }
+                }
+            }
+        }
+    }
+
+    Column {
+        z: 1
+        visible: root.vertical
+        anchors.centerIn: parent
+        spacing: 0
+        Repeater {
+            model: root.slotWorkspaceIds
+            Item {
+                width: root.workspaceButtonWidth
+                height: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
+                property int workspaceValue: modelData
+                property bool isOpen: root.openWorkspaceIds.indexOf(workspaceValue) >= 0
+                property bool isActive: root.dashIndex === index
+                property bool showDot: !isActive && (root.isDynamicMode || isOpen)
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: parent.isActive ? Math.min(root.maxDashWidth, Math.max(root.pillHeight, root.pillWidth - root.dashMargin * 2)) : (parent.showDot ? root.dotSize : 0)
+                    height: parent.isActive ? root.pillHeight : (parent.showDot ? root.dotSize : 0)
+                    radius: parent.isActive ? (root.pillHeight / 2) : (parent.showDot ? root.dotSize / 2 : 0)
+                    color: parent.isActive ? Appearance.colors.colPrimary : Appearance.m3colors.m3onSurfaceVariant
+                    opacity: (parent.isActive || parent.showDot) ? (parent.isActive ? 1 : 0.7) : 0
+                    visible: opacity > 0
+                }
+            }
+        }
+    }
+
+    // Clickable: um botão por slot (mesma largura variável)
+    Row {
+        z: 3
+        visible: !root.vertical
+        spacing: 0
+        anchors.fill: parent
+        Repeater {
+            model: root.slotWorkspaceIds
             Button {
-                id: button
-                property int workspaceValue: workspaceGroup * root.workspacesShown + index + 1
-                implicitHeight: vertical ? Appearance.sizes.verticalBarWidth : Appearance.sizes.barHeight
-                implicitWidth: vertical ? Appearance.sizes.verticalBarWidth : Appearance.sizes.verticalBarWidth
+                property int workspaceValue: modelData
+                property real slotW: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
+                width: slotW
+                height: root.height
                 onPressed: Hyprland.dispatch(`workspace ${workspaceValue}`)
-                width: vertical ? undefined : workspaceButtonWidth
-                height: vertical ? workspaceButtonWidth : undefined
+                background: Item { implicitWidth: parent.width; implicitHeight: parent.height }
+            }
+        }
+    }
+    Column {
+        z: 3
+        visible: root.vertical
+        spacing: 0
+        anchors.fill: parent
+        Repeater {
+            model: root.slotWorkspaceIds
+            Button {
+                property int workspaceValue: modelData
+                property real slotH: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
+                width: root.width
+                height: slotH
+                onPressed: Hyprland.dispatch(`workspace ${workspaceValue}`)
+                background: Item { implicitWidth: parent.width; implicitHeight: parent.height }
+            }
+        }
+    }
+    }
 
-                background: Item {
-                    id: workspaceButtonBackground
-                    implicitWidth: workspaceButtonWidth
-                    implicitHeight: workspaceButtonWidth
-                    property var biggestWindow: HyprlandData.biggestWindowForWorkspace(button.workspaceValue)
-                    property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
-
-                    StyledText { // Workspace number text
-                        opacity: root.showNumbers
-                            || ((Config.options?.bar.workspaces.alwaysShowNumbers && (!Config.options?.bar.workspaces.showAppIcons || !workspaceButtonBackground.biggestWindow || root.showNumbers))
-                            || (root.showNumbers && !Config.options?.bar.workspaces.showAppIcons)
-                            )  ? 1 : 0
-                        z: 3
-
-                        anchors.centerIn: parent
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font {
-                            pixelSize: Appearance.font.barPixelSize.small - ((text.length - 1) * (text !== "10") * 2)
-                            family: Config.options?.bar.workspaces.useNerdFont ? Appearance.font.family.iconNerd : defaultFont
+    // --- Classic style ---
+    Item {
+        visible: !root.isGnomeStyle
+        anchors.fill: parent
+        Grid {
+            z: 1
+            anchors.centerIn: parent
+            rowSpacing: 0
+            columnSpacing: 0
+            columns: root.vertical ? 1 : root.workspacesShown
+            rows: root.vertical ? root.workspacesShown : 1
+            Repeater {
+                model: root.workspacesShown
+                Rectangle {
+                    width: root.classicSlotWidth
+                    height: root.classicSlotWidth
+                    radius: width / 2
+                    color: ColorUtils.transparentize(Appearance.m3colors.m3secondaryContainer, 0.4)
+                    opacity: (root.workspaceOccupied[index] && root.effectiveActiveWorkspaceId !== (root.workspaceGroup * root.workspacesShown + index + 1)) ? 1 : 0
+                    Behavior on opacity { animation: Appearance.animation.elementMove.numberAnimation.createObject(this) }
+                }
+            }
+        }
+        Rectangle {
+            z: 2
+            radius: Appearance.rounding.full
+            color: Appearance.colors.colPrimary
+            anchors.verticalCenter: parent.verticalCenter
+            AnimatedTabIndexPair { id: classicIdx; index: root.workspaceIndexInGroup }
+            property real slotW: root.classicSlotWidth - root.activeWorkspaceMargin * 2
+            property real pos: Math.min(classicIdx.idx1, classicIdx.idx2) * root.classicSlotWidth + root.activeWorkspaceMargin
+            x: root.vertical ? (root.classicSlotWidth - slotW) / 2 : pos
+            y: root.vertical ? pos : (parent.height - slotW) / 2
+            width: slotW
+            height: slotW
+        }
+        Grid {
+            z: 3
+            anchors.fill: parent
+            columns: root.vertical ? 1 : root.workspacesShown
+            rows: root.vertical ? root.workspacesShown : 1
+            columnSpacing: 0
+            rowSpacing: 0
+            Repeater {
+                model: root.workspacesShown
+                Button {
+                    property int workspaceValue: root.workspaceGroup * root.workspacesShown + index + 1
+                    width: root.vertical ? undefined : root.classicSlotWidth
+                    height: root.vertical ? root.classicSlotWidth : undefined
+                    onPressed: Hyprland.dispatch(`workspace ${workspaceValue}`)
+                    background: Item {
+                        width: root.classicSlotWidth
+                        height: root.classicSlotWidth
+                        property int wsValue: parent.workspaceValue
+                        property int wsIndex: parent.index
+                        property var biggestWindow: HyprlandData.biggestWindowForWorkspace(wsValue)
+                        property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
+                        StyledText {
+                            opacity: (root.showNumbers || Config.options.bar.workspaces.alwaysShowNumbers || (Config.options.bar.workspaces.showAppIcons && biggestWindow && root.showNumbers) || (root.showNumbers && !Config.options.bar.workspaces.showAppIcons)) ? 1 : 0
+                            anchors.centerIn: parent
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: Appearance.font.barPixelSize.small - ((text.length - 1) * (text !== "10") * 2)
+                            font.family: Config.options?.bar.workspaces.useNerdFont ? Appearance.font.family.iconNerd : "sans-serif"
+                            text: (Config.options?.bar.workspaces.numberMap || [])[wsValue - 1] || wsValue
+                            color: root.effectiveActiveWorkspaceId === wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
                         }
-                        text: Config.options?.bar.workspaces.numberMap[button.workspaceValue - 1] || button.workspaceValue
-                        elide: Text.ElideRight
-                        color: (root.effectiveActiveWorkspaceId == button.workspaceValue) ? 
-                            Appearance.m3colors.m3onPrimary : 
-                            (workspaceOccupied[index] ? Appearance.m3colors.m3onSecondaryContainer : 
-                                Appearance.colors.colOnLayer1Inactive)
-
-                        Behavior on opacity {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: root.classicSlotWidth * 0.18
+                            height: width
+                            radius: width / 2
+                            color: root.effectiveActiveWorkspaceId === wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
+                            opacity: (Config.options?.bar.workspaces.alwaysShowNumbers || root.showNumbers || (Config.options?.bar.workspaces.showAppIcons && biggestWindow)) ? 0 : 1
                         }
-                    }
-                    Rectangle { // Dot instead of ws number
-                        id: wsDot
-                        opacity: (Config.options?.bar.workspaces.alwaysShowNumbers
-                            || root.showNumbers
-                            || (Config.options?.bar.workspaces.showAppIcons && workspaceButtonBackground.biggestWindow)
-                            ) ? 0 : 1
-                        visible: opacity > 0
-                        anchors.centerIn: parent
-                        width: workspaceButtonWidth * 0.18
-                        height: width
-                        radius: width / 2
-                        color: (root.effectiveActiveWorkspaceId == button.workspaceValue) ? 
-                            Appearance.m3colors.m3onPrimary : 
-                            (workspaceOccupied[index] ? Appearance.m3colors.m3onSecondaryContainer : 
-                                Appearance.colors.colOnLayer1Inactive)
-
-                        Behavior on opacity {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                        }
-                    }
-                    Item { // Main app icon
-                        anchors.centerIn: parent
-                        width: workspaceButtonWidth
-                        height: workspaceButtonWidth
-                        opacity: !Config.options?.bar.workspaces.showAppIcons ? 0 :
-                            (workspaceButtonBackground.biggestWindow && !root.showNumbers && Config.options?.bar.workspaces.showAppIcons) ? 
-                            1 : workspaceButtonBackground.biggestWindow ? workspaceIconOpacityShrinked : 0
-                            visible: opacity > 0
                         IconImage {
-                            id: mainAppIcon
+                            visible: Config.options.bar.workspaces.showAppIcons && biggestWindow
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
-                            anchors.bottomMargin: (!root.showNumbers && Config.options?.bar.workspaces.showAppIcons) ? 
-                                (workspaceButtonWidth - workspaceIconSize) / 2 : workspaceIconMarginShrinked
-                            anchors.rightMargin: (!root.showNumbers && Config.options?.bar.workspaces.showAppIcons) ? 
-                                (workspaceButtonWidth - workspaceIconSize) / 2 : workspaceIconMarginShrinked
-
-                            source: workspaceButtonBackground.mainAppIconSource
-                            implicitSize: (!root.showNumbers && Config.options?.bar.workspaces.showAppIcons) ? workspaceIconSize : workspaceIconSizeShrinked
-
-                            Behavior on opacity {
-                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                            }
-                            Behavior on anchors.bottomMargin {
-                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                            }
-                            Behavior on anchors.rightMargin {
-                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                            }
-                            Behavior on implicitSize {
-                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-                            }
-                        }
-
-                        Loader {
-                            active: Config.options.bar.workspaces.monochromeIcons
-                            anchors.fill: mainAppIcon
-                            sourceComponent: Item {
-                                Desaturate {
-                                    id: desaturatedIcon
-                                    visible: false // There's already color overlay
-                                    anchors.fill: parent
-                                    source: mainAppIcon
-                                    desaturation: 0.8
-                                }
-                                ColorOverlay {
-                                    anchors.fill: desaturatedIcon
-                                    source: desaturatedIcon
-                                    color: ColorUtils.transparentize(wsDot.color, 0.9)
-                                }
-                            }
+                            source: mainAppIconSource
+                            width: root.classicSlotWidth * 0.69
+                            height: width
                         }
                     }
                 }
-                
-
             }
-
         }
-
     }
-
 }

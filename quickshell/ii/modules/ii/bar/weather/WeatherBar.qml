@@ -10,7 +10,7 @@ import QtQuick.Layouts
 MouseArea {
     id: root
     property bool hovered: false
-    implicitWidth: rowLayout.implicitWidth + 10 * 2
+    implicitWidth: rowLayout.implicitWidth + 15
     implicitHeight: Appearance.sizes.barHeight
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -19,8 +19,8 @@ MouseArea {
     onPressed: {
         if (mouse.button === Qt.RightButton) {
             Weather.getData();
-            Quickshell.execDetached(["notify-send", 
-                Translation.tr("Weather"), 
+            Quickshell.execDetached(["notify-send",
+                Translation.tr("Weather"),
                 Translation.tr("Refreshing (manually triggered)")
                 , "-a", "Shell"
             ])

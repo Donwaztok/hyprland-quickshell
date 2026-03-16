@@ -19,7 +19,7 @@
     },
     "appearance": {
         "extraBackgroundTint": true,
-        "fakeScreenRounding": 1,
+        "fakeScreenRounding": 0,
         "fonts": {
             "expressive": "Space Grotesk",
             "iconNerd": "JetBrains Mono NF",
@@ -31,7 +31,7 @@
         },
         "palette": {
             "accentColor": "",
-            "type": "scheme-monochrome"
+            "type": "scheme-rainbow"
         },
         "transparency": {
             "automatic": true,
@@ -53,13 +53,13 @@
     },
     "apps": {
         "bluetooth": "kcmshell6 kcm_bluetooth",
-        "changePassword": "kitty -1 --hold=yes fish -i -c 'passwd'",
+        "changePassword": "kitty -1 --hold=yes zsh -i -c 'passwd'",
         "manageUser": "kcmshell6 kcm_users",
         "network": "kcmshell6 kcm_networkmanagement",
         "networkEthernet": "kcmshell6 kcm_networkmanagement",
         "taskManager": "plasma-systemmonitor --page-name Processes",
         "terminal": "kitty -1",
-        "update": "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'",
+        "update": "kitty -1 --hold=yes zsh -i -c 'pkexec pacman -Syu'",
         "volumeMixer": "~/.config/hypr/hyprland/scripts/launch_first_available.sh \"pavucontrol-qt\" \"pavucontrol\""
     },
     "audio": {
@@ -143,6 +143,7 @@
         "borderless": true,
         "bottom": false,
         "cornerStyle": 0,
+        "debugLayout": false,
         "floatStyleShadow": true,
         "groupStyle": 2,
         "indicators": {
@@ -186,16 +187,21 @@
             "useUSCS": false
         },
         "workspaces": {
-            "alwaysShowNumbers": false,
-            "monochromeIcons": false,
+            "activeSlotWidth": 32,
+            "alwaysShowNumbers": true,
+            "classicSlotWidth": 26,
+            "dashMargin": 1,
+            "dashWidthFactor": 2,
+            "indicatorSize": 8,
+            "monochromeIcons": true,
             "numberMap": [
-                "1",
-                "2"
             ],
-            "showAppIcons": false,
+            "showAppIcons": true,
             "showNumberDelay": 300,
-            "shown": 10,
-            "useNerdFont": false
+            "shown": 0,
+            "style": "gnome",
+            "useNerdFont": false,
+            "workspaceButtonWidth": 11
         }
     },
     "battery": {
@@ -231,7 +237,8 @@
         "height": 60,
         "hoverRegionHeight": 2,
         "hoverToReveal": true,
-        "ignoredAppRegexes": [],
+        "ignoredAppRegexes": [
+        ],
         "monochromeIcons": true,
         "pinnedApps": [
             "org.kde.dolphin",

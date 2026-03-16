@@ -19,7 +19,7 @@ ContentPage {
             }
         }
     }
-    
+
     ContentSection {
         icon: "spoke"
         title: Translation.tr("Positioning")
@@ -85,7 +85,7 @@ ContentPage {
         }
 
         ConfigRow {
-            
+
             ContentSubsection {
                 title: Translation.tr("Corner style")
                 Layout.fillWidth: true
@@ -145,6 +145,16 @@ ContentPage {
                 }
             }
         }
+
+        ConfigSpinBox {
+            icon: "height"
+            text: Translation.tr("Bar size (%)")
+            value: Math.round((Config.options.bar.size ?? 0.8) * 100)
+            from: 50
+            to: 120
+            stepSize: 5
+            onValueChanged: Config.options.bar.size = value / 100
+        }
     }
 
     ContentSection {
@@ -159,7 +169,7 @@ ContentPage {
                 Config.options.tray.invertPinnedItems = checked;
             }
         }
-        
+
         ConfigSwitch {
             buttonIcon: "colors"
             text: Translation.tr('Tint icons')
@@ -261,83 +271,126 @@ ContentPage {
         icon: "workspaces"
         title: Translation.tr("Workspaces")
 
-        ConfigSwitch {
-            buttonIcon: "counter_1"
-            text: Translation.tr('Always show numbers')
-            checked: Config.options.bar.workspaces.alwaysShowNumbers
-            onCheckedChanged: {
-                Config.options.bar.workspaces.alwaysShowNumbers = checked;
+        ContentSubsection {
+            title: Translation.tr("Indicator style")
+            ConfigSelectionArray {
+                currentValue: Config.options.bar.workspaces.style ?? "classic"
+                onSelected: newValue => { Config.options.bar.workspaces.style = newValue }
+                options: [
+                    { displayName: Translation.tr("Classic"), icon: "grid_view", value: "classic" },
+                    { displayName: Translation.tr("GNOME"), icon: "radio_button_checked", value: "gnome" }
+                ]
             }
         }
 
-        ConfigSwitch {
-            buttonIcon: "award_star"
-            text: Translation.tr('Show app icons')
-            checked: Config.options.bar.workspaces.showAppIcons
-            onCheckedChanged: {
-                Config.options.bar.workspaces.showAppIcons = checked;
+        ContentSubsection {
+            title: Translation.tr("Classic style")
+            visible: (Config.options.bar.workspaces.style ?? "classic") === "classic"
+            ConfigSwitch {
+                buttonIcon: "counter_1"
+                text: Translation.tr('Always show numbers')
+                checked: Config.options.bar.workspaces.alwaysShowNumbers ?? false
+                onCheckedChanged: Config.options.bar.workspaces.alwaysShowNumbers = checked
+            }
+            ConfigSwitch {
+                buttonIcon: "award_star"
+                text: Translation.tr('Show app icons')
+                checked: Config.options.bar.workspaces.showAppIcons ?? true
+                onCheckedChanged: Config.options.bar.workspaces.showAppIcons = checked
+            }
+            ConfigSwitch {
+                buttonIcon: "colors"
+                text: Translation.tr('Tint app icons')
+                checked: Config.options.bar.workspaces.monochromeIcons ?? true
+                onCheckedChanged: Config.options.bar.workspaces.monochromeIcons = checked
+            }
+            ConfigSpinBox {
+                icon: "touch_long"
+                text: Translation.tr("Number show delay when pressing Super (ms)")
+                value: Config.options.bar.workspaces.showNumberDelay ?? 300
+                from: 0
+                to: 1000
+                stepSize: 50
+                onValueChanged: Config.options.bar.workspaces.showNumberDelay = value
+            }
+            ConfigSelectionArray {
+                currentValue: JSON.stringify(Config.options.bar.workspaces.numberMap ?? ["1", "2"])
+                onSelected: newValue => { Config.options.bar.workspaces.numberMap = JSON.parse(newValue) }
+                options: [
+                    { displayName: Translation.tr("Normal"), icon: "timer_10", value: '[]' },
+                    { displayName: Translation.tr("Han chars"), icon: "square_dot", value: '["一","二","三","四","五","六","七","八","九","十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十"]' },
+                    { displayName: Translation.tr("Roman"), icon: "account_balance", value: '["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"]' }
+                ]
+            }
+            ConfigSpinBox {
+                icon: "view_column"
+                text: Translation.tr("Slot width (px)")
+                value: Config.options.bar.workspaces.classicSlotWidth ?? 26  // commit inicial: only classic, slot added later
+                from: 20
+                to: 40
+                stepSize: 1
+                onValueChanged: Config.options.bar.workspaces.classicSlotWidth = value
             }
         }
 
-        ConfigSwitch {
-            buttonIcon: "colors"
-            text: Translation.tr('Tint app icons')
-            checked: Config.options.bar.workspaces.monochromeIcons
-            onCheckedChanged: {
-                Config.options.bar.workspaces.monochromeIcons = checked;
+        ContentSubsection {
+            title: Translation.tr("GNOME style")
+            visible: (Config.options.bar.workspaces.style ?? "classic") === "gnome"
+            ConfigSpinBox {
+                icon: "circle"
+                text: Translation.tr("Dot / slot width (px)")
+                value: Config.options.bar.workspaces.workspaceButtonWidth ?? 11
+                from: 6
+                to: 24
+                stepSize: 1
+                onValueChanged: Config.options.bar.workspaces.workspaceButtonWidth = value
+            }
+            ConfigSpinBox {
+                icon: "horizontal_rule"
+                text: Translation.tr("Active slot width (px)")
+                value: Config.options.bar.workspaces.activeSlotWidth ?? 32
+                from: 16
+                to: 48
+                stepSize: 1
+                onValueChanged: Config.options.bar.workspaces.activeSlotWidth = value
+            }
+            ConfigSpinBox {
+                icon: "aspect_ratio"
+                text: Translation.tr("Dash width factor")
+                value: (Config.options.bar.workspaces.dashWidthFactor ?? 2.0) * 10
+                from: 10
+                to: 35
+                stepSize: 1
+                onValueChanged: Config.options.bar.workspaces.dashWidthFactor = value / 10
+            }
+            ConfigSpinBox {
+                icon: "padding"
+                text: Translation.tr("Dash margin")
+                value: (Config.options.bar.workspaces.dashMargin ?? 1) * 10
+                from: 0
+                to: 30
+                stepSize: 1
+                onValueChanged: Config.options.bar.workspaces.dashMargin = value / 10
+            }
+            ConfigSpinBox {
+                icon: "circle"
+                text: Translation.tr("Indicator size (px)")
+                value: Config.options.bar.workspaces.indicatorSize ?? 8
+                from: 4
+                to: 12
+                stepSize: 1
+                onValueChanged: Config.options.bar.workspaces.indicatorSize = value
             }
         }
 
         ConfigSpinBox {
             icon: "view_column"
             text: Translation.tr("Workspaces shown")
-            value: Config.options.bar.workspaces.shown
-            from: 1
+            value: Config.options.bar.workspaces.shown ?? 10  // commit inicial: 10
+            from: 0
             to: 30
             stepSize: 1
-            onValueChanged: {
-                Config.options.bar.workspaces.shown = value;
-            }
-        }
-
-        ConfigSpinBox {
-            icon: "touch_long"
-            text: Translation.tr("Number show delay when pressing Super (ms)")
-            value: Config.options.bar.workspaces.showNumberDelay
-            from: 0
-            to: 1000
-            stepSize: 50
-            onValueChanged: {
-                Config.options.bar.workspaces.showNumberDelay = value;
-            }
-        }
-
-        ContentSubsection {
-            title: Translation.tr("Number style")
-
-            ConfigSelectionArray {
-                currentValue: JSON.stringify(Config.options.bar.workspaces.numberMap)
-                onSelected: newValue => {
-                    Config.options.bar.workspaces.numberMap = JSON.parse(newValue)
-                }
-                options: [
-                    {
-                        displayName: Translation.tr("Normal"),
-                        icon: "timer_10",
-                        value: '[]'
-                    },
-                    {
-                        displayName: Translation.tr("Han chars"),
-                        icon: "square_dot",
-                        value: '["一","二","三","四","五","六","七","八","九","十","十一","十二","十三","十四","十五","十六","十七","十八","十九","二十"]'
-                    },
-                    {
-                        displayName: Translation.tr("Roman"),
-                        icon: "account_balance",
-                        value: '["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"]'
-                    }
-                ]
-            }
+            onValueChanged: Config.options.bar.workspaces.shown = value
         }
     }
 
@@ -351,6 +404,17 @@ ContentPage {
             onCheckedChanged: {
                 Config.options.bar.tooltips.clickToShow = checked;
             }
+        }
+    }
+
+    ContentSection {
+        icon: "bug_report"
+        title: Translation.tr("Debug")
+        ConfigSwitch {
+            buttonIcon: "view_week"
+            text: Translation.tr("Show layout borders")
+            checked: Config.options.bar.debugLayout ?? false
+            onCheckedChanged: Config.options.bar.debugLayout = checked
         }
     }
 }

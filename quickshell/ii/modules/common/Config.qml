@@ -248,6 +248,7 @@ Singleton {
                 property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
                 property bool showBackground: true
                 property bool verbose: true
+                property bool debugLayout: false // Draw borders around bar components for layout debug
                 property bool vertical: false
                 property JsonObject resources: JsonObject {
                     property bool alwaysShowGpu: true
@@ -267,13 +268,22 @@ Singleton {
                     property bool showScreenRecord: false
                 }
                 property JsonObject workspaces: JsonObject {
+                    // Defaults: GNOME = current config; Classic (commit inicial) = shown 10, alwaysShowNumbers false, numberMap ["1","2"]
+                    property string style: "gnome" // "classic" | "gnome"
                     property bool monochromeIcons: true
-                    property int shown: 10
+                    property int shown: 0 // GNOME default (dynamic); Classic default is 10
                     property bool showAppIcons: true
-                    property bool alwaysShowNumbers: false
+                    property bool alwaysShowNumbers: true // GNOME default; Classic default is false
                     property int showNumberDelay: 300 // milliseconds
-                    property list<string> numberMap: ["1", "2"] // Characters to show instead of numbers on workspace indicator
+                    property list<string> numberMap: [] // GNOME default; Classic default is ["1", "2"]
                     property bool useNerdFont: false
+                    property int classicSlotWidth: 26 // Classic style: slot size (px)
+                    // GNOME style (current config)
+                    property int workspaceButtonWidth: 11
+                    property int activeSlotWidth: 32
+                    property real dashWidthFactor: 2.0
+                    property real dashMargin: 1
+                    property real indicatorSize: 8
                 }
                 property JsonObject weather: JsonObject {
                     property bool enable: false

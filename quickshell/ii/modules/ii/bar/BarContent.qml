@@ -98,7 +98,7 @@ Item { // Bar content region
         }
     }
 
-    // Middle section: Workspaces | Clima | <Space> | [Relógio no centro] | <Space> | System/Media
+    // Middle section order: Workspace | Clima | <Space> | System | Tray/Menu (clock overlay in center)
     RowLayout {
         id: middleSection
         anchors {
@@ -107,9 +107,8 @@ Item { // Bar content region
             left: barLeftSideMouseArea.right
             right: barRightSideMouseArea.left
         }
-        spacing: 4
 
-        // Left: Workspaces | Clima
+        // Left: Workspaces
         BarGroup {
             id: leftCenterGroup
             Layout.alignment: Qt.AlignVCenter
@@ -130,28 +129,20 @@ Item { // Bar content region
             }
         }
 
+        // Clima
         Loader {
+            id: weatherLoader
             Layout.alignment: Qt.AlignVCenter
-            Layout.leftMargin: 4
             active: Config.options.bar.weather.enable
-            sourceComponent: BarGroup {
-                WeatherBar {}
-            }
+            sourceComponent: WeatherBar {}
         }
 
         VerticalBarSeparator {
             visible: Config.barGroupStyle === 1
         }
 
-        Item { Layout.fillWidth: true } // Space left of center
-
-        // Placeholder for center (clock is overlay below)
-        Item {
-            Layout.preferredWidth: centerClockContent.implicitWidth
-            Layout.alignment: Qt.AlignVCenter
-        }
-
-        Item { Layout.fillWidth: true } // Space right of center
+        // Single space (clock is overlay, centered on bar)
+        Item { Layout.fillWidth: true }
 
         VerticalBarSeparator {
             visible: Config.barGroupStyle === 1
@@ -342,6 +333,70 @@ Item { // Bar content region
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }
+        }
+    }
+
+    // Debug: draw borders around bar components (enable bar.debugLayout in config)
+    Item {
+        id: debugLayoutOverlay
+        z: 1000
+        anchors.fill: parent
+        visible: Config.options.bar.debugLayout ?? false
+
+        Rectangle {
+            x: barLeftSideMouseArea.x
+            y: barLeftSideMouseArea.y
+            width: barLeftSideMouseArea.width
+            height: barLeftSideMouseArea.height
+            color: "transparent"
+            border.width: 1
+            border.color: "red"
+        }
+        Rectangle {
+            x: middleSection.x + leftCenterGroup.x
+            y: middleSection.y + leftCenterGroup.y
+            width: leftCenterGroup.width
+            height: leftCenterGroup.height
+            color: "transparent"
+            border.width: 1
+            border.color: "orange"
+        }
+        Rectangle {
+            x: middleSection.x + weatherLoader.x
+            y: middleSection.y + weatherLoader.y
+            width: weatherLoader.width
+            height: weatherLoader.height
+            color: "transparent"
+            border.width: 1
+            border.color: "lime"
+            visible: weatherLoader.active
+        }
+        Rectangle {
+            x: centerClockContent.x
+            y: centerClockContent.y
+            width: centerClockContent.width
+            height: centerClockContent.height
+            color: "transparent"
+            border.width: 1
+            border.color: "cyan"
+        }
+        Rectangle {
+            x: middleSection.x + rightCenterGroup.x
+            y: middleSection.y + rightCenterGroup.y
+            width: rightCenterGroup.width
+            height: rightCenterGroup.height
+            color: "transparent"
+            border.width: 1
+            border.color: "magenta"
+        }
+        Rectangle {
+            x: barRightSideMouseArea.x
+            y: barRightSideMouseArea.y
+            width: barRightSideMouseArea.width
+            height: barRightSideMouseArea.height
+            color: "transparent"
+            border.width: 1
+            border.color: "red"
         }
     }
 }
