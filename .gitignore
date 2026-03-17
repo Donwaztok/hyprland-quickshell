@@ -38,6 +38,8 @@
 !mpv/**
 !illogical-impulse/
 !illogical-impulse/**
+!caelestia/
+!caelestia/**
 
 # Arquivos soltos em .config (end-4)
 !starship.toml

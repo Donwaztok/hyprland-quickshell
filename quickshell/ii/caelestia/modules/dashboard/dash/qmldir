@@ -1,0 +1,7 @@
+module caelestia.modules.dashboard.dash
+Calendar 1.0 Calendar.qml
+DateTime 1.0 DateTime.qml
+Media 1.0 Media.qml
+Resources 1.0 Resources.qml
+User 1.0 User.qml
+Weather 1.0 Weather.qml

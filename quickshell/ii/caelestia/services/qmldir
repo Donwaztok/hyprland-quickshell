@@ -1,0 +1,32 @@
+module caelestia.services
+AppDb 1.0 AppDb.qml
+CavaProvider 1.0 CavaProvider.qml
+BeatTracker 1.0 BeatTracker.qml
+CircularBuffer 1.0 CircularBuffer.qml
+FileSystemEntry 1.0 FileSystemEntry.qml
+FileSystemModel 1.0 FileSystemModel.qml
+ImageAnalyser 1.0 ImageAnalyser.qml
+HyprKeyboard 1.0 HyprKeyboard.qml
+HyprDevices 1.0 HyprDevices.qml
+HyprExtras 1.0 HyprExtras.qml
+singleton Audio 1.0 Audio.qml
+singleton Brightness 1.0 Brightness.qml
+singleton Colours 1.0 Colours.qml
+singleton GameMode 1.0 GameMode.qml
+singleton Hypr 1.0 Hypr.qml
+singleton IdleInhibitor 1.0 IdleInhibitor.qml
+singleton Network 1.0 Network.qml
+singleton NetworkUsage 1.0 NetworkUsage.qml
+singleton Nmcli 1.0 Nmcli.qml
+singleton Notifs 1.0 Notifs.qml
+singleton Players 1.0 Players.qml
+singleton Recorder 1.0 Recorder.qml
+singleton Requests 1.0 Requests.qml
+singleton Screens 1.0 Screens.qml
+ServiceRef 1.0 ServiceRef.qml
+singleton SystemUsage 1.0 SystemUsage.qml
+singleton Time 1.0 Time.qml
+singleton Visibilities 1.0 Visibilities.qml
+singleton VPN 1.0 VPN.qml
+singleton Wallpapers 1.0 Wallpapers.qml
+singleton Weather 1.0 Weather.qml

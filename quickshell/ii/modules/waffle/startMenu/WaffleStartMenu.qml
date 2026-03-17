@@ -98,6 +98,9 @@ Scope {
         function toggleReleaseInterrupt() {
             GlobalStates.superReleaseMightTrigger = false;
         }
+        function clipboardToggle() {
+            root.toggleClipboard();
+        }
     }
 
     GlobalShortcut {

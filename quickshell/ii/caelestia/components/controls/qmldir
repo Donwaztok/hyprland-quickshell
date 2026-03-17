@@ -1,0 +1,26 @@
+module caelestia.components.controls
+CircularIndicator 1.0 CircularIndicator.qml
+CircularIndicatorManager 1.0 CircularIndicatorManager.qml
+CircularProgress 1.0 CircularProgress.qml
+CollapsibleSection 1.0 CollapsibleSection.qml
+CustomMouseArea 1.0 CustomMouseArea.qml
+CustomSpinBox 1.0 CustomSpinBox.qml
+FilledSlider 1.0 FilledSlider.qml
+IconButton 1.0 IconButton.qml
+IconTextButton 1.0 IconTextButton.qml
+Menu 1.0 Menu.qml
+MenuItem 1.0 MenuItem.qml
+SpinBoxRow 1.0 SpinBoxRow.qml
+SplitButton 1.0 SplitButton.qml
+SplitButtonRow 1.0 SplitButtonRow.qml
+StyledInputField 1.0 StyledInputField.qml
+StyledRadioButton 1.0 StyledRadioButton.qml
+StyledScrollBar 1.0 StyledScrollBar.qml
+StyledSlider 1.0 StyledSlider.qml
+StyledSwitch 1.0 StyledSwitch.qml
+StyledTextField 1.0 StyledTextField.qml
+SwitchRow 1.0 SwitchRow.qml
+TextButton 1.0 TextButton.qml
+ToggleButton 1.0 ToggleButton.qml
+ToggleRow 1.0 ToggleRow.qml
+Tooltip 1.0 Tooltip.qml

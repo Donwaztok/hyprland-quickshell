@@ -1,0 +1,5 @@
+module caelestia.modules.launcher.services
+singleton Schemes 1.0 Schemes.qml
+singleton Apps 1.0 Apps.qml
+singleton Actions 1.0 Actions.qml
+singleton M3Variants 1.0 M3Variants.qml

@@ -1,0 +1,5 @@
+module caelestia.components.misc
+ArcGauge 1.0 ArcGauge.qml
+CustomShortcut 1.0 CustomShortcut.qml
+Ref 1.0 Ref.qml
+SparklineItem 1.0 SparklineItem.qml

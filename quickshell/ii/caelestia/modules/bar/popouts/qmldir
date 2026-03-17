@@ -1,0 +1,12 @@
+module caelestia.modules.bar.popouts
+ActiveWindow 1.0 ActiveWindow.qml
+Audio 1.0 Audio.qml
+Background 1.0 Background.qml
+Battery 1.0 Battery.qml
+Bluetooth 1.0 Bluetooth.qml
+Content 1.0 Content.qml
+LockStatus 1.0 LockStatus.qml
+Network 1.0 Network.qml
+TrayMenu 1.0 TrayMenu.qml
+WirelessPassword 1.0 WirelessPassword.qml
+Wrapper 1.0 Wrapper.qml

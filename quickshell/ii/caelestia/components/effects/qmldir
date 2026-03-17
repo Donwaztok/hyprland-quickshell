@@ -1,0 +1,6 @@
+module caelestia.components.effects
+ColouredIcon 1.0 ColouredIcon.qml
+Colouriser 1.0 Colouriser.qml
+Elevation 1.0 Elevation.qml
+InnerBorder 1.0 InnerBorder.qml
+OpacityMask 1.0 OpacityMask.qml

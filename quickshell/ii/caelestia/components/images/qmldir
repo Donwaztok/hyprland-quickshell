@@ -1,0 +1,4 @@
+module caelestia.components.images
+CachingImageManager 1.0 CachingImageManager.qml
+CachingIconImage 1.0 CachingIconImage.qml
+CachingImage 1.0 CachingImage.qml

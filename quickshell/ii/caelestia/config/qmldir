@@ -1,0 +1,20 @@
+module caelestia.config
+singleton Config 1.0 Config.qml
+singleton Appearance 1.0 Appearance.qml
+AppearanceConfig 1.0 AppearanceConfig.qml
+BackgroundConfig 1.0 BackgroundConfig.qml
+BarConfig 1.0 BarConfig.qml
+BorderConfig 1.0 BorderConfig.qml
+ControlCenterConfig 1.0 ControlCenterConfig.qml
+DashboardConfig 1.0 DashboardConfig.qml
+GeneralConfig 1.0 GeneralConfig.qml
+LauncherConfig 1.0 LauncherConfig.qml
+LockConfig 1.0 LockConfig.qml
+NotifsConfig 1.0 NotifsConfig.qml
+OsdConfig 1.0 OsdConfig.qml
+ServiceConfig 1.0 ServiceConfig.qml
+SessionConfig 1.0 SessionConfig.qml
+SidebarConfig 1.0 SidebarConfig.qml
+UtilitiesConfig 1.0 UtilitiesConfig.qml
+UserPaths 1.0 UserPaths.qml
+WInfoConfig 1.0 WInfoConfig.qml
