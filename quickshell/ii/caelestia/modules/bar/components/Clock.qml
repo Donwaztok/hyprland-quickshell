@@ -10,6 +10,8 @@ Item {
     id: root
 
     readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
+    readonly property real sizeFactor: (Config.bar.size ?? 1)
+    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * sizeFactor))
     property color colour: Colours.palette.m3tertiary
 
     implicitWidth: barVertical ? clockColumn.implicitWidth : clockRow.implicitWidth
@@ -20,7 +22,7 @@ Item {
 
         visible: barVertical
         anchors.centerIn: parent
-        spacing: Appearance.spacing.small
+        spacing: root.spaceSm
 
         Loader {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -47,7 +49,7 @@ Item {
 
         visible: !barVertical
         anchors.centerIn: parent
-        spacing: Appearance.spacing.small
+        spacing: root.spaceSm
 
         Loader {
             Layout.alignment: Qt.AlignVCenter

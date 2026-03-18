@@ -3,12 +3,13 @@ import Quickshell.Io
 JsonObject {
     // Position of the taskbar: "left", "right", "top", "bottom"
     property string position: "left"
+    // Bar size scale (1.0 = 100%), same for horizontal and vertical bar
+    property real size: 1.0
     property bool persistent: true
     property bool showOnHover: true
     property int dragThreshold: 20
     property ScrollActions scrollActions: ScrollActions {}
     property Popouts popouts: Popouts {}
-    property Workspaces workspaces: Workspaces {}
     property ActiveWindow activeWindow: ActiveWindow {}
     property Tray tray: Tray {}
     property Status status: Status {}
@@ -56,7 +57,6 @@ JsonObject {
     ]
 
     component ScrollActions: JsonObject {
-        property bool workspaces: true
         property bool volume: true
         property bool brightness: true
     }
@@ -65,28 +65,6 @@ JsonObject {
         property bool activeWindow: true
         property bool tray: true
         property bool statusIcons: true
-    }
-
-    component Workspaces: JsonObject {
-        property int shown: 5
-        property bool activeIndicator: true
-        property bool occupiedBg: false
-        property bool showWindows: true
-        property bool showWindowsOnSpecialWorkspaces: showWindows
-        property int maxWindowIcons: 0 // 0 = unlimited
-        property bool activeTrail: false
-        property bool perMonitorWorkspaces: true
-        property string label: "  " // if empty, will show workspace name's first letter
-        property string occupiedLabel: "󰮯"
-        property string activeLabel: "󰮯"
-        property string capitalisation: "preserve" // upper, lower, or preserve - relevant only if label is empty
-        property list<var> specialWorkspaceIcons: []
-        property list<var> windowIcons: [
-            {
-                regex: "steam(_app_(default|[0-9]+))?",
-                icon: "sports_esports"
-            }
-        ]
     }
 
     component ActiveWindow: JsonObject {

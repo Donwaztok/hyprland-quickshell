@@ -8,7 +8,10 @@ import QtQuick
 Item {
     id: root
 
-    implicitWidth: icon.implicitHeight + Appearance.padding.small * 2
+    readonly property real sizeFactor: (Config.bar.size ?? 1)
+    readonly property int padSm: Math.max(1, Math.round(Appearance.padding.small * sizeFactor))
+
+    implicitWidth: icon.implicitHeight + padSm * 2
     implicitHeight: icon.implicitHeight
 
     StateLayer {
@@ -16,7 +19,7 @@ Item {
         anchors.fill: undefined
         anchors.centerIn: parent
         implicitWidth: implicitHeight
-        implicitHeight: icon.implicitHeight + Appearance.padding.small * 2
+        implicitHeight: icon.implicitHeight + padSm * 2
 
         radius: Appearance.rounding.full
 

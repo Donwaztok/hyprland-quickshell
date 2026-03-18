@@ -4,7 +4,7 @@ import caelestia.services
 import caelestia.config
 import "popouts" as BarPopouts
 import "components"
-import "components/workspaces"
+import "../../../modules/ii/bar" as IiBar
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -17,8 +17,9 @@ GridLayout {
     required property BarPopouts.Wrapper popouts
 
     readonly property bool isVertical: Config.bar.position === "left" || Config.bar.position === "right"
-    readonly property int vPadding: Appearance.padding.large
-    readonly property int contentWidth: Config.bar.sizes.innerWidth + Math.max(Appearance.padding.smaller, Config.border.thickness) * 2
+    readonly property real sizeFactor: (Config.bar.size ?? 1)
+    readonly property int vPadding: Math.max(2, Math.round(Appearance.padding.large * sizeFactor))
+    readonly property int contentWidth: Math.round(Config.bar.sizes.innerWidth * sizeFactor) + Math.max(Math.round(Appearance.padding.smaller * sizeFactor), Config.border.thickness) * 2
 
     width: isVertical ? contentWidth : (parent?.width ?? 0)
     height: isVertical ? (parent?.height ?? 0) : contentWidth
@@ -26,9 +27,9 @@ GridLayout {
     flow: isVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
     rows: isVertical ? -1 : 1
     columns: isVertical ? 1 : -1
-    rowSpacing: Appearance.spacing.normal
-    columnSpacing: Appearance.spacing.normal
-    readonly property real spacing: Appearance.spacing.normal
+    rowSpacing: Math.max(2, Math.round(Appearance.spacing.normal * sizeFactor))
+    columnSpacing: Math.max(2, Math.round(Appearance.spacing.normal * sizeFactor))
+    readonly property real spacing: Math.max(2, Math.round(Appearance.spacing.normal * sizeFactor))
 
     function closeTray(): void {
         if (!Config.bar.tray.compact)
@@ -92,27 +93,18 @@ GridLayout {
 
     function handleWheel(coord: real, angleDelta: point): void {
         const ch = (isVertical ? childAt(width / 2, coord) : childAt(coord, height / 2)) as WrappedLoader;
-        if (ch?.id === "workspaces" && Config.bar.scrollActions.workspaces) {
-            const mon = (Config.bar.workspaces.perMonitorWorkspaces ? Hypr.monitorFor(screen) : Hypr.focusedMonitor);
-            const specialWs = mon?.lastIpcObject.specialWorkspace.name;
-            if (specialWs?.length > 0)
-                Hypr.dispatch(`togglespecialworkspace ${specialWs.slice(8)}`);
-            else if (angleDelta.y < 0 || (Config.bar.workspaces.perMonitorWorkspaces ? mon.activeWorkspace?.id : Hypr.activeWsId) > 1)
-                Hypr.dispatch(`workspace r${angleDelta.y > 0 ? "-" : "+"}1`);
-        } else {
-            const halfScreen = isVertical ? screen.height / 2 : screen.width / 2;
-            if (coord < halfScreen && Config.bar.scrollActions.volume) {
-                if (angleDelta.y > 0)
-                    Audio.incrementVolume();
-                else if (angleDelta.y < 0)
-                    Audio.decrementVolume();
-            } else if (Config.bar.scrollActions.brightness) {
-                const monitor = Brightness.getMonitorForScreen(screen);
-                if (angleDelta.y > 0)
-                    monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
-                else if (angleDelta.y < 0)
-                    monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
-            }
+        const halfScreen = isVertical ? screen.height / 2 : screen.width / 2;
+        if (coord < halfScreen && Config.bar.scrollActions.volume) {
+            if (angleDelta.y > 0)
+                Audio.incrementVolume();
+            else if (angleDelta.y < 0)
+                Audio.decrementVolume();
+        } else if (Config.bar.scrollActions.brightness) {
+            const monitor = Brightness.getMonitorForScreen(screen);
+            if (angleDelta.y > 0)
+                monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
+            else if (angleDelta.y < 0)
+                monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
         }
     }
 
@@ -140,8 +132,11 @@ GridLayout {
             DelegateChoice {
                 roleValue: "workspaces"
                 delegate: WrappedLoader {
-                    sourceComponent: Workspaces {
-                        screen: root.screen
+                    sourceComponent: IiBar.Workspaces {
+                        vertical: root.isVertical
+                        screenOverride: root.screen
+                        overrideActiveColor: Colours.palette.m3primary
+                        overrideInactiveColor: Colours.palette.m3onSurfaceVariant
                     }
                 }
             }

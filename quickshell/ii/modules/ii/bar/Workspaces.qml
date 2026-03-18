@@ -15,10 +15,17 @@ import Qt5Compat.GraphicalEffects
 Item {
     id: root
     property bool vertical: false
+    // Optional overrides for reuse outside ii bar (e.g. caelestia bar)
+    property var screenOverride: null
+    property var overrideActiveColor: undefined
+    property var overrideInactiveColor: undefined
     property bool borderless: Config.options.bar.borderless
-    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
+    readonly property var resolvedScreen: root.screenOverride ?? root.QsWindow.window?.screen
+    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.resolvedScreen) ?? Hyprland.focusedMonitor
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
-    readonly property int effectiveActiveWorkspaceId: root.monitor?.activeWorkspace?.id ?? 1
+    readonly property int effectiveActiveWorkspaceId: root.monitor?.activeWorkspace?.id ?? Hyprland.focusedWorkspace?.id ?? 1
+    readonly property color activeIndicatorColor: root.overrideActiveColor ?? Appearance.colors.colPrimary
+    readonly property color inactiveIndicatorColor: root.overrideInactiveColor ?? Appearance.m3colors.m3onSurfaceVariant
 
     readonly property string workspaceStyle: Config.options.bar.workspaces.style || "gnome"
     readonly property bool isGnomeStyle: root.workspaceStyle === "gnome"
@@ -182,114 +189,70 @@ Item {
     Item {
         visible: root.isGnomeStyle
         anchors.fill: parent
-    Row {
-        z: 1
-        visible: !root.vertical
-        anchors.centerIn: parent
-        spacing: 0
-        Repeater {
-            model: root.slotWorkspaceIds
 
-            Item {
-                width: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
-                height: root.workspaceButtonWidth
-                property int workspaceValue: modelData
-                property bool isOpen: root.openWorkspaceIds.indexOf(workspaceValue) >= 0
-                property bool isActive: root.dashIndex === index
-                property bool showDot: !isActive && (root.isDynamicMode || isOpen)
+        Item {
+            id: gnomeTrack
+            anchors.centerIn: parent
+            width: root.vertical ? root.totalHeight : root.totalWidth
+            height: root.workspaceButtonWidth
+            rotation: root.vertical ? 90 : 0
 
-                Rectangle {
-                    id: indicator
-                    anchors.centerIn: parent
-                    width: parent.isActive ? Math.min(root.maxDashWidth, Math.max(root.pillHeight, root.pillWidth - root.dashMargin * 2)) : (parent.showDot ? root.dotSize : 0)
-                    height: parent.isActive ? root.pillHeight : (parent.showDot ? root.dotSize : 0)
-                    radius: parent.isActive ? (root.pillHeight / 2) : (parent.showDot ? root.dotSize / 2 : 0)
-                    color: parent.isActive ? Appearance.colors.colPrimary : Appearance.m3colors.m3onSurfaceVariant
-                    opacity: (parent.isActive || parent.showDot) ? (parent.isActive ? 1 : 0.7) : 0
-                    visible: opacity > 0
+            Row {
+                z: 1
+                anchors.centerIn: parent
+                spacing: 0
 
-                    Behavior on width {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                    }
-                    Behavior on height {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                    }
-                    Behavior on radius {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                    }
-                    Behavior on color {
-                        ColorAnimation { duration: 180 }
-                    }
-                    Behavior on opacity {
-                        NumberAnimation { duration: 150 }
+                Repeater {
+                    model: root.slotWorkspaceIds
+
+                    Item {
+                        required property int index
+                        required property var modelData
+                        width: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
+                        height: root.workspaceButtonWidth
+                        property int workspaceValue: Number(modelData) || 1
+                        property bool isOpen: root.openWorkspaceIds.indexOf(workspaceValue) >= 0
+                        property bool isActive: root.dashIndex === index
+                        property bool showDot: !isActive && (root.isDynamicMode || isOpen)
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.isActive ? Math.min(root.maxDashWidth, Math.max(root.pillHeight, root.pillWidth - root.dashMargin * 2)) : (parent.showDot ? root.dotSize : 0)
+                            height: parent.isActive ? root.pillHeight : (parent.showDot ? root.dotSize : 0)
+                            radius: parent.isActive ? (root.pillHeight / 2) : (parent.showDot ? root.dotSize / 2 : 0)
+                            color: parent.isActive ? root.activeIndicatorColor : root.inactiveIndicatorColor
+                            opacity: (parent.isActive || parent.showDot) ? (parent.isActive ? 1 : 0.7) : 0
+                            visible: opacity > 0
+
+                            Behavior on width {
+                                NumberAnimation { duration: 220; easing.type: Easing.InOutCubic }
+                            }
+                            Behavior on height {
+                                NumberAnimation { duration: 220; easing.type: Easing.InOutCubic }
+                            }
+                            Behavior on radius {
+                                NumberAnimation { duration: 220; easing.type: Easing.InOutCubic }
+                            }
+                            Behavior on color {
+                                ColorAnimation { duration: 180 }
+                            }
+                            Behavior on opacity {
+                                NumberAnimation { duration: 150 }
+                            }
+                        }
+
+                        Behavior on width {
+                            NumberAnimation { duration: 220; easing.type: Easing.InOutCubic }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onPressed: Hyprland.dispatch(`workspace ${parent.workspaceValue}`)
+                        }
                     }
                 }
             }
         }
-    }
-
-    Column {
-        z: 1
-        visible: root.vertical
-        anchors.centerIn: parent
-        spacing: 0
-        Repeater {
-            model: root.slotWorkspaceIds
-            Item {
-                width: root.workspaceButtonWidth
-                height: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
-                property int workspaceValue: modelData
-                property bool isOpen: root.openWorkspaceIds.indexOf(workspaceValue) >= 0
-                property bool isActive: root.dashIndex === index
-                property bool showDot: !isActive && (root.isDynamicMode || isOpen)
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: parent.isActive ? Math.min(root.maxDashWidth, Math.max(root.pillHeight, root.pillWidth - root.dashMargin * 2)) : (parent.showDot ? root.dotSize : 0)
-                    height: parent.isActive ? root.pillHeight : (parent.showDot ? root.dotSize : 0)
-                    radius: parent.isActive ? (root.pillHeight / 2) : (parent.showDot ? root.dotSize / 2 : 0)
-                    color: parent.isActive ? Appearance.colors.colPrimary : Appearance.m3colors.m3onSurfaceVariant
-                    opacity: (parent.isActive || parent.showDot) ? (parent.isActive ? 1 : 0.7) : 0
-                    visible: opacity > 0
-                }
-            }
-        }
-    }
-
-    // Clickable: um botão por slot (mesma largura variável)
-    Row {
-        z: 3
-        visible: !root.vertical
-        spacing: 0
-        anchors.fill: parent
-        Repeater {
-            model: root.slotWorkspaceIds
-            Button {
-                property int workspaceValue: modelData
-                property real slotW: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
-                width: slotW
-                height: root.height
-                onPressed: Hyprland.dispatch(`workspace ${workspaceValue}`)
-                background: Item { implicitWidth: parent.width; implicitHeight: parent.height }
-            }
-        }
-    }
-    Column {
-        z: 3
-        visible: root.vertical
-        spacing: 0
-        anchors.fill: parent
-        Repeater {
-            model: root.slotWorkspaceIds
-            Button {
-                property int workspaceValue: modelData
-                property real slotH: root.dashIndex === index ? root.activeSlotWidth : root.workspaceButtonWidth
-                width: root.width
-                height: slotH
-                onPressed: Hyprland.dispatch(`workspace ${workspaceValue}`)
-                background: Item { implicitWidth: parent.width; implicitHeight: parent.height }
-            }
-        }
-    }
     }
 
     // --- Classic style ---
@@ -306,6 +269,7 @@ Item {
             Repeater {
                 model: root.workspacesShown
                 Rectangle {
+                    required property int index
                     width: root.classicSlotWidth
                     height: root.classicSlotWidth
                     radius: width / 2
@@ -338,40 +302,42 @@ Item {
             Repeater {
                 model: root.workspacesShown
                 Button {
+                    required property int index
                     property int workspaceValue: root.workspaceGroup * root.workspacesShown + index + 1
                     width: root.vertical ? undefined : root.classicSlotWidth
                     height: root.vertical ? root.classicSlotWidth : undefined
                     onPressed: Hyprland.dispatch(`workspace ${workspaceValue}`)
                     background: Item {
+                        id: classicCell
                         width: root.classicSlotWidth
                         height: root.classicSlotWidth
                         property int wsValue: parent.workspaceValue
-                        property int wsIndex: parent.index
+                        property int wsIndex: index
                         property var biggestWindow: HyprlandData.biggestWindowForWorkspace(wsValue)
                         property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
                         StyledText {
-                            opacity: (root.showNumbers || Config.options.bar.workspaces.alwaysShowNumbers || (Config.options.bar.workspaces.showAppIcons && biggestWindow && root.showNumbers) || (root.showNumbers && !Config.options.bar.workspaces.showAppIcons)) ? 1 : 0
+                            opacity: (root.showNumbers || Config.options.bar.workspaces.alwaysShowNumbers || (Config.options.bar.workspaces.showAppIcons && classicCell.biggestWindow && root.showNumbers) || (root.showNumbers && !Config.options.bar.workspaces.showAppIcons)) ? 1 : 0
                             anchors.centerIn: parent
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                             font.pixelSize: Appearance.font.barPixelSize.small - ((text.length - 1) * (text !== "10") * 2)
                             font.family: Config.options?.bar.workspaces.useNerdFont ? Appearance.font.family.iconNerd : "sans-serif"
-                            text: (Config.options?.bar.workspaces.numberMap || [])[wsValue - 1] || wsValue
-                            color: root.effectiveActiveWorkspaceId === wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
+                            text: (Config.options?.bar.workspaces.numberMap || [])[classicCell.wsValue - 1] || classicCell.wsValue
+                            color: root.effectiveActiveWorkspaceId === classicCell.wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[classicCell.wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
                         }
                         Rectangle {
                             anchors.centerIn: parent
                             width: root.classicSlotWidth * 0.18
                             height: width
                             radius: width / 2
-                            color: root.effectiveActiveWorkspaceId === wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
-                            opacity: (Config.options?.bar.workspaces.alwaysShowNumbers || root.showNumbers || (Config.options?.bar.workspaces.showAppIcons && biggestWindow)) ? 0 : 1
+                            color: root.effectiveActiveWorkspaceId === classicCell.wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[classicCell.wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
+                            opacity: (Config.options?.bar.workspaces.alwaysShowNumbers || root.showNumbers || (Config.options?.bar.workspaces.showAppIcons && classicCell.biggestWindow)) ? 0 : 1
                         }
                         IconImage {
-                            visible: Config.options.bar.workspaces.showAppIcons && biggestWindow
+                            visible: Config.options.bar.workspaces.showAppIcons && classicCell.biggestWindow
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
-                            source: mainAppIconSource
+                            source: classicCell.mainAppIconSource
                             width: root.classicSlotWidth * 0.69
                             height: width
                         }

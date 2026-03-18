@@ -15,6 +15,8 @@ Item {
     property color colour: Colours.palette.m3primary
 
     readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
+    readonly property real sizeFactor: (Config.bar.size ?? 1)
+    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * sizeFactor))
 
     readonly property string windowTitle: {
         const title = Hypr.activeToplevel?.title;
@@ -69,9 +71,11 @@ Item {
     RowLayout {
         id: horizontalRow
 
-        anchors.fill: parent
         visible: !root.barVertical
-        spacing: Appearance.spacing.small
+        spacing: root.spaceSm
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
 
         MaterialIcon {
             Layout.alignment: Qt.AlignVCenter
@@ -141,7 +145,7 @@ Item {
 
         anchors.horizontalCenter: icon.horizontalCenter
         anchors.top: icon.bottom
-        anchors.topMargin: Appearance.spacing.small
+        anchors.topMargin: root.spaceSm
 
         font.pointSize: metrics.font.pointSize
         font.family: metrics.font.family

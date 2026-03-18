@@ -230,7 +230,8 @@ Singleton {
             }
 
             property JsonObject bar: JsonObject {
-                property real size: 0.8 // Bar height and font scale (e.g. 0.85 = smaller bar, crisp text)
+                property real size: 0.8 // Horizontal bar height scale (e.g. 0.85 = smaller bar)
+                property real sizeVertical: 0.8 // Vertical bar width scale (when bar is on left/right)
                 property JsonObject autoHide: JsonObject {
                     property bool enable: false
                     property int hoverRegionWidth: 2

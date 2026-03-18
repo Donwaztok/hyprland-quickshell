@@ -25,7 +25,7 @@
       "mediaGifSpeedAdjustment": 300,
       "sessionGifSpeed": 0.7,
       "durations": {
-        "scale": 1
+        "scale": 0.5
       }
     },
     "transparency": {
@@ -127,11 +127,11 @@
   },
   "bar": {
     "position": "top",
+    "size": 0.5,
     "persistent": true,
     "showOnHover": true,
     "dragThreshold": 20,
     "scrollActions": {
-      "workspaces": true,
       "volume": true,
       "brightness": true
     },
@@ -139,27 +139,6 @@
       "activeWindow": true,
       "tray": true,
       "statusIcons": true
-    },
-    "workspaces": {
-      "shown": 5,
-      "activeIndicator": true,
-      "occupiedBg": false,
-      "showWindows": true,
-      "showWindowsOnSpecialWorkspaces": true,
-      "maxWindowIcons": 0,
-      "activeTrail": false,
-      "perMonitorWorkspaces": true,
-      "label": "  ",
-      "occupiedLabel": "󰮯",
-      "activeLabel": "󰮯",
-      "capitalisation": "preserve",
-      "specialWorkspaceIcons": [],
-      "windowIcons": [
-        {
-          "icon": "sports_esports",
-          "regex": "steam(_app_(default|[0-9]+))?"
-        }
-      ]
     },
     "activeWindow": {
       "compact": false,

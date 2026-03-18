@@ -20,6 +20,7 @@ Item {
     required property Session session
 
     property string position: Config.bar.position ?? "left"
+    property real barSize: Config.bar.size ?? 1.0
     property bool activeWindowCompact: Config.bar.activeWindow.compact ?? false
     property bool activeWindowInverted: Config.bar.activeWindow.inverted ?? false
     property bool clockShowIcon: Config.bar.clock.showIcon ?? true
@@ -37,13 +38,6 @@ Item {
     property bool trayBackground: Config.bar.tray.background ?? false
     property bool trayCompact: Config.bar.tray.compact ?? false
     property bool trayRecolour: Config.bar.tray.recolour ?? false
-    property int workspacesShown: Config.bar.workspaces.shown ?? 5
-    property bool workspacesActiveIndicator: Config.bar.workspaces.activeIndicator ?? true
-    property bool workspacesOccupiedBg: Config.bar.workspaces.occupiedBg ?? false
-    property bool workspacesShowWindows: Config.bar.workspaces.showWindows ?? false
-    property int workspacesMaxWindowIcons: Config.bar.workspaces.maxWindowIcons ?? 0
-    property bool workspacesPerMonitor: Config.bar.workspaces.perMonitorWorkspaces ?? true
-    property bool scrollWorkspaces: Config.bar.scrollActions.workspaces ?? true
     property bool scrollVolume: Config.bar.scrollActions.volume ?? true
     property bool scrollBrightness: Config.bar.scrollActions.brightness ?? true
     property bool popoutActiveWindow: Config.bar.popouts.activeWindow ?? true
@@ -69,6 +63,7 @@ Item {
 
     function saveConfig(entryIndex, entryEnabled) {
         Config.bar.position = root.position;
+        Config.bar.size = root.barSize;
         Config.bar.activeWindow.compact = root.activeWindowCompact;
         Config.bar.activeWindow.inverted = root.activeWindowInverted;
         Config.bar.clock.showIcon = root.clockShowIcon;
@@ -86,13 +81,6 @@ Item {
         Config.bar.tray.background = root.trayBackground;
         Config.bar.tray.compact = root.trayCompact;
         Config.bar.tray.recolour = root.trayRecolour;
-        Config.bar.workspaces.shown = root.workspacesShown;
-        Config.bar.workspaces.activeIndicator = root.workspacesActiveIndicator;
-        Config.bar.workspaces.occupiedBg = root.workspacesOccupiedBg;
-        Config.bar.workspaces.showWindows = root.workspacesShowWindows;
-        Config.bar.workspaces.maxWindowIcons = root.workspacesMaxWindowIcons;
-        Config.bar.workspaces.perMonitorWorkspaces = root.workspacesPerMonitor;
-        Config.bar.scrollActions.workspaces = root.scrollWorkspaces;
         Config.bar.scrollActions.volume = root.scrollVolume;
         Config.bar.scrollActions.brightness = root.scrollBrightness;
         Config.bar.popouts.activeWindow = root.popoutActiveWindow;
@@ -235,6 +223,37 @@ Item {
                     alignTop: true
 
                     StyledText {
+                        text: qsTr("Bar size")
+                        font.pointSize: Appearance.font.size.normal
+                    }
+
+                    SectionContainer {
+                        contentSpacing: Appearance.spacing.normal
+
+                        SliderInput {
+                            Layout.fillWidth: true
+                            label: qsTr("Bar size (%)")
+                            value: root.barSize * 100
+                            from: 50
+                            to: 150
+                            stepSize: 1
+                            suffix: "%"
+                            validator: IntValidator { bottom: 50; top: 150 }
+                            formatValueFunction: val => Math.round(val).toString()
+                            parseValueFunction: text => parseInt(text)
+                            onValueModified: newValue => {
+                                root.barSize = newValue / 100;
+                                root.saveConfig();
+                            }
+                        }
+                    }
+                }
+
+                SectionContainer {
+                    Layout.fillWidth: true
+                    alignTop: true
+
+                    StyledText {
                         text: qsTr("Status Icons")
                         font.pointSize: Appearance.font.size.normal
                     }
@@ -327,218 +346,6 @@ Item {
                             alignTop: true
 
                             StyledText {
-                                text: qsTr("Workspaces")
-                                font.pointSize: Appearance.font.size.normal
-                            }
-
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: workspacesShownRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
-
-                                Behavior on implicitHeight {
-                                    Anim {}
-                                }
-
-                                RowLayout {
-                                    id: workspacesShownRow
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.margins: Appearance.padding.large
-                                    spacing: Appearance.spacing.normal
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Shown")
-                                    }
-
-                                    CustomSpinBox {
-                                        min: 1
-                                        max: 20
-                                        value: root.workspacesShown
-                                        onValueModified: value => {
-                                            root.workspacesShown = value;
-                                            root.saveConfig();
-                                        }
-                                    }
-                                }
-                            }
-
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: workspacesActiveIndicatorRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
-
-                                Behavior on implicitHeight {
-                                    Anim {}
-                                }
-
-                                RowLayout {
-                                    id: workspacesActiveIndicatorRow
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.margins: Appearance.padding.large
-                                    spacing: Appearance.spacing.normal
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Active indicator")
-                                    }
-
-                                    StyledSwitch {
-                                        checked: root.workspacesActiveIndicator
-                                        onToggled: {
-                                            root.workspacesActiveIndicator = checked;
-                                            root.saveConfig();
-                                        }
-                                    }
-                                }
-                            }
-
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: workspacesOccupiedBgRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
-
-                                Behavior on implicitHeight {
-                                    Anim {}
-                                }
-
-                                RowLayout {
-                                    id: workspacesOccupiedBgRow
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.margins: Appearance.padding.large
-                                    spacing: Appearance.spacing.normal
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Occupied background")
-                                    }
-
-                                    StyledSwitch {
-                                        checked: root.workspacesOccupiedBg
-                                        onToggled: {
-                                            root.workspacesOccupiedBg = checked;
-                                            root.saveConfig();
-                                        }
-                                    }
-                                }
-                            }
-
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: workspacesShowWindowsRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
-
-                                Behavior on implicitHeight {
-                                    Anim {}
-                                }
-
-                                RowLayout {
-                                    id: workspacesShowWindowsRow
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.margins: Appearance.padding.large
-                                    spacing: Appearance.spacing.normal
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Show windows")
-                                    }
-
-                                    StyledSwitch {
-                                        checked: root.workspacesShowWindows
-                                        onToggled: {
-                                            root.workspacesShowWindows = checked;
-                                            root.saveConfig();
-                                        }
-                                    }
-                                }
-                            }
-
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: workspacesMaxWindowIconsRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
-
-                                Behavior on implicitHeight {
-                                    Anim {}
-                                }
-
-                                RowLayout {
-                                    id: workspacesMaxWindowIconsRow
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.margins: Appearance.padding.large
-                                    spacing: Appearance.spacing.normal
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Max window icons")
-                                    }
-
-                                    CustomSpinBox {
-                                        min: 0
-                                        max: 20
-                                        value: root.workspacesMaxWindowIcons
-                                        onValueModified: value => {
-                                            root.workspacesMaxWindowIcons = value;
-                                            root.saveConfig();
-                                        }
-                                    }
-                                }
-                            }
-
-                            StyledRect {
-                                Layout.fillWidth: true
-                                implicitHeight: workspacesPerMonitorRow.implicitHeight + Appearance.padding.large * 2
-                                radius: Appearance.rounding.normal
-                                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
-
-                                Behavior on implicitHeight {
-                                    Anim {}
-                                }
-
-                                RowLayout {
-                                    id: workspacesPerMonitorRow
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.margins: Appearance.padding.large
-                                    spacing: Appearance.spacing.normal
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: qsTr("Per monitor workspaces")
-                                    }
-
-                                    StyledSwitch {
-                                        checked: root.workspacesPerMonitor
-                                        onToggled: {
-                                            root.workspacesPerMonitor = checked;
-                                            root.saveConfig();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
-
-                            StyledText {
                                 text: qsTr("Scroll Actions")
                                 font.pointSize: Appearance.font.size.normal
                             }
@@ -547,14 +354,6 @@ Item {
                                 rootItem: root
 
                                 options: [
-                                    {
-                                        label: qsTr("Workspaces"),
-                                        propertyName: "scrollWorkspaces",
-                                        onToggled: function (checked) {
-                                            root.scrollWorkspaces = checked;
-                                            root.saveConfig();
-                                        }
-                                    },
                                     {
                                         label: qsTr("Volume"),
                                         propertyName: "scrollVolume",

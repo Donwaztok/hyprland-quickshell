@@ -10,34 +10,36 @@ import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 
-StyledRect {
+Item {
     id: root
 
     readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
+    readonly property real sizeFactor: (Config.bar.size ?? 1)
+    readonly property int effectiveInnerWidth: Math.round(Config.bar.sizes.innerWidth * sizeFactor)
+    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * sizeFactor))
+    readonly property int spaceS: Math.max(1, Math.round(Appearance.spacing.smaller * sizeFactor))
     property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
 
-    color: Colours.tPalette.m3surfaceContainer
-    radius: Appearance.rounding.full
-
-    clip: true
-    implicitWidth: barVertical ? Config.bar.sizes.innerWidth : (iconColumn.implicitWidth + Appearance.padding.normal * 2)
-    implicitHeight: barVertical ? (iconColumn.implicitHeight + Appearance.padding.normal * 2 - (Config.bar.status.showLockStatus && !Hypr.capsLock && !Hypr.numLock ? iconColumn.spacing : 0)) : Config.bar.sizes.innerWidth
+    clip: !barVertical
+    implicitWidth: barVertical ? root.effectiveInnerWidth : iconColumn.implicitWidth
+    implicitHeight: barVertical ? (iconColumn.implicitHeight - (Config.bar.status.showLockStatus && !Hypr.capsLock && !Hypr.numLock ? iconColumn.spacing : 0)) : root.effectiveInnerWidth
 
     GridLayout {
         id: iconColumn
 
         anchors.left: parent.left
         anchors.right: parent.right
+        anchors.top: barVertical ? parent.top : undefined
         anchors.bottom: barVertical ? parent.bottom : undefined
         anchors.verticalCenter: barVertical ? undefined : parent.verticalCenter
-        anchors.margins: Appearance.padding.normal
+        anchors.margins: 0
 
         flow: root.barVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
         rows: root.barVertical ? -1 : 1
         columns: root.barVertical ? 1 : -1
-        rowSpacing: Appearance.spacing.smaller / 2
-        columnSpacing: Appearance.spacing.smaller / 2
+        rowSpacing: root.spaceSm
+        columnSpacing: root.spaceSm
 
         // Lock keys status
         WrappedLoader {
@@ -178,7 +180,7 @@ StyledRect {
             active: Config.bar.status.showBluetooth
 
             sourceComponent: ColumnLayout {
-                spacing: Appearance.spacing.smaller / 2
+                spacing: Math.max(1, Math.floor(root.spaceS / 2))
 
                 // Bluetooth icon
                 MaterialIcon {

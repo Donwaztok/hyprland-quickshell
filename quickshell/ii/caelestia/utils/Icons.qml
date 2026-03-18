@@ -107,7 +107,9 @@ Singleton {
     }
 
     function getAppCategoryIcon(name: string, fallback: string): string {
-        for (const iconConfig of Config.bar.workspaces.windowIcons)
+        const workspaceConfig = Config.bar?.workspaces;
+        const windowIcons = workspaceConfig?.windowIcons ?? [];
+        for (const iconConfig of windowIcons)
             if (matchIconConfig(name, iconConfig))
                 return iconConfig.icon;
 
@@ -212,7 +214,9 @@ Singleton {
     function getSpecialWsIcon(name: string): string {
         name = name.toLowerCase().slice("special:".length);
 
-        for (const iconConfig of Config.bar.workspaces.specialWorkspaceIcons)
+        const workspaceConfig = Config.bar?.workspaces;
+        const specialWorkspaceIcons = workspaceConfig?.specialWorkspaceIcons ?? [];
+        for (const iconConfig of specialWorkspaceIcons)
             if (matchIconConfig(name, iconConfig))
                 return iconConfig.icon;
 

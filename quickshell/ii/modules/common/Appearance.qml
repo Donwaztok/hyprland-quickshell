@@ -385,6 +385,7 @@ Singleton {
 
     sizes: QtObject {
         readonly property real barSizeFactor: (Config && Config.options && Config.options.bar && typeof Config.options.bar.size === "number" && Config.options.bar.size > 0) ? Config.options.bar.size : 1.0
+        readonly property real barSizeFactorVertical: (Config && Config.options && Config.options.bar && typeof (Config.options.bar.sizeVertical ?? Config.options.bar.size) === "number") ? (Config.options.bar.sizeVertical ?? Config.options.bar.size) : 1.0
         property real baseBarHeight: Math.round(40 * barSizeFactor)
         property real barHeight: Config.options.bar.cornerStyle === 1 ? 
             (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
@@ -405,7 +406,7 @@ Singleton {
         property real searchWidth: 360
         property real sidebarWidth: 460
         property real sidebarWidthExtended: 750
-        property real baseVerticalBarWidth: 46
+        property real baseVerticalBarWidth: Math.round(46 * barSizeFactorVertical)
         property real verticalBarWidth: Config.options.bar.cornerStyle === 1 ? 
             (baseVerticalBarWidth + root.sizes.hyprlandGapsOut * 2) : baseVerticalBarWidth
         property real wallpaperSelectorWidth: 1200

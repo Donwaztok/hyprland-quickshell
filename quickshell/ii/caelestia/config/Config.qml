@@ -26,6 +26,7 @@ Singleton {
     property alias services: adapter.services
     property alias paths: adapter.paths
 
+    property bool loaded: false
     property bool recentlySaved: false
 
     // Public save function - call this to persist config changes
@@ -151,11 +152,11 @@ Singleton {
     function serializeBar(): var {
         return {
             position: bar.position,
+            size: bar.size,
             persistent: bar.persistent,
             showOnHover: bar.showOnHover,
             dragThreshold: bar.dragThreshold,
             scrollActions: {
-                workspaces: bar.scrollActions.workspaces,
                 volume: bar.scrollActions.volume,
                 brightness: bar.scrollActions.brightness
             },
@@ -163,22 +164,6 @@ Singleton {
                 activeWindow: bar.popouts.activeWindow,
                 tray: bar.popouts.tray,
                 statusIcons: bar.popouts.statusIcons
-            },
-            workspaces: {
-                shown: bar.workspaces.shown,
-                activeIndicator: bar.workspaces.activeIndicator,
-                occupiedBg: bar.workspaces.occupiedBg,
-                showWindows: bar.workspaces.showWindows,
-                showWindowsOnSpecialWorkspaces: bar.workspaces.showWindowsOnSpecialWorkspaces,
-                maxWindowIcons: bar.workspaces.maxWindowIcons,
-                activeTrail: bar.workspaces.activeTrail,
-                perMonitorWorkspaces: bar.workspaces.perMonitorWorkspaces,
-                label: bar.workspaces.label,
-                occupiedLabel: bar.workspaces.occupiedLabel,
-                activeLabel: bar.workspaces.activeLabel,
-                capitalisation: bar.workspaces.capitalisation,
-                specialWorkspaceIcons: bar.workspaces.specialWorkspaceIcons,
-                windowIcons: bar.workspaces.windowIcons
             },
             activeWindow: {
                 compact: bar.activeWindow.compact,
@@ -433,7 +418,6 @@ Singleton {
             try {
                 JSON.parse(text());
                 const elapsed = timer.elapsedMs();
-                // Only show toast for external changes (not our own saves) and when elapsed time is meaningful
                 if (adapter.utilities.toasts.configLoaded && !root.recentlySaved && elapsed > 0) {
                     Toaster.toast(qsTr("Config loaded"), qsTr("Config loaded in %1ms").arg(elapsed), "rule_settings");
                 } else if (adapter.utilities.toasts.configLoaded && root.recentlySaved && elapsed > 0) {
@@ -442,8 +426,10 @@ Singleton {
             } catch (e) {
                 Toaster.toast(qsTr("Failed to load config"), e.message, "settings_alert", Toast.Error);
             }
+            root.loaded = true;
         }
         onLoadFailed: err => {
+            root.loaded = true;
             if (err !== FileViewError.FileNotFound)
                 Toaster.toast(qsTr("Failed to read config file"), FileViewError.toString(err), "settings_alert", Toast.Warning);
         }

@@ -148,12 +148,21 @@ ContentPage {
 
         ConfigSpinBox {
             icon: "height"
-            text: Translation.tr("Bar size (%)")
+            text: Translation.tr("Horizontal bar size (%)")
             value: Math.round((Config.options.bar.size ?? 0.8) * 100)
             from: 50
             to: 120
             stepSize: 5
             onValueChanged: Config.options.bar.size = value / 100
+        }
+        ConfigSpinBox {
+            icon: "width"
+            text: Translation.tr("Vertical bar size (%)")
+            value: Math.round((Config.options.bar.sizeVertical ?? Config.options.bar.size ?? 0.8) * 100)
+            from: 50
+            to: 120
+            stepSize: 5
+            onValueChanged: Config.options.bar.sizeVertical = value / 100
         }
     }
 

@@ -12,30 +12,35 @@ StyledRect {
     id: root
 
     readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
+    readonly property real sizeFactor: (Config.bar.size ?? 1)
+    readonly property int effectiveInnerWidth: Math.round(Config.bar.sizes.innerWidth * sizeFactor)
+    readonly property int padSm: Math.max(1, Math.round(Appearance.padding.small * sizeFactor))
+    readonly property int padN: Math.max(1, Math.round(Appearance.padding.normal * sizeFactor))
+    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * sizeFactor))
     readonly property alias layout: layoutDims
     readonly property alias items: items
 
     Item {
         id: layoutDims
-        implicitWidth: barVertical ? (Config.bar.sizes.innerWidth - root.padding * 2) : layoutRow.implicitWidth
+        implicitWidth: barVertical ? (root.effectiveInnerWidth - root.padding * 2) : layoutRow.implicitWidth
         implicitHeight: barVertical ? root.verticalContentHeight : layoutRow.implicitHeight
     }
     readonly property alias expandIcon: expandIcon
 
-    readonly property int padding: Config.bar.tray.background ? Appearance.padding.normal : Appearance.padding.small
-    readonly property int spacing: Config.bar.tray.background ? Appearance.spacing.small : 0
+    readonly property int padding: Config.bar.tray.background ? root.padN : root.padSm
+    readonly property int spacing: Config.bar.tray.background ? root.spaceSm : 0
     readonly property int trayItemSize: Appearance.font.size.small * 2
 
     property bool expanded
 
-    readonly property real verticalContentHeight: items.count * root.trayItemSize + Math.max(0, items.count - 1) * Appearance.spacing.small
+    readonly property real verticalContentHeight: items.count * root.trayItemSize + Math.max(0, items.count - 1) * root.spaceSm
     readonly property real nonAnimHeight: {
         if (root.barVertical) {
             if (!Config.bar.tray.compact)
                 return root.verticalContentHeight + padding * 2;
             return (expanded ? expandIcon.implicitHeight + root.verticalContentHeight + spacing : expandIcon.implicitHeight) + padding * 2;
         }
-        return Config.bar.sizes.innerWidth;
+        return root.effectiveInnerWidth;
     }
     readonly property real nonAnimWidth: {
         if (!root.barVertical) {
@@ -43,14 +48,14 @@ StyledRect {
                 return layoutRow.implicitWidth + padding * 2;
             return (expanded ? expandIcon.implicitWidth + layoutRow.implicitWidth + spacing : expandIcon.implicitWidth) + padding * 2;
         }
-        return Config.bar.sizes.innerWidth;
+        return root.effectiveInnerWidth;
     }
 
     clip: true
     visible: height > 0
 
-    implicitWidth: barVertical ? Config.bar.sizes.innerWidth : nonAnimWidth
-    implicitHeight: barVertical ? nonAnimHeight : Config.bar.sizes.innerWidth
+    implicitWidth: barVertical ? root.effectiveInnerWidth : nonAnimWidth
+    implicitHeight: barVertical ? nonAnimHeight : root.effectiveInnerWidth
 
     color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (Config.bar.tray.background && items.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Appearance.rounding.full
@@ -62,8 +67,8 @@ StyledRect {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: root.padding
-        width: root.barVertical ? (Config.bar.sizes.innerWidth - root.padding * 2) : undefined
-        spacing: Appearance.spacing.small
+        width: root.barVertical ? (root.effectiveInnerWidth - root.padding * 2) : undefined
+        spacing: root.spaceSm
 
         opacity: root.expanded || !Config.bar.tray.compact ? 1 : 0
 
@@ -77,9 +82,9 @@ StyledRect {
             delegate: Item {
                 required property var modelData
                 Layout.preferredHeight: root.trayItemSize
-                Layout.preferredWidth: Config.bar.sizes.innerWidth - root.padding * 2
+                Layout.preferredWidth: root.effectiveInnerWidth - root.padding * 2
                 Layout.alignment: Qt.AlignHCenter
-                implicitWidth: Config.bar.sizes.innerWidth - root.padding * 2
+                implicitWidth: root.effectiveInnerWidth - root.padding * 2
                 implicitHeight: root.trayItemSize
 
                 TrayItem {
@@ -101,7 +106,7 @@ StyledRect {
         anchors.right: expandIcon.active ? expandIcon.left : undefined
         anchors.leftMargin: root.padding
         anchors.rightMargin: expandIcon.active ? root.spacing : root.padding
-        spacing: Appearance.spacing.small
+        spacing: root.spaceSm
 
         opacity: root.expanded || !Config.bar.tray.compact ? 1 : 0
 
