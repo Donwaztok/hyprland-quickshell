@@ -90,10 +90,7 @@ Searcher {
 
         function onClicked(list: AppList): void {
             list.visibilities.launcher = false;
-            if (CaelestiaCli.available)
-                CaelestiaCli.exec(["scheme", "set", "-n", name, "-f", flavour]);
-            else
-                Colours.writeScheme(modelData);
+            Colours.writeScheme(modelData);
         }
     }
 }

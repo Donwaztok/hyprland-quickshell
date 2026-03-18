@@ -43,12 +43,8 @@ CollapsibleSection {
                         const flavour = modelData.flavour;
                         const schemeKey = `${name} ${flavour}`;
 
-                        if (CaelestiaCli.available) {
-                            Schemes._currentSchemeFromCli = schemeKey;
-                            CaelestiaCli.exec(["scheme", "set", "-n", name, "-f", flavour]);
-                        } else {
-                            Colours.writeScheme(modelData);
-                        }
+                        Schemes._currentSchemeFromCli = schemeKey;
+                        Colours.writeScheme(modelData);
 
                         Qt.callLater(() => {
                             reloadTimer.restart();
