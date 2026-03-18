@@ -19,6 +19,7 @@ Item {
 
     required property Session session
 
+    property string position: Config.bar.position ?? "left"
     property bool activeWindowCompact: Config.bar.activeWindow.compact ?? false
     property bool activeWindowInverted: Config.bar.activeWindow.inverted ?? false
     property bool clockShowIcon: Config.bar.clock.showIcon ?? true
@@ -67,6 +68,7 @@ Item {
     }
 
     function saveConfig(entryIndex, entryEnabled) {
+        Config.bar.position = root.position;
         Config.bar.activeWindow.compact = root.activeWindowCompact;
         Config.bar.activeWindow.inverted = root.activeWindowInverted;
         Config.bar.clock.showIcon = root.clockShowIcon;
@@ -173,6 +175,58 @@ Item {
                         text: qsTr("Taskbar")
                         font.pointSize: Appearance.font.size.large
                         font.weight: 500
+                    }
+                }
+
+                SectionContainer {
+                    Layout.fillWidth: true
+                    alignTop: true
+
+                    StyledText {
+                        text: qsTr("Position")
+                        font.pointSize: Appearance.font.size.normal
+                    }
+
+                    RowLayout {
+                        Layout.topMargin: Appearance.spacing.smaller
+                        spacing: Appearance.spacing.small
+
+                        ToggleButton {
+                            toggled: root.position === "left"
+                            icon: "west"
+                            label: qsTr("Left")
+                            onClicked: {
+                                root.position = "left";
+                                root.saveConfig();
+                            }
+                        }
+                        ToggleButton {
+                            toggled: root.position === "right"
+                            icon: "east"
+                            label: qsTr("Right")
+                            onClicked: {
+                                root.position = "right";
+                                root.saveConfig();
+                            }
+                        }
+                        ToggleButton {
+                            toggled: root.position === "top"
+                            icon: "north"
+                            label: qsTr("Top")
+                            onClicked: {
+                                root.position = "top";
+                                root.saveConfig();
+                            }
+                        }
+                        ToggleButton {
+                            toggled: root.position === "bottom"
+                            icon: "south"
+                            label: qsTr("Bottom")
+                            onClicked: {
+                                root.position = "bottom";
+                                root.saveConfig();
+                            }
+                        }
                     }
                 }
 

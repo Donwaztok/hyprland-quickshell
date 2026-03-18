@@ -13,6 +13,7 @@ import QtQuick.Layouts
 StyledRect {
     id: root
 
+    readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
     property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
 
@@ -20,18 +21,24 @@ StyledRect {
     radius: Appearance.rounding.full
 
     clip: true
-    implicitWidth: Config.bar.sizes.innerWidth
-    implicitHeight: iconColumn.implicitHeight + Appearance.padding.normal * 2 - (Config.bar.status.showLockStatus && !Hypr.capsLock && !Hypr.numLock ? iconColumn.spacing : 0)
+    implicitWidth: barVertical ? Config.bar.sizes.innerWidth : (iconColumn.implicitWidth + Appearance.padding.normal * 2)
+    implicitHeight: barVertical ? (iconColumn.implicitHeight + Appearance.padding.normal * 2 - (Config.bar.status.showLockStatus && !Hypr.capsLock && !Hypr.numLock ? iconColumn.spacing : 0)) : Config.bar.sizes.innerWidth
 
-    ColumnLayout {
+    GridLayout {
         id: iconColumn
 
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: Appearance.padding.normal
+        anchors.bottom: barVertical ? parent.bottom : undefined
+        anchors.top: barVertical ? undefined : parent.top
+        anchors.verticalCenter: barVertical ? undefined : parent.verticalCenter
+        anchors.margins: Appearance.padding.normal
 
-        spacing: Appearance.spacing.smaller / 2
+        flow: root.barVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+        rows: root.barVertical ? -1 : 1
+        columns: root.barVertical ? 1 : -1
+        rowSpacing: Appearance.spacing.smaller / 2
+        columnSpacing: Appearance.spacing.smaller / 2
 
         // Lock keys status
         WrappedLoader {
@@ -264,7 +271,7 @@ StyledRect {
     component WrappedLoader: Loader {
         required property string name
 
-        Layout.alignment: Qt.AlignHCenter
+        Layout.alignment: root.barVertical ? Qt.AlignHCenter : Qt.AlignVCenter
         visible: active
     }
 }

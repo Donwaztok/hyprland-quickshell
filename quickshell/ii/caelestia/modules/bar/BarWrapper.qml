@@ -14,33 +14,44 @@ Item {
     required property BarPopouts.Wrapper popouts
     required property bool disabled
 
+    readonly property string position: Config.bar.position === "right" || Config.bar.position === "top" || Config.bar.position === "bottom" ? Config.bar.position : "left"
+    readonly property bool isVertical: position === "left" || position === "right"
+
     readonly property int padding: Math.max(Appearance.padding.smaller, Config.border.thickness)
     readonly property int contentWidth: Config.bar.sizes.innerWidth + padding * 2
     readonly property int exclusiveZone: !disabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
     readonly property bool shouldBeVisible: !disabled && (Config.bar.persistent || visibilities.bar || isHovered)
     property bool isHovered
 
+    // Margins for content area (only the bar edge is non-zero)
+    readonly property int leftMargin: position === "left" ? exclusiveZone : 0
+    readonly property int rightMargin: position === "right" ? exclusiveZone : 0
+    readonly property int topMargin: position === "top" ? exclusiveZone : 0
+    readonly property int bottomMargin: position === "bottom" ? exclusiveZone : 0
+
     function closeTray(): void {
         content.item?.closeTray();
     }
 
-    function checkPopout(y: real): void {
-        content.item?.checkPopout(y);
+    function checkPopout(coord: real): void {
+        content.item?.checkPopout(coord);
     }
 
-    function handleWheel(y: real, angleDelta: point): void {
-        content.item?.handleWheel(y, angleDelta);
+    function handleWheel(coord: real, angleDelta: point): void {
+        content.item?.handleWheel(coord, angleDelta);
     }
 
-    visible: width > Config.border.thickness
-    implicitWidth: Config.border.thickness
+    visible: isVertical ? (width > Config.border.thickness) : (height > Config.border.thickness)
+    implicitWidth: isVertical ? (root.shouldBeVisible ? root.contentWidth : Config.border.thickness) : 0
+    implicitHeight: isVertical ? 0 : (root.shouldBeVisible ? root.contentWidth : Config.border.thickness)
 
     states: State {
         name: "visible"
         when: root.shouldBeVisible
 
         PropertyChanges {
-            root.implicitWidth: root.contentWidth
+            root.implicitWidth: root.isVertical ? root.contentWidth : 0
+            root.implicitHeight: root.isVertical ? 0 : root.contentWidth
         }
     }
 
@@ -55,6 +66,12 @@ Item {
                 duration: Appearance.anim.durations.expressiveDefaultSpatial
                 easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
             }
+            Anim {
+                target: root
+                property: "implicitHeight"
+                duration: Appearance.anim.durations.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            }
         },
         Transition {
             from: "visible"
@@ -65,20 +82,22 @@ Item {
                 property: "implicitWidth"
                 easing.bezierCurve: Appearance.anim.curves.emphasized
             }
+            Anim {
+                target: root
+                property: "implicitHeight"
+                easing.bezierCurve: Appearance.anim.curves.emphasized
+            }
         }
     ]
 
     Loader {
         id: content
 
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.right: parent.right
+        anchors.fill: parent
 
         active: root.shouldBeVisible || root.visible
 
         sourceComponent: Bar {
-            width: root.contentWidth
             screen: root.screen
             visibilities: root.visibilities
             popouts: root.popouts

@@ -125,6 +125,7 @@
     }
   },
   "bar": {
+    "position": "top",
     "persistent": true,
     "showOnHover": true,
     "dragThreshold": 20,

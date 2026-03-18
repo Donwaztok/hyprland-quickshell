@@ -1,6 +1,8 @@
 import Quickshell.Io
 
 JsonObject {
+    // Position of the taskbar: "left", "right", "top", "bottom"
+    property string position: "left"
     property bool persistent: true
     property bool showOnHover: true
     property int dragThreshold: 20

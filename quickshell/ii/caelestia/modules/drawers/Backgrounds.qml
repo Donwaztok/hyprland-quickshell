@@ -19,7 +19,10 @@ Shape {
 
     anchors.fill: parent
     anchors.margins: Config.border.thickness
-    anchors.leftMargin: bar.implicitWidth
+    anchors.leftMargin: Math.max(Config.border.thickness, bar.leftMargin)
+    anchors.rightMargin: Math.max(Config.border.thickness, bar.rightMargin)
+    anchors.topMargin: Math.max(Config.border.thickness, bar.topMargin)
+    anchors.bottomMargin: Math.max(Config.border.thickness, bar.bottomMargin)
     preferredRendererType: Shape.CurveRenderer
 
     Osd.Background {

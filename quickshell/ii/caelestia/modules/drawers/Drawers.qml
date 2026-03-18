@@ -57,10 +57,10 @@ Variants {
             WlrLayershell.keyboardFocus: visibilities.launcher || visibilities.session ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
             mask: Region {
-                x: bar.implicitWidth + win.dragMaskPadding
-                y: Config.border.thickness + win.dragMaskPadding
-                width: win.width - bar.implicitWidth - Config.border.thickness - win.dragMaskPadding * 2
-                height: win.height - Config.border.thickness * 2 - win.dragMaskPadding * 2
+                x: bar.leftMargin + win.dragMaskPadding
+                y: bar.topMargin + Config.border.thickness + win.dragMaskPadding
+                width: win.width - bar.leftMargin - bar.rightMargin - Config.border.thickness - win.dragMaskPadding * 2
+                height: win.height - bar.topMargin - bar.bottomMargin - Config.border.thickness * 2 - win.dragMaskPadding * 2
                 intersection: Intersection.Xor
 
                 regions: regions.instances
@@ -79,8 +79,8 @@ Variants {
                 Region {
                     required property Item modelData
 
-                    x: modelData.x + bar.implicitWidth
-                    y: modelData.y + Config.border.thickness
+                    x: modelData.x + bar.leftMargin
+                    y: modelData.y + bar.topMargin + Config.border.thickness
                     width: modelData.width
                     height: modelData.height
                     intersection: Intersection.Subtract
@@ -164,8 +164,10 @@ Variants {
                 BarWrapper {
                     id: bar
 
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
+                    x: Config.bar.position === "right" ? (parent.width - width) : 0
+                    y: Config.bar.position === "bottom" ? (parent.height - height) : 0
+                    width: Config.bar.position === "left" || Config.bar.position === "right" ? bar.implicitWidth : parent.width
+                    height: Config.bar.position === "left" || Config.bar.position === "right" ? parent.height : bar.implicitHeight
 
                     screen: scope.modelData
                     visibilities: visibilities

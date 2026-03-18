@@ -149,6 +149,7 @@ Singleton {
 
     function serializeBar(): var {
         return {
+            position: bar.position,
             persistent: bar.persistent,
             showOnHover: bar.showOnHover,
             dragThreshold: bar.dragThreshold,

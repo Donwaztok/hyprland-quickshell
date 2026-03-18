@@ -4,35 +4,67 @@ import caelestia.components
 import caelestia.services
 import caelestia.config
 import QtQuick
+import QtQuick.Layouts
 
-Column {
+Item {
     id: root
 
+    readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
     property color colour: Colours.palette.m3tertiary
 
-    spacing: Appearance.spacing.small
+    implicitWidth: barVertical ? clockColumn.implicitWidth : clockRow.implicitWidth
+    implicitHeight: barVertical ? clockColumn.implicitHeight : clockRow.implicitHeight
 
-    Loader {
-        anchors.horizontalCenter: parent.horizontalCenter
+    Column {
+        id: clockColumn
 
-        active: Config.bar.clock.showIcon
-        visible: active
+        visible: barVertical
+        anchors.centerIn: parent
+        spacing: Appearance.spacing.small
 
-        sourceComponent: MaterialIcon {
-            text: "calendar_month"
+        Loader {
+            anchors.horizontalCenter: parent.horizontalCenter
+            active: Config.bar.clock.showIcon
+            visible: active
+            sourceComponent: MaterialIcon {
+                text: "calendar_month"
+                color: root.colour
+            }
+        }
+
+        StyledText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            horizontalAlignment: StyledText.AlignHCenter
+            text: Time.format(Config.services.useTwelveHourClock ? "hh\nmm\nA" : "hh\nmm")
+            font.pointSize: Appearance.font.size.smaller
+            font.family: Appearance.font.family.mono
             color: root.colour
         }
     }
 
-    StyledText {
-        id: text
+    RowLayout {
+        id: clockRow
 
-        anchors.horizontalCenter: parent.horizontalCenter
+        visible: !barVertical
+        anchors.centerIn: parent
+        spacing: Appearance.spacing.small
 
-        horizontalAlignment: StyledText.AlignHCenter
-        text: Time.format(Config.services.useTwelveHourClock ? "hh\nmm\nA" : "hh\nmm")
-        font.pointSize: Appearance.font.size.smaller
-        font.family: Appearance.font.family.mono
-        color: root.colour
+        Loader {
+            Layout.alignment: Qt.AlignVCenter
+            active: Config.bar.clock.showIcon
+            visible: active
+            sourceComponent: MaterialIcon {
+                text: "calendar_month"
+                color: root.colour
+            }
+        }
+
+        StyledText {
+            Layout.alignment: Qt.AlignVCenter
+            text: Time.format(Config.services.useTwelveHourClock ? "h:mm A" : "HH:mm")
+            font.pointSize: Appearance.font.size.smaller
+            font.family: Appearance.font.family.mono
+            color: root.colour
+        }
     }
 }

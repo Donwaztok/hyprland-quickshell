@@ -29,8 +29,10 @@ Item {
     readonly property alias sidebar: sidebar
 
     anchors.fill: parent
-    anchors.margins: Config.border.thickness
-    anchors.leftMargin: bar.implicitWidth
+    anchors.leftMargin: Math.max(Config.border.thickness, bar.leftMargin)
+    anchors.rightMargin: Math.max(Config.border.thickness, bar.rightMargin)
+    anchors.topMargin: Math.max(Config.border.thickness, bar.topMargin)
+    anchors.bottomMargin: Math.max(Config.border.thickness, bar.bottomMargin)
 
     Osd.Wrapper {
         id: osd
@@ -91,11 +93,26 @@ Item {
 
         screen: root.screen
 
-        x: isDetached ? (root.width - nonAnimWidth) / 2 : 0
+        x: {
+            if (isDetached)
+                return (root.width - nonAnimWidth) / 2;
+            if (Config.bar.position === "left")
+                return 0;
+            if (Config.bar.position === "right")
+                return root.width - nonAnimWidth;
+            const off = currentCenter - parent.bar.leftMargin - nonAnimWidth / 2;
+            const diff = root.width - Math.floor(off + nonAnimWidth);
+            if (diff < 0)
+                return off + diff;
+            return Math.max(off, 0);
+        }
         y: {
             if (isDetached)
                 return (root.height - nonAnimHeight) / 2;
-
+            if (Config.bar.position === "top")
+                return 0;
+            if (Config.bar.position === "bottom")
+                return root.height - nonAnimHeight;
             const off = currentCenter - Config.border.thickness - nonAnimHeight / 2;
             const diff = root.height - Math.floor(off + nonAnimHeight);
             if (diff < 0)

@@ -18,22 +18,36 @@ CustomMouseArea {
     property bool osdShortcutActive
     property bool utilitiesShortcutActive
 
+    function contentLeft(): real { return bar.leftMargin; }
+    function contentTop(): real { return bar.topMargin; }
+
+    function inBarArea(x: real, y: real): bool {
+        return (bar.leftMargin > 0 && x < bar.leftMargin) || (bar.rightMargin > 0 && x >= width - bar.rightMargin)
+            || (bar.topMargin > 0 && y < bar.topMargin) || (bar.bottomMargin > 0 && y >= height - bar.bottomMargin);
+    }
+
+    function barCoord(x: real, y: real): real {
+        if (bar.leftMargin > 0 || bar.rightMargin > 0)
+            return y;
+        return x;
+    }
+
     function withinPanelHeight(panel: Item, x: real, y: real): bool {
         const panelY = Config.border.thickness + panel.y;
         return y >= panelY - Config.border.rounding && y <= panelY + panel.height + Config.border.rounding;
     }
 
     function withinPanelWidth(panel: Item, x: real, y: real): bool {
-        const panelX = bar.implicitWidth + panel.x;
+        const panelX = contentLeft() + panel.x;
         return x >= panelX - Config.border.rounding && x <= panelX + panel.width + Config.border.rounding;
     }
 
     function inLeftPanel(panel: Item, x: real, y: real): bool {
-        return x < bar.implicitWidth + panel.x + panel.width && withinPanelHeight(panel, x, y);
+        return x < contentLeft() + panel.x + panel.width && withinPanelHeight(panel, x, y);
     }
 
     function inRightPanel(panel: Item, x: real, y: real): bool {
-        return x > bar.implicitWidth + panel.x && withinPanelHeight(panel, x, y);
+        return x > contentLeft() + panel.x && withinPanelHeight(panel, x, y);
     }
 
     function inTopPanel(panel: Item, x: real, y: real): bool {
@@ -45,8 +59,8 @@ CustomMouseArea {
     }
 
     function onWheel(event: WheelEvent): void {
-        if (event.x < bar.implicitWidth) {
-            bar.handleWheel(event.y, event.angleDelta);
+        if (inBarArea(event.x, event.y)) {
+            bar.handleWheel(barCoord(event.x, event.y), event.angleDelta);
         }
     }
 
@@ -88,14 +102,17 @@ CustomMouseArea {
         const dragY = y - dragStart.y;
 
         // Show bar in non-exclusive mode on hover
-        if (!visibilities.bar && Config.bar.showOnHover && x < bar.implicitWidth)
+        if (!visibilities.bar && Config.bar.showOnHover && inBarArea(x, y))
             bar.isHovered = true;
 
-        // Show/hide bar on drag
-        if (pressed && dragStart.x < bar.implicitWidth) {
-            if (dragX > Config.bar.dragThreshold)
+        // Show/hide bar on drag (drag toward content to show, toward bar to hide)
+        if (pressed && inBarArea(dragStart.x, dragStart.y)) {
+            const dragTowardContent = (bar.leftMargin > 0 && dragX > 0) || (bar.rightMargin > 0 && dragX < 0) || (bar.topMargin > 0 && dragY > 0) || (bar.bottomMargin > 0 && dragY < 0);
+            const dragTowardBar = (bar.leftMargin > 0 && dragX < 0) || (bar.rightMargin > 0 && dragX > 0) || (bar.topMargin > 0 && dragY < 0) || (bar.bottomMargin > 0 && dragY > 0);
+            const dragDist = bar.leftMargin > 0 || bar.rightMargin > 0 ? Math.abs(dragX) : Math.abs(dragY);
+            if (dragTowardContent && dragDist > Config.bar.dragThreshold)
                 visibilities.bar = true;
-            else if (dragX < -Config.bar.dragThreshold)
+            else if (dragTowardBar && dragDist > Config.bar.dragThreshold)
                 visibilities.bar = false;
         }
 
@@ -113,7 +130,7 @@ CustomMouseArea {
                 root.panels.osd.hovered = true;
             }
 
-            const showSidebar = pressed && dragStart.x > bar.implicitWidth + panels.sidebar.x;
+            const showSidebar = pressed && dragStart.x > contentLeft() + panels.sidebar.x;
 
             // Show/hide session on drag
             if (pressed && inRightPanel(panels.session, dragStart.x, dragStart.y) && withinPanelHeight(panels.session, x, y)) {
@@ -199,8 +216,8 @@ CustomMouseArea {
         }
 
         // Show popouts on hover
-        if (x < bar.implicitWidth) {
-            bar.checkPopout(y);
+        if (inBarArea(x, y)) {
+            bar.checkPopout(barCoord(x, y));
         } else if ((!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) && !inLeftPanel(panels.popouts, x, y)) {
             popouts.hasCurrent = false;
             bar.closeTray();

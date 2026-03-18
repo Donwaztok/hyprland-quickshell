@@ -37,7 +37,10 @@ Item {
         Rectangle {
             anchors.fill: parent
             anchors.margins: Config.border.thickness
-            anchors.leftMargin: root.bar.implicitWidth
+            anchors.leftMargin: Math.max(Config.border.thickness, root.bar.leftMargin)
+            anchors.rightMargin: Math.max(Config.border.thickness, root.bar.rightMargin)
+            anchors.topMargin: Math.max(Config.border.thickness, root.bar.topMargin)
+            anchors.bottomMargin: Math.max(Config.border.thickness, root.bar.bottomMargin)
             radius: Config.border.rounding
         }
     }

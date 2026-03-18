@@ -13,6 +13,8 @@ StyledClippingRect {
 
     required property ShellScreen screen
 
+    readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
+
     readonly property bool onSpecial: (Config.bar.workspaces.perMonitorWorkspaces ? Hypr.monitorFor(screen) : Hypr.focusedMonitor)?.lastIpcObject?.specialWorkspace?.name !== ""
     readonly property int activeWsId: Config.bar.workspaces.perMonitorWorkspaces ? (Hypr.monitorFor(screen).activeWorkspace?.id ?? 1) : Hypr.activeWsId
 
@@ -26,8 +28,8 @@ StyledClippingRect {
 
     property real blur: onSpecial ? 1 : 0
 
-    implicitWidth: Config.bar.sizes.innerWidth
-    implicitHeight: layout.implicitHeight + Appearance.padding.small * 2
+    implicitWidth: barVertical ? Config.bar.sizes.innerWidth : (layout.implicitWidth + Appearance.padding.small * 2)
+    implicitHeight: barVertical ? (layout.implicitHeight + Appearance.padding.small * 2) : Config.bar.sizes.innerWidth
 
     color: Colours.tPalette.m3surfaceContainer
     radius: Appearance.rounding.full
@@ -57,11 +59,16 @@ StyledClippingRect {
             }
         }
 
-        ColumnLayout {
+        GridLayout {
             id: layout
 
             anchors.centerIn: parent
-            spacing: Math.floor(Appearance.spacing.small / 2)
+            rowSpacing: Math.floor(Appearance.spacing.small / 2)
+            columnSpacing: Math.floor(Appearance.spacing.small / 2)
+
+            flow: root.barVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+            rows: root.barVertical ? -1 : 1
+            columns: root.barVertical ? 1 : -1
 
             Repeater {
                 id: workspaces
