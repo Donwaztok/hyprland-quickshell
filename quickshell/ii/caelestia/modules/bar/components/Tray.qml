@@ -6,6 +6,7 @@ import caelestia.config
 import Quickshell
 import Quickshell.Services.SystemTray
 import QtQuick
+import QtQuick.Layouts
 
 StyledRect {
     id: root
@@ -16,21 +17,23 @@ StyledRect {
 
     Item {
         id: layoutDims
-        implicitWidth: barVertical ? layoutColumn.implicitWidth : layoutRow.implicitWidth
-        implicitHeight: barVertical ? layoutColumn.implicitHeight : layoutRow.implicitHeight
+        implicitWidth: barVertical ? (Config.bar.sizes.innerWidth - root.padding * 2) : layoutRow.implicitWidth
+        implicitHeight: barVertical ? root.verticalContentHeight : layoutRow.implicitHeight
     }
     readonly property alias expandIcon: expandIcon
 
     readonly property int padding: Config.bar.tray.background ? Appearance.padding.normal : Appearance.padding.small
     readonly property int spacing: Config.bar.tray.background ? Appearance.spacing.small : 0
+    readonly property int trayItemSize: Appearance.font.size.small * 2
 
     property bool expanded
 
+    readonly property real verticalContentHeight: items.count * root.trayItemSize + Math.max(0, items.count - 1) * Appearance.spacing.small
     readonly property real nonAnimHeight: {
         if (root.barVertical) {
             if (!Config.bar.tray.compact)
-                return layoutColumn.implicitHeight + padding * 2;
-            return (expanded ? expandIcon.implicitHeight + layoutColumn.implicitHeight + spacing : expandIcon.implicitHeight) + padding * 2;
+                return root.verticalContentHeight + padding * 2;
+            return (expanded ? expandIcon.implicitHeight + root.verticalContentHeight + spacing : expandIcon.implicitHeight) + padding * 2;
         }
         return Config.bar.sizes.innerWidth;
     }
@@ -52,24 +55,17 @@ StyledRect {
     color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (Config.bar.tray.background && items.count > 0) ? Colours.tPalette.m3surfaceContainer.a : 0)
     radius: Appearance.rounding.full
 
-    Column {
+    ColumnLayout {
         id: layoutColumn
 
         visible: barVertical
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: root.padding
+        width: root.barVertical ? (Config.bar.sizes.innerWidth - root.padding * 2) : undefined
         spacing: Appearance.spacing.small
 
         opacity: root.expanded || !Config.bar.tray.compact ? 1 : 0
-
-        add: Transition {
-            Anim { properties: "scale"; from: 0; to: 1; easing.bezierCurve: Appearance.anim.curves.standardDecel }
-        }
-        move: Transition {
-            Anim { properties: "scale"; to: 1; easing.bezierCurve: Appearance.anim.curves.standardDecel }
-            Anim { properties: "x,y" }
-        }
 
         Repeater {
             id: items
@@ -78,7 +74,19 @@ StyledRect {
                 values: SystemTray.items.values.filter(i => !Config.bar.tray.hiddenIcons.includes(i.id))
             }
 
-            TrayItem {}
+            delegate: Item {
+                required property var modelData
+                Layout.preferredHeight: root.trayItemSize
+                Layout.preferredWidth: Config.bar.sizes.innerWidth - root.padding * 2
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: Config.bar.sizes.innerWidth - root.padding * 2
+                implicitHeight: root.trayItemSize
+
+                TrayItem {
+                    modelData: parent.modelData
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
         }
 
         Behavior on opacity { Anim {} }
@@ -90,7 +98,9 @@ StyledRect {
         visible: !barVertical
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
+        anchors.right: expandIcon.active ? expandIcon.left : undefined
         anchors.leftMargin: root.padding
+        anchors.rightMargin: expandIcon.active ? root.spacing : root.padding
         spacing: Appearance.spacing.small
 
         opacity: root.expanded || !Config.bar.tray.compact ? 1 : 0
@@ -125,20 +135,17 @@ StyledRect {
 
         sourceComponent: Item {
             implicitWidth: expandIconInner.implicitWidth
-            implicitHeight: expandIconInner.implicitHeight - Appearance.padding.small * 2
+            implicitHeight: expandIconInner.implicitHeight
 
             MaterialIcon {
                 id: expandIconInner
 
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: Config.bar.tray.background ? Appearance.padding.small : -Appearance.padding.small
+                anchors.centerIn: parent
                 text: root.barVertical ? "expand_less" : "expand_more"
                 font.pointSize: Appearance.font.size.large
                 rotation: root.expanded ? (root.barVertical ? 180 : 180) : 0
 
                 Behavior on rotation { Anim {} }
-                Behavior on anchors.bottomMargin { Anim {} }
             }
         }
     }
