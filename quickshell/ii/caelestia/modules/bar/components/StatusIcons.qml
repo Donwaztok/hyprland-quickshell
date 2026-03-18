@@ -30,7 +30,6 @@ StyledRect {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: barVertical ? parent.bottom : undefined
-        anchors.top: barVertical ? undefined : parent.top
         anchors.verticalCenter: barVertical ? undefined : parent.verticalCenter
         anchors.margins: Appearance.padding.normal
 

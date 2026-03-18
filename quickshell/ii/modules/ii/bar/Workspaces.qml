@@ -18,7 +18,7 @@ Item {
     property bool borderless: Config.options.bar.borderless
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
-    property int effectiveActiveWorkspaceId: 1
+    readonly property int effectiveActiveWorkspaceId: root.monitor?.activeWorkspace?.id ?? 1
 
     readonly property string workspaceStyle: Config.options.bar.workspaces.style || "gnome"
     readonly property bool isGnomeStyle: root.workspaceStyle === "gnome"
@@ -62,25 +62,6 @@ Item {
     }
 
     function syncActiveFromHyprland() {
-        var monName = root.monitor?.name
-        if (!monName) {
-            root.effectiveActiveWorkspaceId = 1
-            root.activeIndex = 0
-            return
-        }
-        if (root.isGnomeStyle) {
-            var list = Hyprland.workspaces.values
-            for (var i = 0; i < list.length; i++) {
-                var ws = list[i]
-                if (ws.monitor && ws.monitor.name === monName && ws.active) {
-                    root.effectiveActiveWorkspaceId = ws.id
-                    root.activeIndex = root.openWorkspaceIds.indexOf(ws.id)
-                    if (root.activeIndex < 0) root.activeIndex = 0
-                    return
-                }
-            }
-        }
-        root.effectiveActiveWorkspaceId = root.monitor?.activeWorkspace?.id ?? 1
         if (root.isGnomeStyle) {
             root.activeIndex = root.openWorkspaceIds.indexOf(root.effectiveActiveWorkspaceId)
             if (root.activeIndex < 0) root.activeIndex = 0

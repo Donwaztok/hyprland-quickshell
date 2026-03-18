@@ -76,6 +76,7 @@ StyledClippingRect {
                 model: Config.bar.workspaces.shown
 
                 Workspace {
+                    barVertical: root.barVertical
                     activeWsId: root.activeWsId
                     occupied: root.occupied
                     groupOffset: root.groupOffset
@@ -84,11 +85,24 @@ StyledClippingRect {
         }
 
         Loader {
-            anchors.horizontalCenter: parent.horizontalCenter
+            id: activeIndicatorLoader
+
+            anchors.horizontalCenter: root.barVertical ? parent.horizontalCenter : undefined
+            anchors.verticalCenter: root.barVertical ? undefined : parent.verticalCenter
             active: Config.bar.workspaces.activeIndicator
 
+            Binding on x {
+                when: !root.barVertical && activeIndicatorLoader.item && workspaces.itemAt(activeIndicatorLoader.item.currentWsIdx)
+                value: layout.mapToItem(activeIndicatorLoader.parent, workspaces.itemAt(activeIndicatorLoader.item.currentWsIdx).x, 0).x
+            }
+            Binding on x {
+                when: root.barVertical
+                value: 0
+            }
+
             sourceComponent: ActiveIndicator {
-                activeWsId: root.activeWsId
+                screen: root.screen
+                barVertical: root.barVertical
                 workspaces: workspaces
                 mask: layout
             }
