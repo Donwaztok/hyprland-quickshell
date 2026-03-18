@@ -93,7 +93,10 @@ StyledClippingRect {
 
             Binding on x {
                 when: !root.barVertical && activeIndicatorLoader.item && workspaces.itemAt(activeIndicatorLoader.item.currentWsIdx)
-                value: layout.mapToItem(activeIndicatorLoader.parent, workspaces.itemAt(activeIndicatorLoader.item.currentWsIdx).x, 0).x
+                value: (() => {
+                    const item = workspaces.itemAt(activeIndicatorLoader.item.currentWsIdx);
+                    return item ? layout.mapToItem(activeIndicatorLoader.parent, item.x, 0).x : 0;
+                })()
             }
             Binding on x {
                 when: root.barVertical
