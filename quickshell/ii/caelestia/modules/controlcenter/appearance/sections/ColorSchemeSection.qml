@@ -29,7 +29,7 @@ CollapsibleSection {
 
                 Layout.fillWidth: true
 
-                readonly property string schemeKey: `${modelData.name} ${modelData.flavour}`
+                readonly property string schemeKey: modelData.mode ? `${modelData.name} ${modelData.flavour} ${modelData.mode}` : `${modelData.name} ${modelData.flavour}`
                 readonly property bool isCurrent: schemeKey === Schemes.currentScheme
 
                 color: Qt.alpha(Colours.tPalette.m3surfaceContainer, isCurrent ? Colours.tPalette.m3surfaceContainer.a : 0)
@@ -41,7 +41,7 @@ CollapsibleSection {
                     function onClicked(): void {
                         const name = modelData.name;
                         const flavour = modelData.flavour;
-                        const schemeKey = `${name} ${flavour}`;
+                        const schemeKey = modelData.mode ? `${name} ${flavour} ${modelData.mode}` : `${name} ${flavour}`;
 
                         Schemes._currentSchemeFromCli = schemeKey;
                         Colours.writeScheme(modelData);
@@ -113,12 +113,12 @@ CollapsibleSection {
                         spacing: 0
 
                         StyledText {
-                            text: modelData.flavour ?? ""
+                            text: (modelData.mode === "light" ? qsTr("Light") : modelData.mode === "dark" ? qsTr("Dark") : modelData.flavour) ?? ""
                             font.pointSize: Appearance.font.size.normal
                         }
 
                         StyledText {
-                            text: modelData.name ?? ""
+                            text: modelData.mode ? (modelData.name + " · " + modelData.flavour) : (modelData.name ?? "")
                             font.pointSize: Appearance.font.size.small
                             color: Colours.palette.m3outline
 

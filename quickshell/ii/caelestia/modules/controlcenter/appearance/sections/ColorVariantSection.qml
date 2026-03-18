@@ -43,12 +43,19 @@ CollapsibleSection {
                             CaelestiaCli.exec(["scheme", "set", "-v", variant]);
                         } else {
                             const builtin = Colours.currentLight ? Colours.builtinSchemes.defaultLight : Colours.builtinSchemes.defaultDark;
+                            const raw = builtin.colours;
+                            const coloursCopy = {};
+                            for (const key in raw) {
+                                if (raw.hasOwnProperty(key))
+                                    coloursCopy[key] = raw[key];
+                            }
                             Colours.writeScheme({
                                 name: Colours.scheme,
                                 flavour: variant,
                                 mode: builtin.mode,
-                                colours: builtin.colours
+                                colours: coloursCopy
                             });
+                            Schemes._currentVariantFromCli = variant;
                         }
 
                         Qt.callLater(() => {

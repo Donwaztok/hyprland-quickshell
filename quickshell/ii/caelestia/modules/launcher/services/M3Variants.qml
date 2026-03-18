@@ -2,6 +2,7 @@ pragma Singleton
 
 import ".."
 import caelestia.config
+import caelestia.services
 import caelestia.utils
 import Quickshell
 import QtQuick
@@ -79,7 +80,23 @@ Searcher {
 
         function onClicked(list: AppList): void {
             list.visibilities.launcher = false;
-            CaelestiaCli.exec(["scheme", "set", "-v", variant]);
+            if (CaelestiaCli.available) {
+                CaelestiaCli.exec(["scheme", "set", "-v", variant]);
+            } else {
+                const builtin = Colours.currentLight ? Colours.builtinSchemes.defaultLight : Colours.builtinSchemes.defaultDark;
+                const raw = builtin.colours;
+                const coloursCopy = {};
+                for (const key in raw) {
+                    if (raw.hasOwnProperty(key))
+                        coloursCopy[key] = raw[key];
+                }
+                Colours.writeScheme({
+                    name: Colours.scheme,
+                    flavour: variant,
+                    mode: builtin.mode,
+                    colours: coloursCopy
+                });
+            }
         }
     }
 }

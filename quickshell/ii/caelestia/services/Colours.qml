@@ -60,12 +60,7 @@ Singleton {
 
     function load(data: string, isPreview: bool): void {
         const colours = isPreview ? preview : current;
-        let scheme = JSON.parse(data);
-        // Migrate old default dark (beige text) to ii (white text)
-        if (!isPreview && scheme.mode === "dark" && scheme.colours && (scheme.colours.onBackground === "efdfe2" || scheme.colours.on_background === "efdfe2")) {
-            scheme = builtinSchemes.defaultDark;
-            writeScheme(scheme);
-        }
+        const scheme = JSON.parse(data);
 
         if (!isPreview) {
             root.scheme = scheme.name;
@@ -85,32 +80,28 @@ Singleton {
 
     function setMode(mode: string): void {
         const scheme = (mode === "light") ? builtinSchemes.defaultLight : builtinSchemes.defaultDark;
-        writeScheme(scheme);
+        load(JSON.stringify(scheme), false);
+        Config.appearance.themeMode = mode;
+        Config.save();
     }
 
     function writeScheme(schemeObj: var): void {
         if (!schemeObj || !schemeObj.colours)
             return;
         let mode = schemeObj.mode;
-        if (!mode && schemeObj.colours.background) {
-            const r = parseInt(String(schemeObj.colours.background).substring(0, 2), 16);
-            mode = r < 0x80 ? "dark" : "light";
-        }
-        const coloursCopy = {};
-        const raw = schemeObj.colours;
-        for (const key in raw) {
-            if (raw.hasOwnProperty(key))
-                coloursCopy[key] = raw[key];
-        }
-        const scheme = {
-            name: schemeObj.name,
-            flavour: schemeObj.flavour,
-            mode: mode || "dark",
-            colours: coloursCopy
-        };
-        const json = JSON.stringify(scheme, null, 2);
-        schemeFileView.setText(json);
-        load(json, false);
+        if (!mode && schemeObj.colours.background)
+            mode = parseInt(String(schemeObj.colours.background).substring(0, 2), 16) < 0x80 ? "dark" : "light";
+        mode = mode || "dark";
+        const scheme = { name: schemeObj.name, flavour: schemeObj.flavour, mode: mode, colours: schemeObj.colours };
+        load(JSON.stringify(scheme), false);
+        Config.appearance.themeMode = mode;
+        Config.save();
+    }
+
+    Component.onCompleted: {
+        const mode = Config.appearance.themeMode || "dark";
+        const scheme = (mode === "light") ? builtinSchemes.defaultLight : builtinSchemes.defaultDark;
+        load(JSON.stringify(scheme), false);
     }
 
     readonly property var builtinSchemes: ({
@@ -119,7 +110,7 @@ Singleton {
             flavour: "tonalspot",
             mode: "dark",
             colours: {
-                primary_paletteKeyColor: "cbc4cb",
+                primary_paletteKeyColor: "FFD369",
                 secondary_paletteKeyColor: "cac5c8",
                 tertiary_paletteKeyColor: "d1c3c6",
                 neutral_paletteKeyColor: "948f94",
@@ -139,10 +130,10 @@ Singleton {
                 onSurfaceVariant: "ffffff",
                 outline: "948f94",
                 outlineVariant: "49464a",
-                primary: "cbc4cb",
-                onPrimary: "322f34",
-                primaryContainer: "2d2a2f",
-                onPrimaryContainer: "bcb6bc",
+                primary: "FFD369",
+                onPrimary: "3d3000",
+                primaryContainer: "4a3f00",
+                onPrimaryContainer: "ffe082",
                 secondary: "cac5c8",
                 onSecondary: "323032",
                 secondaryContainer: "4d4b4d",
@@ -201,22 +192,6 @@ Singleton {
             }
         }
     })
-
-    FileView {
-        id: schemeFileView
-
-        path: `${Paths.state}/scheme.json`
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: root.load(text(), false)
-        onLoadFailed: () => {
-            root.scheme = "ii";
-            root.flavour = "tonalspot";
-            root.currentLight = false;
-            root.load(JSON.stringify(builtinSchemes.defaultDark), false);
-            writeScheme(builtinSchemes.defaultDark);
-        }
-    }
 
     ImageAnalyser {
         id: analyser
@@ -292,7 +267,7 @@ Singleton {
     }
 
     component M3Palette: QtObject {
-        property color m3primary_paletteKeyColor: "#cbc4cb"
+        property color m3primary_paletteKeyColor: "#FFD369"
         property color m3secondary_paletteKeyColor: "#cac5c8"
         property color m3tertiary_paletteKeyColor: "#d1c3c6"
         property color m3neutral_paletteKeyColor: "#948f94"
@@ -316,11 +291,11 @@ Singleton {
         property color m3outlineVariant: "#49464a"
         property color m3shadow: "#000000"
         property color m3scrim: "#000000"
-        property color m3surfaceTint: "#cbc4cb"
-        property color m3primary: "#cbc4cb"
-        property color m3onPrimary: "#322f34"
-        property color m3primaryContainer: "#2d2a2f"
-        property color m3onPrimaryContainer: "#bcb6bc"
+        property color m3surfaceTint: "#FFD369"
+        property color m3primary: "#FFD369"
+        property color m3onPrimary: "#3d3000"
+        property color m3primaryContainer: "#4a3f00"
+        property color m3onPrimaryContainer: "#ffe082"
         property color m3inversePrimary: "#615d63"
         property color m3secondary: "#cac5c8"
         property color m3onSecondary: "#323032"
@@ -338,8 +313,8 @@ Singleton {
         property color m3onSuccess: "#213528"
         property color m3successContainer: "#374B3E"
         property color m3onSuccessContainer: "#D1E9D6"
-        property color m3primaryFixed: "#e7e0e7"
-        property color m3primaryFixedDim: "#cbc4cb"
+        property color m3primaryFixed: "#ffe082"
+        property color m3primaryFixedDim: "#FFD369"
         property color m3onPrimaryFixed: "#1d1b1f"
         property color m3onPrimaryFixedVariant: "#49454b"
         property color m3secondaryFixed: "#e6e1e4"

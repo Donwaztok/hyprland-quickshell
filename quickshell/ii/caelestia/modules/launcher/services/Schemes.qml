@@ -13,7 +13,7 @@ Searcher {
 
     property string _currentSchemeFromCli: ""
     property string _currentVariantFromCli: ""
-    readonly property string currentScheme: CaelestiaCli.available ? _currentSchemeFromCli : (Colours.scheme + " " + Colours.flavour)
+    readonly property string currentScheme: CaelestiaCli.available ? _currentSchemeFromCli : (Colours.scheme + " " + Colours.flavour + " " + (Colours.currentLight ? "light" : "dark"))
     readonly property string currentVariant: CaelestiaCli.available ? _currentVariantFromCli : Colours.flavour
 
     function transformSearch(search: string): string {
@@ -21,7 +21,8 @@ Searcher {
     }
 
     function selector(item: var): string {
-        return `${item.name} ${item.flavour}`;
+        const mode = item.mode || (item.colours?.background && parseInt(String(item.colours.background).substring(0, 2), 16) < 0x80 ? "dark" : "light");
+        return `${item.name} ${item.flavour} ${mode}`;
     }
 
     function reload(): void {

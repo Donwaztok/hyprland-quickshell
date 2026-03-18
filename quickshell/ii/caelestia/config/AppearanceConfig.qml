@@ -1,6 +1,7 @@
 import Quickshell.Io
 
 JsonObject {
+    property string themeMode: "dark"
     property Rounding rounding: Rounding {}
     property Spacing spacing: Spacing {}
     property Padding padding: Padding {}

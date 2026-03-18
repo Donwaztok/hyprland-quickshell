@@ -60,6 +60,7 @@ Singleton {
 
     function serializeAppearance(): var {
         return {
+            themeMode: appearance.themeMode || "dark",
             rounding: {
                 scale: appearance.rounding.scale
             },
