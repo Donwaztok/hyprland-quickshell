@@ -125,7 +125,7 @@
     }
   },
   "bar": {
-    "position": "top",
+    "position": "left",
     "persistent": true,
     "showOnHover": true,
     "dragThreshold": 20,
@@ -135,7 +135,7 @@
       "brightness": true
     },
     "popouts": {
-      "activeWindow": false,
+      "activeWindow": true,
       "tray": true,
       "statusIcons": true
     },

@@ -5,6 +5,7 @@ import caelestia.services
 import caelestia.utils
 import caelestia.config
 import QtQuick
+import QtQuick.Layouts
 
 Item {
     id: root
@@ -12,6 +13,8 @@ Item {
     required property var bar
     required property Brightness.Monitor monitor
     property color colour: Colours.palette.m3primary
+
+    readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
 
     readonly property string windowTitle: {
         const title = Hypr.activeToplevel?.title;
@@ -35,8 +38,8 @@ Item {
     property Title current: text1
 
     clip: true
-    implicitWidth: Math.max(icon.implicitWidth, current.implicitHeight)
-    implicitHeight: icon.implicitHeight + current.implicitWidth + current.anchors.topMargin
+    implicitWidth: root.barVertical ? Math.max(icon.implicitWidth, current.implicitHeight) : horizontalRow.implicitWidth
+    implicitHeight: root.barVertical ? (icon.implicitHeight + current.implicitWidth + current.anchors.topMargin) : horizontalRow.implicitHeight
 
     Loader {
         anchors.fill: parent
@@ -63,10 +66,36 @@ Item {
         }
     }
 
+    RowLayout {
+        id: horizontalRow
+
+        anchors.fill: parent
+        visible: !root.barVertical
+        spacing: Appearance.spacing.small
+
+        MaterialIcon {
+            Layout.alignment: Qt.AlignVCenter
+            animate: true
+            text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.lastIpcObject.class, "desktop_windows")
+            color: root.colour
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            text: root.windowTitle
+            font.pointSize: Appearance.font.size.smaller
+            font.family: Appearance.font.family.mono
+            color: root.colour
+            elide: Text.ElideRight
+        }
+    }
+
     MaterialIcon {
         id: icon
 
         anchors.horizontalCenter: parent.horizontalCenter
+        visible: root.barVertical
 
         animate: true
         text: Icons.getAppCategoryIcon(Hypr.activeToplevel?.lastIpcObject.class, "desktop_windows")
@@ -75,10 +104,12 @@ Item {
 
     Title {
         id: text1
+        visible: root.barVertical
     }
 
     Title {
         id: text2
+        visible: root.barVertical
     }
 
     TextMetrics {
