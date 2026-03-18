@@ -15,8 +15,11 @@ Item {
 
     required property ShellScreen screen
 
-    readonly property real nonAnimWidth: x > 0 || hasCurrent ? children.find(c => c.shouldBeActive)?.implicitWidth ?? content.implicitWidth : 0
-    readonly property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? content.implicitHeight
+    // Keep geometry while a loader is still active (e.g. fade-out transition),
+    // but collapse completely when no popout is active anymore.
+    readonly property Item activeComp: children.find(c => c.active) ?? null
+    readonly property real nonAnimWidth: activeComp?.implicitWidth ?? 0
+    readonly property real nonAnimHeight: activeComp?.implicitHeight ?? 0
     readonly property Item current: content.item?.current ?? null
 
     property string currentName
