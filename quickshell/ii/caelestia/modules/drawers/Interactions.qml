@@ -55,7 +55,15 @@ CustomMouseArea {
     }
 
     function inBottomPanel(panel: Item, x: real, y: real): bool {
-        return y > root.height - Config.border.thickness - panel.height - Config.border.rounding && withinPanelWidth(panel, x, y);
+        // Use implicitHeight and (for launcher) contentHeight so hit-testing matches the full panel while
+        // height is still animating from 0 — otherwise focus-grab / mask holes are degenerate and the
+        // launcher closes immediately unless the cursor stays on the bottom edge.
+        let ph = Math.max(panel.height, panel.implicitHeight);
+        if (visibilities.launcher && panel === panels.launcher) {
+            const ch = panels.launcher.contentHeight ?? 0;
+            ph = Math.max(ph, ch);
+        }
+        return y > root.height - Config.border.thickness - ph - Config.border.rounding && withinPanelWidth(panel, x, y);
     }
 
     function onWheel(event: WheelEvent): void {

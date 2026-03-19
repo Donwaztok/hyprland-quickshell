@@ -123,10 +123,13 @@ Item {
                         Layout.fillWidth: !root.isVertical && enabled
                     }
                 }
+                // Legacy "logo" entries in shell.json: no UI (launcher remains available via other bindings).
                 DelegateChoice {
                     roleValue: "logo"
-                    delegate: WrappedLoader {
-                        sourceComponent: OsIcon {}
+                    delegate: Item {
+                        implicitWidth: 0
+                        implicitHeight: 0
+                        visible: false
                     }
                 }
                 DelegateChoice {

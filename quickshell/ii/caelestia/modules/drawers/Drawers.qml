@@ -82,7 +82,17 @@ Variants {
                     x: modelData.x + bar.leftMargin
                     y: modelData.y + bar.topMargin + Config.border.thickness
                     width: modelData.width
-                    height: modelData.height
+                    // Match Interactions.inBottomPanel: while launcher height animates from 0, use content
+                    // height so the input-region hole is not empty (avoids instant HyprlandFocusGrab clear).
+                    height: {
+                        const hGeom = modelData.height;
+                        const hImplicit = modelData.implicitHeight ?? 0;
+                        if (visibilities.launcher && modelData === panels.launcher) {
+                            const ch = panels.launcher.contentHeight ?? 0;
+                            return Math.max(hGeom, hImplicit, ch, 1);
+                        }
+                        return Math.max(hGeom, hImplicit);
+                    }
                     intersection: Intersection.Subtract
                 }
             }

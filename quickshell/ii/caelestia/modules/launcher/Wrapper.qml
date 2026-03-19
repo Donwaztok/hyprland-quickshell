@@ -24,6 +24,11 @@ Item {
 
     onMaxHeightChanged: timer.start()
 
+    function updateContentHeight(): void {
+        if (content.status === Loader.Ready && content.item)
+            root.contentHeight = Math.min(root.maxHeight, content.item.implicitHeight);
+    }
+
     visible: height > 0
     implicitHeight: 0
     implicitWidth: content.implicitWidth
@@ -109,6 +114,19 @@ Item {
         }
     }
 
+    // Explicit Component avoids "Cannot create delegate" with ComponentBehavior: Bound + inline sourceComponent.
+    Component {
+        id: launcherContentComponent
+
+        Content {
+            visibilities: root.visibilities
+            panels: root.panels
+            maxHeight: root.maxHeight
+
+            Component.onCompleted: root.updateContentHeight()
+        }
+    }
+
     Loader {
         id: content
 
@@ -117,14 +135,23 @@ Item {
 
         visible: false
         active: false
+        asynchronous: false
+        sourceComponent: launcherContentComponent
+
         Component.onCompleted: timer.start()
 
-        sourceComponent: Content {
-            visibilities: root.visibilities
-            panels: root.panels
-            maxHeight: root.maxHeight
+        onLoaded: root.updateContentHeight()
 
-            Component.onCompleted: root.contentHeight = implicitHeight
+        onImplicitHeightChanged: root.updateContentHeight()
+    }
+
+    Connections {
+        target: content.item
+
+        enabled: content.status === Loader.Ready && content.item !== null
+
+        function onImplicitHeightChanged(): void {
+            root.updateContentHeight();
         }
     }
 }

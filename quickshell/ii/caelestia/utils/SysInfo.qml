@@ -1,6 +1,5 @@
 pragma Singleton
 
-import caelestia.config
 import caelestia.utils
 import Quickshell
 import Quickshell.Io
@@ -36,24 +35,13 @@ Singleton {
             root.osIdLike = fd("ID_LIKE").split(" ");
 
             const logo = Quickshell.iconPath(fd("LOGO"), true);
-            if (Config.general.logo === "caelestia") {
-                root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/caelestia/assets/logo.svg`);
-                root.isDefaultLogo = true;
-            } else if (Config.general.logo) {
-                root.osLogo = Quickshell.iconPath(Config.general.logo, true) || "file://" + Paths.absolutePath(Config.general.logo);
-                root.isDefaultLogo = false;
-            } else if (logo) {
+            if (logo) {
                 root.osLogo = logo;
                 root.isDefaultLogo = false;
+            } else {
+                root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/caelestia/assets/logo.svg`);
+                root.isDefaultLogo = true;
             }
-        }
-    }
-
-    Connections {
-        target: Config.general
-
-        function onLogoChanged(): void {
-            osRelease.reload();
         }
     }
 

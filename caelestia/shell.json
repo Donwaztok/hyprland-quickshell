@@ -35,7 +35,6 @@
     }
   },
   "general": {
-    "logo": "caelestia",
     "excludedScreens": [],
     "apps": {
       "terminal": [
@@ -126,7 +125,7 @@
     }
   },
   "bar": {
-    "position": "top",
+    "position": "left",
     "size": 0.5,
     "persistent": true,
     "showOnHover": true,
@@ -156,10 +155,6 @@
       "showIcon": false
     },
     "entries": [
-      {
-        "enabled": true,
-        "id": "logo"
-      },
       {
         "enabled": true,
         "id": "workspaces"

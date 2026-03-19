@@ -1,7 +1,6 @@
 import Quickshell.Io
 
 JsonObject {
-    property string logo: ""
     property list<string> excludedScreens: []
     property Apps apps: Apps {}
     property Idle idle: Idle {}
