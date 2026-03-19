@@ -40,10 +40,6 @@ JsonObject {
         {
             id: "statusIcons",
             enabled: true
-        },
-        {
-            id: "power",
-            enabled: true
         }
     ]
 

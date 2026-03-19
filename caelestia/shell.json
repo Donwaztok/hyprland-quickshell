@@ -183,10 +183,6 @@
       {
         "enabled": true,
         "id": "statusIcons"
-      },
-      {
-        "enabled": true,
-        "id": "power"
       }
     ],
     "excludedScreens": [

@@ -170,14 +170,6 @@ Item {
                         sourceComponent: StatusIcons {}
                     }
                 }
-                DelegateChoice {
-                    roleValue: "power"
-                    delegate: WrappedLoader {
-                        sourceComponent: Power {
-                            visibilities: root.visibilities
-                        }
-                    }
-                }
             }
         }
     }

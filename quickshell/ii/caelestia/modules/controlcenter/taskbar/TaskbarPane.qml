@@ -50,7 +50,7 @@ Item {
             entriesModel.clear();
             for (let i = 0; i < Config.bar.entries.length; i++) {
                 const entry = Config.bar.entries[i];
-                if (entry.id === "activeWindow")
+                if (entry.id === "activeWindow" || entry.id === "power")
                     continue;
                 entriesModel.append({
                     id: entry.id,

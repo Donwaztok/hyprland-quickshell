@@ -107,6 +107,26 @@ Scope {
     IpcHandler {
         target: "drawers"
 
+        function open(drawer: string): void {
+            if (list().split("\n").includes(drawer)) {
+                if (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer))
+                    return;
+                const visibilities = Visibilities.getForActive();
+                visibilities[drawer] = true;
+            } else {
+                console.warn(`[IPC] Drawer "${drawer}" does not exist`);
+            }
+        }
+
+        function close(drawer: string): void {
+            if (list().split("\n").includes(drawer)) {
+                const visibilities = Visibilities.getForActive();
+                visibilities[drawer] = false;
+            } else {
+                console.warn(`[IPC] Drawer "${drawer}" does not exist`);
+            }
+        }
+
         function toggle(drawer: string): void {
             if (list().split("\n").includes(drawer)) {
                 if (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer))
