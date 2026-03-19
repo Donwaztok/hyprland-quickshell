@@ -9,7 +9,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-GridLayout {
+Item {
     id: root
 
     required property ShellScreen screen
@@ -24,11 +24,6 @@ GridLayout {
     width: isVertical ? contentWidth : (parent?.width ?? 0)
     height: isVertical ? (parent?.height ?? 0) : contentWidth
 
-    flow: isVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
-    rows: isVertical ? -1 : 1
-    columns: isVertical ? 1 : -1
-    rowSpacing: Math.max(2, Math.round(Appearance.spacing.normal * sizeFactor))
-    columnSpacing: Math.max(2, Math.round(Appearance.spacing.normal * sizeFactor))
     readonly property real spacing: Math.max(2, Math.round(Appearance.spacing.normal * sizeFactor))
 
     function closeTray(): void {
@@ -43,8 +38,20 @@ GridLayout {
         }
     }
 
+    function isEntryEnabled(entryId: string): bool {
+        const entries = Config.bar.entries ?? [];
+        for (let i = 0; i < entries.length; i++) {
+            const entry = entries[i];
+            if (entry?.id === entryId && entry.enabled !== false)
+                return true;
+        }
+        return false;
+    }
+
     function checkPopout(coord: real): void {
-        const ch = (isVertical ? childAt(width / 2, coord) : childAt(coord, height / 2)) as WrappedLoader;
+        const ch = (isVertical
+            ? contentLayout.childAt(contentLayout.width / 2, coord)
+            : contentLayout.childAt(coord, contentLayout.height / 2)) as WrappedLoader;
 
         if (ch?.id !== "tray")
             closeTray();
@@ -84,15 +91,10 @@ GridLayout {
                 popouts.hasCurrent = false;
                 item.expanded = true;
             }
-        } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
-            popouts.currentName = id.toLowerCase();
-            popouts.currentCenter = isVertical ? item.mapToItem(root, 0, itemSize / 2).y : item.mapToItem(root, itemSize / 2, 0).x;
-            popouts.hasCurrent = true;
         }
     }
 
     function handleWheel(coord: real, angleDelta: point): void {
-        const ch = (isVertical ? childAt(width / 2, coord) : childAt(coord, height / 2)) as WrappedLoader;
         const halfScreen = isVertical ? screen.height / 2 : screen.width / 2;
         if (coord < halfScreen && Config.bar.scrollActions.volume) {
             if (angleDelta.y > 0)
@@ -108,76 +110,86 @@ GridLayout {
         }
     }
 
-    Repeater {
-        id: repeater
+    GridLayout {
+        id: contentLayout
 
-        model: Config.bar.entries
+        anchors.fill: parent
+        flow: root.isVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+        rows: root.isVertical ? -1 : 1
+        columns: root.isVertical ? 1 : -1
+        rowSpacing: root.spacing
+        columnSpacing: root.spacing
 
-        DelegateChooser {
-            role: "id"
+        Repeater {
+            id: repeater
 
-            DelegateChoice {
-                roleValue: "spacer"
-                delegate: WrappedLoader {
-                    Layout.fillHeight: root.isVertical && enabled
-                    Layout.fillWidth: !root.isVertical && enabled
-                }
-            }
-            DelegateChoice {
-                roleValue: "logo"
-                delegate: WrappedLoader {
-                    sourceComponent: OsIcon {}
-                }
-            }
-            DelegateChoice {
-                roleValue: "workspaces"
-                delegate: WrappedLoader {
-                    sourceComponent: IiBar.Workspaces {
-                        vertical: root.isVertical
-                        screenOverride: root.screen
-                        overrideActiveColor: Colours.palette.m3primary
-                        overrideInactiveColor: Colours.palette.m3onSurfaceVariant
+            model: Config.bar.entries
+
+            DelegateChooser {
+                role: "id"
+
+                DelegateChoice {
+                    roleValue: "spacer"
+                    delegate: WrappedLoader {
+                        Layout.fillHeight: root.isVertical && enabled
+                        Layout.fillWidth: !root.isVertical && enabled
                     }
                 }
-            }
-            DelegateChoice {
-                roleValue: "activeWindow"
-                delegate: WrappedLoader {
-                    Layout.fillWidth: root.isVertical
-                    Layout.fillHeight: !root.isVertical
-                    sourceComponent: ActiveWindow {
-                        bar: root
-                        monitor: Brightness.getMonitorForScreen(root.screen)
+                DelegateChoice {
+                    roleValue: "logo"
+                    delegate: WrappedLoader {
+                        sourceComponent: OsIcon {}
                     }
                 }
-            }
-            DelegateChoice {
-                roleValue: "tray"
-                delegate: WrappedLoader {
-                    sourceComponent: Tray {}
+                DelegateChoice {
+                    roleValue: "workspaces"
+                    delegate: WrappedLoader {
+                        sourceComponent: IiBar.Workspaces {
+                            vertical: root.isVertical
+                            screenOverride: root.screen
+                            overrideActiveColor: Colours.palette.m3primary
+                            overrideInactiveColor: Colours.palette.m3onSurfaceVariant
+                        }
+                    }
                 }
-            }
-            DelegateChoice {
-                roleValue: "clock"
-                delegate: WrappedLoader {
-                    sourceComponent: Clock {}
+                DelegateChoice {
+                    roleValue: "tray"
+                    delegate: WrappedLoader {
+                        sourceComponent: Tray {}
+                    }
                 }
-            }
-            DelegateChoice {
-                roleValue: "statusIcons"
-                delegate: WrappedLoader {
-                    sourceComponent: StatusIcons {}
+                DelegateChoice {
+                    roleValue: "clock"
+                    delegate: WrappedLoader {
+                        enabled: false
+                    }
                 }
-            }
-            DelegateChoice {
-                roleValue: "power"
-                delegate: WrappedLoader {
-                    sourceComponent: Power {
-                        visibilities: root.visibilities
+                DelegateChoice {
+                    roleValue: "statusIcons"
+                    delegate: WrappedLoader {
+                        sourceComponent: StatusIcons {}
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "power"
+                    delegate: WrappedLoader {
+                        sourceComponent: Power {
+                            visibilities: root.visibilities
+                        }
                     }
                 }
             }
         }
+    }
+
+    Loader {
+        id: centeredClock
+
+        anchors.centerIn: parent
+        active: root.isEntryEnabled("clock")
+        visible: active
+        z: 10
+        sourceComponent: Clock {}
     }
 
     component WrappedLoader: Loader {

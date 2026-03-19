@@ -21,8 +21,6 @@ Item {
 
     property string position: Config.bar.position ?? "left"
     property real barSize: Config.bar.size ?? 1.0
-    property bool activeWindowCompact: Config.bar.activeWindow.compact ?? false
-    property bool activeWindowInverted: Config.bar.activeWindow.inverted ?? false
     property bool clockShowIcon: Config.bar.clock.showIcon ?? true
     property bool persistent: Config.bar.persistent ?? true
     property bool showOnHover: Config.bar.showOnHover ?? true
@@ -40,7 +38,6 @@ Item {
     property bool trayRecolour: Config.bar.tray.recolour ?? false
     property bool scrollVolume: Config.bar.scrollActions.volume ?? true
     property bool scrollBrightness: Config.bar.scrollActions.brightness ?? true
-    property bool popoutActiveWindow: Config.bar.popouts.activeWindow ?? true
     property bool popoutTray: Config.bar.popouts.tray ?? true
     property bool popoutStatusIcons: Config.bar.popouts.statusIcons ?? true
     property list<string> monitorNames: Hypr.monitorNames()
@@ -53,6 +50,8 @@ Item {
             entriesModel.clear();
             for (let i = 0; i < Config.bar.entries.length; i++) {
                 const entry = Config.bar.entries[i];
+                if (entry.id === "activeWindow")
+                    continue;
                 entriesModel.append({
                     id: entry.id,
                     enabled: entry.enabled !== false
@@ -64,8 +63,6 @@ Item {
     function saveConfig(entryIndex, entryEnabled) {
         Config.bar.position = root.position;
         Config.bar.size = root.barSize;
-        Config.bar.activeWindow.compact = root.activeWindowCompact;
-        Config.bar.activeWindow.inverted = root.activeWindowInverted;
         Config.bar.clock.showIcon = root.clockShowIcon;
         Config.bar.persistent = root.persistent;
         Config.bar.showOnHover = root.showOnHover;
@@ -83,7 +80,6 @@ Item {
         Config.bar.tray.recolour = root.trayRecolour;
         Config.bar.scrollActions.volume = root.scrollVolume;
         Config.bar.scrollActions.brightness = root.scrollBrightness;
-        Config.bar.popouts.activeWindow = root.popoutActiveWindow;
         Config.bar.popouts.tray = root.popoutTray;
         Config.bar.popouts.statusIcons = root.popoutStatusIcons;
         Config.bar.excludedScreens = root.excludedScreens;
@@ -453,33 +449,6 @@ Item {
                             }
                         }
 
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
-
-                            StyledText {
-                                text: qsTr("Active window")
-                                font.pointSize: Appearance.font.size.normal
-                            }
-
-                            SwitchRow {
-                                label: qsTr("Compact")
-                                checked: root.activeWindowCompact
-                                onToggled: checked => {
-                                    root.activeWindowCompact = checked;
-                                    root.saveConfig();
-                                }
-                            }
-
-                            SwitchRow {
-                                label: qsTr("Inverted")
-                                checked: root.activeWindowInverted
-                                onToggled: checked => {
-                                    root.activeWindowInverted = checked;
-                                    root.saveConfig();
-                                }
-                            }
-                        }
                     }
 
                     ColumnLayout {
@@ -495,15 +464,6 @@ Item {
                             StyledText {
                                 text: qsTr("Popouts")
                                 font.pointSize: Appearance.font.size.normal
-                            }
-
-                            SwitchRow {
-                                label: qsTr("Active window")
-                                checked: root.popoutActiveWindow
-                                onToggled: checked => {
-                                    root.popoutActiveWindow = checked;
-                                    root.saveConfig();
-                                }
                             }
 
                             SwitchRow {

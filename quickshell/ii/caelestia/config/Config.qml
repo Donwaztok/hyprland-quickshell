@@ -161,14 +161,8 @@ Singleton {
                 brightness: bar.scrollActions.brightness
             },
             popouts: {
-                activeWindow: bar.popouts.activeWindow,
                 tray: bar.popouts.tray,
                 statusIcons: bar.popouts.statusIcons
-            },
-            activeWindow: {
-                compact: bar.activeWindow.compact,
-                inverted: bar.activeWindow.inverted,
-                showOnHover: bar.activeWindow.showOnHover
             },
             tray: {
                 background: bar.tray.background,

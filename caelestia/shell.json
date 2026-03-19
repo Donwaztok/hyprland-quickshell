@@ -30,7 +30,7 @@
     },
     "transparency": {
       "enabled": false,
-      "base": 0.7979770972454091,
+      "base": 0.9503437738731857,
       "layers": 0.40959541944908184
     }
   },
@@ -136,14 +136,8 @@
       "brightness": true
     },
     "popouts": {
-      "activeWindow": true,
       "tray": true,
       "statusIcons": true
-    },
-    "activeWindow": {
-      "compact": false,
-      "inverted": false,
-      "showOnHover": true
     },
     "tray": {
       "background": false,
@@ -173,14 +167,6 @@
       {
         "enabled": true,
         "id": "workspaces"
-      },
-      {
-        "enabled": true,
-        "id": "spacer"
-      },
-      {
-        "enabled": true,
-        "id": "activeWindow"
       },
       {
         "enabled": true,

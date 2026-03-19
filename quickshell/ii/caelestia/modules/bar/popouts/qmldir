@@ -1,5 +1,4 @@
 module caelestia.modules.bar.popouts
-ActiveWindow 1.0 ActiveWindow.qml
 Audio 1.0 Audio.qml
 Background 1.0 Background.qml
 Battery 1.0 Battery.qml

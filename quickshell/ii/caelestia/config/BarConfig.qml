@@ -10,7 +10,6 @@ JsonObject {
     property int dragThreshold: 20
     property ScrollActions scrollActions: ScrollActions {}
     property Popouts popouts: Popouts {}
-    property ActiveWindow activeWindow: ActiveWindow {}
     property Tray tray: Tray {}
     property Status status: Status {}
     property Clock clock: Clock {}
@@ -24,14 +23,6 @@ JsonObject {
         },
         {
             id: "workspaces",
-            enabled: true
-        },
-        {
-            id: "spacer",
-            enabled: true
-        },
-        {
-            id: "activeWindow",
             enabled: true
         },
         {
@@ -62,15 +53,8 @@ JsonObject {
     }
 
     component Popouts: JsonObject {
-        property bool activeWindow: true
         property bool tray: true
         property bool statusIcons: true
-    }
-
-    component ActiveWindow: JsonObject {
-        property bool compact: false
-        property bool inverted: false
-        property bool showOnHover: true
     }
 
     component Tray: JsonObject {
