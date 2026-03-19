@@ -3,8 +3,6 @@ import Quickshell.Io
 JsonObject {
     // Position of the taskbar: "left", "right", "top", "bottom"
     property string position: "left"
-    // Bar size scale (1.0 = 100%), same for horizontal and vertical bar
-    property real size: 1.0
     property bool persistent: true
     property bool showOnHover: true
     property int dragThreshold: 20
@@ -67,6 +65,8 @@ JsonObject {
     }
 
     component Sizes: JsonObject {
+        // Bar depth in pixels: width when bar is vertical, height when horizontal.
+        property int thickness: 36
         property int innerWidth: 40
         property int windowPreviewSize: 400
         property int trayMenuWidth: 300

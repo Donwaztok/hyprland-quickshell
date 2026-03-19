@@ -26,6 +26,9 @@ Singleton {
     property alias services: adapter.services
     property alias paths: adapter.paths
 
+    // Bar UI scale vs 36px design baseline (avoids a separate singleton that would circular-import Config via caelestia.utils).
+    readonly property real barThicknessScale: (bar.sizes.thickness > 0) ? (bar.sizes.thickness / 36) : 1
+
     property bool loaded: false
     property bool recentlySaved: false
 
@@ -151,7 +154,6 @@ Singleton {
     function serializeBar(): var {
         return {
             position: bar.position,
-            size: bar.size,
             persistent: bar.persistent,
             showOnHover: bar.showOnHover,
             dragThreshold: bar.dragThreshold,
@@ -178,6 +180,15 @@ Singleton {
             },
             clock: {
                 showIcon: bar.clock.showIcon
+            },
+            sizes: {
+                thickness: bar.sizes.thickness,
+                innerWidth: bar.sizes.innerWidth,
+                windowPreviewSize: bar.sizes.windowPreviewSize,
+                trayMenuWidth: bar.sizes.trayMenuWidth,
+                batteryWidth: bar.sizes.batteryWidth,
+                networkWidth: bar.sizes.networkWidth,
+                kbLayoutWidth: bar.sizes.kbLayoutWidth
             },
             entries: bar.entries,
             excludedScreens: bar.excludedScreens

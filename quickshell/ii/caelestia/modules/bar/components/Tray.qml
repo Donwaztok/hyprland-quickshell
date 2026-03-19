@@ -12,11 +12,10 @@ StyledRect {
     id: root
 
     readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
-    readonly property real sizeFactor: (Config.bar.size ?? 1)
-    readonly property int effectiveInnerWidth: Math.round(Config.bar.sizes.innerWidth * sizeFactor)
-    readonly property int padSm: Math.max(1, Math.round(Appearance.padding.small * sizeFactor))
-    readonly property int padN: Math.max(1, Math.round(Appearance.padding.normal * sizeFactor))
-    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * sizeFactor))
+    readonly property int effectiveInnerWidth: Config.bar.sizes.thickness
+    readonly property int padSm: Math.max(1, Math.round(Appearance.padding.small * Config.barThicknessScale))
+    readonly property int padN: Math.max(1, Math.round(Appearance.padding.normal * Config.barThicknessScale))
+    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * Config.barThicknessScale))
     readonly property alias layout: layoutDims
     readonly property alias items: items
 
@@ -29,7 +28,7 @@ StyledRect {
 
     readonly property int padding: Config.bar.tray.background ? root.padN : root.padSm
     readonly property int spacing: Config.bar.tray.background ? root.spaceSm : 0
-    readonly property int trayItemSize: Appearance.font.size.small * 2
+    readonly property int trayItemSize: Math.max(16, Math.round(Appearance.font.size.small * 2 * Config.barThicknessScale))
 
     property bool expanded
 
@@ -147,7 +146,7 @@ StyledRect {
 
                 anchors.centerIn: parent
                 text: root.barVertical ? "expand_less" : "expand_more"
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Appearance.font.size.large * Config.barThicknessScale
                 rotation: root.expanded ? (root.barVertical ? 180 : 180) : 0
 
                 Behavior on rotation { Anim {} }

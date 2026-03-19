@@ -8,8 +8,7 @@ import QtQuick
 Item {
     id: root
 
-    readonly property real sizeFactor: (Config.bar.size ?? 1)
-    readonly property int padSm: Math.max(1, Math.round(Appearance.padding.small * sizeFactor))
+    readonly property int padSm: Math.max(1, Math.round(Appearance.padding.small * Config.barThicknessScale))
 
     implicitWidth: icon.implicitHeight + padSm * 2
     implicitHeight: icon.implicitHeight
@@ -39,6 +38,6 @@ Item {
         text: "settings"
         color: Colours.palette.m3onSurface
         font.bold: true
-        font.pointSize: Appearance.font.size.normal
+        font.pointSize: Appearance.font.size.normal * Config.barThicknessScale
     }
 }

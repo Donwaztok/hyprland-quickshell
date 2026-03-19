@@ -16,10 +16,7 @@ Item {
 
     readonly property string position: Config.bar.position === "right" || Config.bar.position === "top" || Config.bar.position === "bottom" ? Config.bar.position : "left"
     readonly property bool isVertical: position === "left" || position === "right"
-    readonly property real sizeFactor: (Config.bar.size ?? 1)
-
-    readonly property int padding: Math.max(Math.round(Appearance.padding.smaller * sizeFactor), Config.border.thickness)
-    readonly property int contentWidth: Math.round(Config.bar.sizes.innerWidth * sizeFactor) + padding * 2
+    readonly property int contentWidth: Config.bar.sizes.thickness
     readonly property int exclusiveZone: !disabled && (Config.bar.persistent || visibilities.bar) ? contentWidth : Config.border.thickness
     readonly property bool shouldBeVisible: !disabled && (Config.bar.persistent || visibilities.bar || isHovered)
     property bool isHovered

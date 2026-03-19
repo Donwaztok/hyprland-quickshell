@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 import caelestia.components
 import caelestia.services
-import caelestia.utils
 import caelestia.config
+import caelestia.utils
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Services.UPower
@@ -14,10 +14,9 @@ Item {
     id: root
 
     readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
-    readonly property real sizeFactor: (Config.bar.size ?? 1)
-    readonly property int effectiveInnerWidth: Math.round(Config.bar.sizes.innerWidth * sizeFactor)
-    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * sizeFactor))
-    readonly property int spaceS: Math.max(1, Math.round(Appearance.spacing.smaller * sizeFactor))
+    readonly property int effectiveInnerWidth: Config.bar.sizes.thickness
+    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * Config.barThicknessScale))
+    readonly property int spaceS: Math.max(1, Math.round(Appearance.spacing.smaller * Config.barThicknessScale))
     property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
 
@@ -57,6 +56,7 @@ Item {
                         id: capslockIcon
 
                         anchors.centerIn: parent
+                        pointSizeScale: Config.barThicknessScale
 
                         scale: Hypr.capsLock ? 1 : 0.5
                         opacity: Hypr.capsLock ? 1 : 0
@@ -88,6 +88,7 @@ Item {
                         id: numlockIcon
 
                         anchors.centerIn: parent
+                        pointSizeScale: Config.barThicknessScale
 
                         scale: Hypr.numLock ? 1 : 0.5
                         opacity: Hypr.numLock ? 1 : 0
@@ -117,6 +118,7 @@ Item {
             active: Config.bar.status.showAudio
 
             sourceComponent: MaterialIcon {
+                pointSizeScale: Config.barThicknessScale
                 animate: true
                 text: Icons.getVolumeIcon(Audio.volume, Audio.muted)
                 color: root.colour
@@ -129,6 +131,7 @@ Item {
             active: Config.bar.status.showMicrophone
 
             sourceComponent: MaterialIcon {
+                pointSizeScale: Config.barThicknessScale
                 animate: true
                 text: Icons.getMicVolumeIcon(Audio.sourceVolume, Audio.sourceMuted)
                 color: root.colour
@@ -145,6 +148,7 @@ Item {
                 text: Hypr.kbLayout
                 color: root.colour
                 font.family: Appearance.font.family.mono
+                font.pointSize: Math.max(6, Appearance.font.size.small * Config.barThicknessScale)
             }
         }
 
@@ -154,6 +158,7 @@ Item {
             active: Config.bar.status.showNetwork && (!Nmcli.activeEthernet || Config.bar.status.showWifi)
 
             sourceComponent: MaterialIcon {
+                pointSizeScale: Config.barThicknessScale
                 animate: true
                 text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
                 color: root.colour
@@ -166,6 +171,7 @@ Item {
             active: Config.bar.status.showNetwork && Nmcli.activeEthernet
 
             sourceComponent: MaterialIcon {
+                pointSizeScale: Config.barThicknessScale
                 animate: true
                 text: "cable"
                 color: root.colour
@@ -184,6 +190,7 @@ Item {
 
                 // Bluetooth icon
                 MaterialIcon {
+                    pointSizeScale: Config.barThicknessScale
                     animate: true
                     text: {
                         if (!Bluetooth.defaultAdapter?.enabled)
@@ -206,6 +213,7 @@ Item {
 
                         required property BluetoothDevice modelData
 
+                        pointSizeScale: Config.barThicknessScale
                         animate: true
                         text: Icons.getBluetoothIcon(modelData?.icon)
                         color: root.colour
@@ -244,6 +252,7 @@ Item {
             active: Config.bar.status.showBattery
 
             sourceComponent: MaterialIcon {
+                pointSizeScale: Config.barThicknessScale
                 animate: true
                 text: {
                     if (!UPower.displayDevice.isLaptopBattery) {

@@ -126,7 +126,6 @@
   },
   "bar": {
     "position": "left",
-    "size": 0.5,
     "persistent": true,
     "showOnHover": true,
     "dragThreshold": 20,
@@ -153,6 +152,15 @@
     },
     "clock": {
       "showIcon": false
+    },
+    "sizes": {
+      "thickness": 36,
+      "innerWidth": 40,
+      "windowPreviewSize": 400,
+      "trayMenuWidth": 300,
+      "batteryWidth": 250,
+      "networkWidth": 320,
+      "kbLayoutWidth": 320
     },
     "entries": [
       {

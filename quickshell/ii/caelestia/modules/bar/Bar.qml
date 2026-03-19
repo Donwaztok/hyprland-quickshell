@@ -17,14 +17,13 @@ Item {
     required property BarPopouts.Wrapper popouts
 
     readonly property bool isVertical: Config.bar.position === "left" || Config.bar.position === "right"
-    readonly property real sizeFactor: (Config.bar.size ?? 1)
-    readonly property int vPadding: Math.max(2, Math.round(Appearance.padding.large * sizeFactor))
-    readonly property int contentWidth: Math.round(Config.bar.sizes.innerWidth * sizeFactor) + Math.max(Math.round(Appearance.padding.smaller * sizeFactor), Config.border.thickness) * 2
+    readonly property int vPadding: Math.max(2, Math.round(Appearance.padding.large * Config.barThicknessScale))
+    readonly property int contentWidth: Config.bar.sizes.thickness
 
     width: isVertical ? contentWidth : (parent?.width ?? 0)
     height: isVertical ? (parent?.height ?? 0) : contentWidth
 
-    readonly property real spacing: Math.max(2, Math.round(Appearance.spacing.normal * sizeFactor))
+    readonly property real spacing: Math.max(2, Math.round(Appearance.spacing.normal * Config.barThicknessScale))
 
     function closeTray(): void {
         if (!Config.bar.tray.compact)

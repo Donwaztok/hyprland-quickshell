@@ -10,8 +10,7 @@ Item {
     id: root
 
     readonly property bool barVertical: Config.bar.position === "left" || Config.bar.position === "right"
-    readonly property real sizeFactor: (Config.bar.size ?? 1)
-    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * sizeFactor))
+    readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * Config.barThicknessScale))
     property color colour: Colours.palette.m3tertiary
 
     implicitWidth: barVertical ? clockColumn.implicitWidth : clockRow.implicitWidth
@@ -29,6 +28,7 @@ Item {
             active: Config.bar.clock.showIcon
             visible: active
             sourceComponent: MaterialIcon {
+                pointSizeScale: Config.barThicknessScale
                 text: "calendar_month"
                 color: root.colour
             }
@@ -38,7 +38,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: StyledText.AlignHCenter
             text: Time.format(Config.services.useTwelveHourClock ? "hh\nmm\nA" : "hh\nmm")
-            font.pointSize: Appearance.font.size.smaller
+            font.pointSize: Math.max(5, Appearance.font.size.smaller * Config.barThicknessScale)
             font.family: Appearance.font.family.mono
             color: root.colour
         }
@@ -56,6 +56,7 @@ Item {
             active: Config.bar.clock.showIcon
             visible: active
             sourceComponent: MaterialIcon {
+                pointSizeScale: Config.barThicknessScale
                 text: "calendar_month"
                 color: root.colour
             }
@@ -64,7 +65,7 @@ Item {
         StyledText {
             Layout.alignment: Qt.AlignVCenter
             text: Time.format(Config.services.useTwelveHourClock ? "h:mm A" : "HH:mm")
-            font.pointSize: Appearance.font.size.smaller
+            font.pointSize: Math.max(5, Appearance.font.size.smaller * Config.barThicknessScale)
             font.family: Appearance.font.family.mono
             color: root.colour
         }

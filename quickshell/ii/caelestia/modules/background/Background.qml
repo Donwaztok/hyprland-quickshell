@@ -56,8 +56,8 @@ Loader {
                 id: clockLoader
                 active: Config.background.desktopClock.enabled
 
-                anchors.margins: Math.round(Appearance.padding.large * 2 * (Config.bar.size ?? 1))
-                anchors.leftMargin: Math.round(Appearance.padding.large * 2 * (Config.bar.size ?? 1)) + Math.round(Config.bar.sizes.innerWidth * (Config.bar.size ?? 1)) + Math.max(Math.round(Appearance.padding.smaller * (Config.bar.size ?? 1)), Config.border.thickness)
+                anchors.margins: Math.round(Appearance.padding.large * 2 * Config.barThicknessScale)
+                anchors.leftMargin: Math.round(Appearance.padding.large * 2 * Config.barThicknessScale) + Config.bar.sizes.thickness + Math.max(Math.round(Appearance.padding.smaller * Config.barThicknessScale), Config.border.thickness)
 
                 state: Config.background.desktopClock.position
                 states: [

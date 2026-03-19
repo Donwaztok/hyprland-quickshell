@@ -20,7 +20,7 @@ Item {
     required property Session session
 
     property string position: Config.bar.position ?? "left"
-    property real barSize: Config.bar.size ?? 1.0
+    property int barThickness: Config.bar.sizes.thickness ?? 36
     property bool clockShowIcon: Config.bar.clock.showIcon ?? true
     property bool persistent: Config.bar.persistent ?? true
     property bool showOnHover: Config.bar.showOnHover ?? true
@@ -60,7 +60,7 @@ Item {
 
     function saveConfig(entryIndex, entryEnabled) {
         Config.bar.position = root.position;
-        Config.bar.size = root.barSize;
+        Config.bar.sizes.thickness = root.barThickness;
         Config.bar.clock.showIcon = root.clockShowIcon;
         Config.bar.persistent = root.persistent;
         Config.bar.showOnHover = root.showOnHover;
@@ -215,7 +215,7 @@ Item {
                     alignTop: true
 
                     StyledText {
-                        text: qsTr("Bar size")
+                        text: qsTr("Bar thickness")
                         font.pointSize: Appearance.font.size.normal
                     }
 
@@ -224,17 +224,20 @@ Item {
 
                         SliderInput {
                             Layout.fillWidth: true
-                            label: qsTr("Bar size (%)")
-                            value: root.barSize * 100
-                            from: 50
-                            to: 150
+                            label: qsTr("Thickness (px)")
+                            value: root.barThickness
+                            from: 28
+                            to: 72
                             stepSize: 1
-                            suffix: "%"
-                            validator: IntValidator { bottom: 50; top: 150 }
+                            suffix: "px"
+                            validator: IntValidator {
+                                bottom: 28
+                                top: 72
+                            }
                             formatValueFunction: val => Math.round(val).toString()
                             parseValueFunction: text => parseInt(text)
                             onValueModified: newValue => {
-                                root.barSize = newValue / 100;
+                                root.barThickness = Math.round(newValue);
                                 root.saveConfig();
                             }
                         }
