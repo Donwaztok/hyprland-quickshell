@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import caelestia.components
 import caelestia.config
+import caelestia.services
 import Quickshell
 import QtQuick
 
@@ -51,10 +52,8 @@ Item {
     Loader {
         id: content
 
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
-
-        Component.onCompleted: active = Qt.binding(() => (root.visibilities.session && Config.session.enabled) || root.visible)
+        anchors.centerIn: parent
+        active: true
 
         sourceComponent: Content {
             visibilities: root.visibilities

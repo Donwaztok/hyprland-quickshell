@@ -2,7 +2,6 @@ import caelestia.services
 import caelestia.config
 import caelestia.modules.osd as Osd
 import caelestia.modules.notifications as Notifications
-import caelestia.modules.session as Session
 import caelestia.modules.launcher as Launcher
 import caelestia.modules.dashboard as Dashboard
 import caelestia.modules.bar.popouts as BarPopouts
@@ -28,7 +27,7 @@ Shape {
     Osd.Background {
         wrapper: root.panels.osd
 
-        startX: root.width - root.panels.session.width - root.panels.sidebar.width
+        startX: root.width - root.panels.sidebar.width
         startY: (root.height - wrapper.height) / 2 - rounding
     }
 
@@ -38,13 +37,6 @@ Shape {
 
         startX: root.width
         startY: 0
-    }
-
-    Session.Background {
-        wrapper: root.panels.session
-
-        startX: root.width - root.panels.sidebar.width
-        startY: (root.height - wrapper.height) / 2 - rounding
     }
 
     Launcher.Background {

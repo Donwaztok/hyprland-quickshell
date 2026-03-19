@@ -132,8 +132,8 @@
     "showOnHover": true,
     "dragThreshold": 20,
     "scrollActions": {
-      "volume": true,
-      "brightness": true
+      "volume": false,
+      "brightness": false
     },
     "popouts": {
       "tray": true,
@@ -519,7 +519,6 @@
   },
   "paths": {
     "wallpaperDir": "~/Pictures/Wallpapers",
-    "sessionGif": "root:/assets/kurukuru.gif",
     "mediaGif": "root:/assets/bongocat.gif"
   }
 }
