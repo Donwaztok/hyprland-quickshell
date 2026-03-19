@@ -95,19 +95,7 @@ Item {
     }
 
     function handleWheel(coord: real, angleDelta: point): void {
-        const halfScreen = isVertical ? screen.height / 2 : screen.width / 2;
-        if (coord < halfScreen && Config.bar.scrollActions.volume) {
-            if (angleDelta.y > 0)
-                Audio.incrementVolume();
-            else if (angleDelta.y < 0)
-                Audio.decrementVolume();
-        } else if (Config.bar.scrollActions.brightness) {
-            const monitor = Brightness.getMonitorForScreen(screen);
-            if (angleDelta.y > 0)
-                monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
-            else if (angleDelta.y < 0)
-                monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
-        }
+        // Wheel actions on the bar are intentionally disabled.
     }
 
     GridLayout {

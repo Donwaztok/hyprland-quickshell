@@ -36,8 +36,6 @@ Item {
     property bool trayBackground: Config.bar.tray.background ?? false
     property bool trayCompact: Config.bar.tray.compact ?? false
     property bool trayRecolour: Config.bar.tray.recolour ?? false
-    property bool scrollVolume: Config.bar.scrollActions.volume ?? true
-    property bool scrollBrightness: Config.bar.scrollActions.brightness ?? true
     property bool popoutTray: Config.bar.popouts.tray ?? true
     property bool popoutStatusIcons: Config.bar.popouts.statusIcons ?? true
     property list<string> monitorNames: Hypr.monitorNames()
@@ -78,8 +76,6 @@ Item {
         Config.bar.tray.background = root.trayBackground;
         Config.bar.tray.compact = root.trayCompact;
         Config.bar.tray.recolour = root.trayRecolour;
-        Config.bar.scrollActions.volume = root.scrollVolume;
-        Config.bar.scrollActions.brightness = root.scrollBrightness;
         Config.bar.popouts.tray = root.popoutTray;
         Config.bar.popouts.statusIcons = root.popoutStatusIcons;
         Config.bar.excludedScreens = root.excludedScreens;
@@ -336,39 +332,6 @@ Item {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignTop
                         spacing: Appearance.spacing.normal
-
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
-
-                            StyledText {
-                                text: qsTr("Scroll Actions")
-                                font.pointSize: Appearance.font.size.normal
-                            }
-
-                            ConnectedButtonGroup {
-                                rootItem: root
-
-                                options: [
-                                    {
-                                        label: qsTr("Volume"),
-                                        propertyName: "scrollVolume",
-                                        onToggled: function (checked) {
-                                            root.scrollVolume = checked;
-                                            root.saveConfig();
-                                        }
-                                    },
-                                    {
-                                        label: qsTr("Brightness"),
-                                        propertyName: "scrollBrightness",
-                                        onToggled: function (checked) {
-                                            root.scrollBrightness = checked;
-                                            root.saveConfig();
-                                        }
-                                    }
-                                ]
-                            }
-                        }
                     }
 
                     ColumnLayout {

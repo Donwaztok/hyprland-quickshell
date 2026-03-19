@@ -131,10 +131,6 @@
     "persistent": true,
     "showOnHover": true,
     "dragThreshold": 20,
-    "scrollActions": {
-      "volume": false,
-      "brightness": false
-    },
     "popouts": {
       "tray": true,
       "statusIcons": true
@@ -519,6 +515,7 @@
   },
   "paths": {
     "wallpaperDir": "~/Pictures/Wallpapers",
+    "sessionGif": "root:/caelestia/assets/kurukuru.gif",
     "mediaGif": "root:/assets/bongocat.gif"
   }
 }

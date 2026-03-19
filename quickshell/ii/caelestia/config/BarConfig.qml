@@ -8,7 +8,6 @@ JsonObject {
     property bool persistent: true
     property bool showOnHover: true
     property int dragThreshold: 20
-    property ScrollActions scrollActions: ScrollActions {}
     property Popouts popouts: Popouts {}
     property Tray tray: Tray {}
     property Status status: Status {}
@@ -42,11 +41,6 @@ JsonObject {
             enabled: true
         }
     ]
-
-    component ScrollActions: JsonObject {
-        property bool volume: true
-        property bool brightness: true
-    }
 
     component Popouts: JsonObject {
         property bool tray: true

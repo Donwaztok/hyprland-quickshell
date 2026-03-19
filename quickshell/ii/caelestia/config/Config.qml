@@ -156,10 +156,6 @@ Singleton {
             persistent: bar.persistent,
             showOnHover: bar.showOnHover,
             dragThreshold: bar.dragThreshold,
-            scrollActions: {
-                volume: bar.scrollActions.volume,
-                brightness: bar.scrollActions.brightness
-            },
             popouts: {
                 tray: bar.popouts.tray,
                 statusIcons: bar.popouts.statusIcons
