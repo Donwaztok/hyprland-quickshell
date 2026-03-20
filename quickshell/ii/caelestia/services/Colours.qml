@@ -10,6 +10,8 @@ import QtQuick
 Singleton {
     id: root
 
+    signal schemeApplied()
+
     property bool showPreview
     property string scheme
     property string flavour
@@ -76,6 +78,7 @@ Singleton {
             if (colours.hasOwnProperty(propName))
                 colours[propName] = `#${colour}`;
         }
+        root.schemeApplied();
     }
 
     function setMode(mode: string): void {

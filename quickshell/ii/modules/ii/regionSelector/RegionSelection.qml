@@ -1,4 +1,4 @@
-pragma ComponentBehavior: Bound
+import caelestia.services
 import qs.modules.common
 import qs.modules.common.utils
 import qs.modules.common.functions
@@ -35,12 +35,12 @@ PanelWindow {
     signal dismiss()
 
     property string screenshotDir: Directories.screenshotTemp
-    property color overlayColor: ColorUtils.transparentize("#000000", 0.4)
-    property color brightText: Appearance.m3colors.darkmode ? Appearance.colors.colOnLayer0 : Appearance.colors.colLayer0
-    property color brightSecondary: Appearance.m3colors.darkmode ? Appearance.colors.colSecondary : Appearance.colors.colOnSecondary
-    property color brightTertiary: Appearance.m3colors.darkmode ? Appearance.colors.colTertiary : Qt.lighter(Appearance.colors.colPrimary)
+    property color overlayColor: ColorUtils.transparentize(Colours.tPalette.m3scrim, 0.45)
+    property color brightText: !Colours.light ? Colours.tPalette.m3onSurface : Colours.tPalette.m3surface
+    property color brightSecondary: !Colours.light ? Colours.tPalette.m3secondary : Colours.tPalette.m3onSecondary
+    property color brightTertiary: !Colours.light ? Colours.tPalette.m3tertiary : Qt.lighter(Colours.tPalette.m3primary)
     property color selectionBorderColor: ColorUtils.mix(brightText, brightSecondary, 0.5)
-    property color selectionFillColor: "#33ffffff"
+    property color selectionFillColor: ColorUtils.transparentize(Colours.tPalette.m3primary, 0.18)
     property color windowBorderColor: brightSecondary
     property color windowFillColor: ColorUtils.transparentize(windowBorderColor, 0.85)
     property color imageBorderColor: brightTertiary
@@ -505,10 +505,10 @@ PanelWindow {
                         StyledToolTip {
                             text: Translation.tr("Close")
                         }
-                        colBackground: Appearance.colors.colTertiaryContainer
-                        colBackgroundHover: Appearance.colors.colTertiaryContainerHover
-                        colRipple: Appearance.colors.colTertiaryContainerActive
-                        colOnBackground: Appearance.colors.colOnTertiaryContainer
+                        colBackground: Colours.tPalette.m3primary
+                        colBackgroundHover: ColorUtils.mix(Colours.tPalette.m3primary, Colours.tPalette.m3onPrimary, 0.88)
+                        colRipple: ColorUtils.mix(Colours.tPalette.m3primary, Colours.tPalette.m3onPrimary, 0.75)
+                        colOnBackground: Colours.tPalette.m3onPrimary
                     }
                 }
             }

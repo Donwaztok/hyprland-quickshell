@@ -1,4 +1,3 @@
-pragma ComponentBehavior: Bound
 import qs
 import qs.modules.common
 import qs.modules.common.functions
@@ -13,14 +12,11 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
-// Options toolbar
 Toolbar {
     id: root
 
-    // Use a synchronizer on these
     property var action
     property var selectionMode
-    // Signals
     signal dismiss()
 
     ToolbarTabBar {

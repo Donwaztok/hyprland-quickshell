@@ -6,6 +6,7 @@ Item {
     property QtObject options: opts
     function refreshDevices() {}
     function batchMessage(arr) {}
+    function refreshOptions(): void {}
     HyprDevices {
         id: dev
     }

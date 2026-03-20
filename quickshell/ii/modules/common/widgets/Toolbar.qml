@@ -1,3 +1,4 @@
+import caelestia.services
 import QtQuick
 import QtQuick.Layouts
 import qs.modules.common
@@ -31,7 +32,10 @@ Item {
     Rectangle {
         id: background
         anchors.fill: parent
-        color: Appearance.m3colors.m3surfaceContainer
+        // tPalette = Caelestia layer() (transparency / wallpaper tint); differs from Appearance after MaterialThemeLoader sync.
+        color: Colours.tPalette.m3surfaceContainer
+        border.width: 1
+        border.color: Colours.tPalette.m3outlineVariant
         implicitHeight: 56
         implicitWidth: toolbarLayout.implicitWidth + root.padding * 2
         radius: height / 2

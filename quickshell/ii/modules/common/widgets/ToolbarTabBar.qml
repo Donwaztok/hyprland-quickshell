@@ -1,4 +1,4 @@
-pragma ComponentBehavior: Bound
+import caelestia.services
 import qs.modules.common
 import qs.modules.common.models
 import qs.services
@@ -51,7 +51,8 @@ Item {
     Rectangle {
         id: activeIndicator
         z: 0
-        color: Appearance.colors.colSecondaryContainer
+        // Primary = Caelestia theme accent (was secondaryContainer — looked neutral / off-brand).
+        color: Colours.tPalette.m3primary
         implicitWidth: contentItem.children[root.currentIndex]?.implicitWidth ?? 0
         implicitHeight: contentItem.children[root.currentIndex]?.implicitHeight ?? 0
         radius: height / 2
