@@ -19,7 +19,11 @@ Item {
     required property int padding
     required property int rounding
 
-    readonly property bool showWallpapers: search.text.startsWith(`${Config.launcher.actionPrefix}wallpaper `)
+    readonly property bool showWallpapers: {
+        const p = `${Config.launcher.actionPrefix}wallpaper`;
+        const t = search.text;
+        return t === p || t.startsWith(p + " ");
+    }
     readonly property Item currentList: showWallpapers ? wallpaperList.item : appList.item
 
     anchors.horizontalCenter: parent.horizontalCenter
@@ -135,7 +139,15 @@ Item {
             }
 
             StyledText {
-                text: root.state === "wallpapers" && Wallpapers.list.length === 0 ? qsTr("Try putting some wallpapers in %1").arg(Paths.shortenHome(Paths.wallsdir)) : qsTr("Try searching for something else")
+                text: {
+                    if (root.state !== "wallpapers")
+                        return qsTr("Try searching for something else");
+                    if (Wallpapers.list.length === 0)
+                        return qsTr("Try putting some wallpapers in %1").arg(Paths.shortenHome(Paths.wallsdir));
+                    if ((root.currentList?.count ?? 0) === 0)
+                        return qsTr("No file matches that search — delete the text after %1wallpaper to list every image.").arg(Config.launcher.actionPrefix);
+                    return "";
+                }
                 color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.normal
             }

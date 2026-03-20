@@ -1,0 +1,5 @@
+module caelestia.modules.background
+Background 1.0 Background.qml
+DesktopClock 1.0 DesktopClock.qml
+Visualiser 1.0 Visualiser.qml
+Wallpaper 1.0 Wallpaper.qml

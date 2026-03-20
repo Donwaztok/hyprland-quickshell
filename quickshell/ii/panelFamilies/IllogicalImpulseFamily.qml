@@ -2,7 +2,8 @@ import QtQuick
 import Quickshell
 
 import qs.modules.common
-import qs.modules.ii.background
+import caelestia.config as CaelestiaCfg
+import caelestia.modules.background as CaelestiaBackground
 import qs.modules.ii.cheatsheet
 import qs.modules.ii.dock
 import qs.modules.ii.lock
@@ -19,7 +20,10 @@ import "../caelestia/modules/drawers" as CaelestiaDrawers
 Scope {
     PanelLoader { component: CaelestiaCore.Shortcuts {} }
     PanelLoader { component: CaelestiaDrawers.Drawers {} }
-    PanelLoader { component: Background {} }
+    PanelLoader {
+        extraCondition: CaelestiaCfg.Config.loaded
+        component: CaelestiaBackground.Background {}
+    }
     PanelLoader { component: Cheatsheet {} }
     PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
     PanelLoader { component: Lock {} }

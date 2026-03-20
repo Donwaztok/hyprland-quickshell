@@ -49,7 +49,12 @@ PathView {
 
         readonly property string search: root.search.text.split(" ").slice(1).join(" ")
 
-        values: Wallpapers.query(search)
+        // QML does not always invalidate this binding when only wallpapers.entries is filled later;
+        // wallpaperImageCount forces a refresh when the folder scan updates.
+        values: {
+            void Wallpapers.wallpaperImageCount;
+            return Wallpapers.query(search);
+        }
         onValuesChanged: root.currentIndex = search ? 0 : values.findIndex(w => w.path === Wallpapers.actualCurrent)
     }
 

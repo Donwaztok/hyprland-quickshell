@@ -14,9 +14,6 @@ Item {
     property list<string> keys: [key]
     property list<real> weights: [1]
 
-    readonly property var fzf: useFuzzy ? [] : new Fzf.Finder(list, Object.assign({
-        selector
-    }, extraOpts))
     readonly property list<var> fuzzyPrepped: useFuzzy ? list.map(e => {
         const obj = {
             _item: e
@@ -47,7 +44,11 @@ Item {
                 scoreFn: r => weights.reduce((a, w, i) => a + r[i].score * w, 0)
             }, extraOpts)).map(r => r.obj._item);
 
-        return fzf.find(search).sort((a, b) => {
+        // Always build Finder from current `list` (FileSystemModel can fill entries after startup).
+        const finder = new Fzf.Finder(list, Object.assign({
+            selector
+        }, extraOpts));
+        return finder.find(search).sort((a, b) => {
             if (a.score === b.score)
                 return selector(a.item).trim().length - selector(b.item).trim().length;
             return b.score - a.score;
