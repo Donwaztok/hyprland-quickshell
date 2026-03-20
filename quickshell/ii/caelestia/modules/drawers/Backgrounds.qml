@@ -58,9 +58,6 @@ Shape {
         invertBottomRounding: Config.bar.position === "top" || Config.bar.position === "bottom"
             ? (wrapper.x + wrapper.width + 1 >= root.width)
             : (wrapper.y + wrapper.height + 1 >= root.height)
-
-        startX: Config.bar.position === "top" || Config.bar.position === "bottom" ? (wrapper.x - rounding * sideRounding) : wrapper.x
-        startY: Config.bar.position === "top" || Config.bar.position === "bottom" ? wrapper.y : (wrapper.y - rounding * sideRounding)
     }
 
     Utilities.Background {

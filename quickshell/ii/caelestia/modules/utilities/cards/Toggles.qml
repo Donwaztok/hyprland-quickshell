@@ -14,6 +14,13 @@ StyledRect {
     required property var visibilities
     required property Item popouts
 
+    Timer {
+        id: closeUtilitiesAfterDetachTimer
+        interval: 32
+        repeat: false
+        onTriggered: root.visibilities.utilities = false
+    }
+
     readonly property var quickToggles: {
         const seenIds = new Set();
 
@@ -117,8 +124,8 @@ StyledRect {
                         inactiveOnColour: Colours.palette.m3onSurfaceVariant
                         toggle: false
                         onClicked: {
-                            root.visibilities.utilities = false;
-                            root.popouts.detach("network");
+                            root.popouts.detach("dashboard");
+                            closeUtilitiesAfterDetachTimer.restart();
                         }
                     }
                 }

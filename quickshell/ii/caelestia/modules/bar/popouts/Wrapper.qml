@@ -17,10 +17,24 @@ Item {
 
     // Keep geometry while a loader is still active (e.g. fade-out transition),
     // but collapse completely when no popout is active anymore.
-    readonly property Item activeComp: children.find(c => c.active) ?? null
-    readonly property real nonAnimWidth: activeComp?.implicitWidth ?? 0
-    readonly property real nonAnimHeight: activeComp?.implicitHeight ?? 0
-    readonly property Item current: content.item?.current ?? null
+    // Do not use children.find(c => c.active): during detach, the bar loader can
+    // still be active=true while fading out but detached loaders are already active,
+    // so find() returns the wrong item and implicitHeight collapses (Shape gap bug).
+    // While detached, also use Config fallbacks so size is never 0 before Loader.item exists,
+    // and disable implicit size Behaviors so height does not lag behind the real content.
+    readonly property real detachedCcHeight: screen.height * Config.controlCenter.sizes.heightMult
+    readonly property real detachedCcWidth: detachedCcHeight * Config.controlCenter.sizes.ratio
+    readonly property real nonAnimWidth: detachedMode === "any"
+        ? Math.max(detachedCcWidth, detachedLoader.item?.implicitWidth ?? detachedLoader.implicitWidth ?? 0)
+        : detachedMode === "winfo"
+            ? Math.max(1, winfoLoader.item?.implicitWidth ?? winfoLoader.implicitWidth ?? 0)
+            : (hasCurrent ? (barPopoutsLoader.implicitWidth ?? 0) : 0)
+    readonly property real nonAnimHeight: detachedMode === "any"
+        ? Math.max(detachedCcHeight, detachedLoader.item?.implicitHeight ?? detachedLoader.implicitHeight ?? 0)
+        : detachedMode === "winfo"
+            ? Math.max(1, winfoLoader.item?.implicitHeight ?? winfoLoader.implicitHeight ?? 0)
+            : (hasCurrent ? (barPopoutsLoader.implicitHeight ?? 0) : 0)
+    readonly property Item current: barPopoutsLoader.item?.current ?? null
 
     property string currentName
     property real currentCenter
@@ -33,8 +47,20 @@ Item {
     property int animLength: Appearance.anim.durations.normal
     property list<real> animCurve: Appearance.anim.curves.emphasized
 
+    // Ignores the first HyprlandFocusGrab clear right after detach (utilities collapse / mask update can spuriously clear).
+    property bool suppressDetachedGrabClear: false
+
+    Timer {
+        id: detachedGrabClearTimer
+        interval: 180
+        repeat: false
+        onTriggered: root.suppressDetachedGrabClear = false
+    }
+
     function detach(mode: string): void {
         animLength = Appearance.anim.durations.large;
+        suppressDetachedGrabClear = true;
+        detachedGrabClearTimer.restart();
         if (mode === "winfo") {
             detachedMode = mode;
         } else {
@@ -58,11 +84,24 @@ Item {
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
 
+    // Detached surface: drawn here so it always matches Wrapper bounds (global Shape can desync).
+    Rectangle {
+        z: -1
+        anchors.fill: parent
+        visible: root.isDetached
+        radius: Config.border.rounding
+        color: Colours.palette.m3surface
+
+        Behavior on color {
+            CAnim {}
+        }
+    }
+
     focus: hasCurrent
     Keys.onEscapePressed: {
         // Forward escape to password popout if active, otherwise close
-        if (currentName === "wirelesspassword" && content.item) {
-            const passwordPopout = content.item.children.find(c => c.name === "wirelesspassword");
+        if (currentName === "wirelesspassword" && barPopoutsLoader.item) {
+            const passwordPopout = barPopoutsLoader.item.children.find(c => c.name === "wirelesspassword");
             if (passwordPopout && passwordPopout.item) {
                 passwordPopout.item.closeDialog();
                 return;
@@ -81,7 +120,11 @@ Item {
     HyprlandFocusGrab {
         active: root.isDetached
         windows: [QsWindow.window]
-        onCleared: root.close()
+        onCleared: {
+            if (root.suppressDetachedGrabClear)
+                return;
+            root.close();
+        }
     }
 
     Binding {
@@ -101,7 +144,7 @@ Item {
     }
 
     Comp {
-        id: content
+        id: barPopoutsLoader
 
         shouldBeActive: root.hasCurrent && !root.detachedMode
         anchors.right: parent.right
@@ -113,6 +156,8 @@ Item {
     }
 
     Comp {
+        id: winfoLoader
+
         shouldBeActive: root.detachedMode === "winfo"
         anchors.centerIn: parent
 
@@ -123,6 +168,8 @@ Item {
     }
 
     Comp {
+        id: detachedLoader
+
         shouldBeActive: root.detachedMode === "any"
         anchors.centerIn: parent
 
@@ -153,6 +200,8 @@ Item {
     }
 
     Behavior on implicitWidth {
+        enabled: !root.isDetached
+
         Anim {
             duration: root.animLength
             easing.bezierCurve: root.animCurve
@@ -160,7 +209,7 @@ Item {
     }
 
     Behavior on implicitHeight {
-        enabled: root.implicitWidth > 0
+        enabled: root.implicitWidth > 0 && !root.isDetached
 
         Anim {
             duration: root.animLength

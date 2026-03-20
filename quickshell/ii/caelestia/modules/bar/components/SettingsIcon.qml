@@ -24,7 +24,7 @@ Item {
 
         function onClicked(): void {
             WindowFactory.create(null, {
-                active: "network"
+                active: "dashboard"
             });
         }
     }

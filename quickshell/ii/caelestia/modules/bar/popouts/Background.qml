@@ -9,9 +9,11 @@ ShapePath {
 
     required property Wrapper wrapper
     required property bool invertBottomRounding
+
     readonly property string barPosition: Config.bar.position
     readonly property bool isVerticalBar: barPosition === "left" || barPosition === "right"
-    readonly property real rounding: wrapper.isDetached ? Appearance.rounding.normal : Config.border.rounding
+    // Merge geometry uses border rounding only; detached fill is drawn on Wrapper (Rectangle).
+    readonly property real rounding: Config.border.rounding
     readonly property real mainSize: isVerticalBar ? wrapper.width : wrapper.height
     readonly property bool flatten: mainSize < rounding * 2
     readonly property real roundingMain: flatten ? mainSize / 2 : rounding
@@ -19,8 +21,15 @@ ShapePath {
 
     property real sideRounding: root.barPosition === "right" || root.barPosition === "bottom" ? -1 : 1
 
+    startX: root.barPosition === "top" || root.barPosition === "bottom"
+        ? (wrapper.x - root.rounding * root.sideRounding)
+        : wrapper.x
+    startY: root.barPosition === "top" || root.barPosition === "bottom"
+        ? wrapper.y
+        : (wrapper.y - root.rounding * root.sideRounding)
+
     strokeWidth: -1
-    fillColor: Colours.palette.m3surface
+    fillColor: wrapper.isDetached ? Qt.rgba(0, 0, 0, 0) : Colours.palette.m3surface
     fillRule: ShapePath.WindingFill
 
     PathArc {

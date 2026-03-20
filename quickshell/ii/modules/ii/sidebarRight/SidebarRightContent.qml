@@ -29,6 +29,16 @@ Item {
     property bool showWifiDialog: false
     property bool editMode: false
 
+    Timer {
+        id: launchSettingsTimer
+        interval: 1
+        repeat: false
+        onTriggered: {
+            GlobalStates.sidebarRightOpen = false;
+            Quickshell.execDetached(["qs", "-p", root.settingsQmlPath]);
+        }
+    }
+
     Connections {
         target: GlobalStates
         function onSidebarRightOpenChanged() {
@@ -278,10 +288,7 @@ Item {
             QuickToggleButton {
                 toggled: false
                 buttonIcon: "settings"
-                onClicked: {
-                    GlobalStates.sidebarRightOpen = false;
-                    Quickshell.execDetached(["qs", "-p", root.settingsQmlPath]);
-                }
+                onClicked: launchSettingsTimer.restart()
                 StyledToolTip {
                     text: Translation.tr("Settings")
                 }

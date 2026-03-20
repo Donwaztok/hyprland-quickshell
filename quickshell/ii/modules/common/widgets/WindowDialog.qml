@@ -9,6 +9,7 @@ Rectangle {
     id: root
 
     property bool show: false
+    property bool scrimDismissReady: false
     default property alias data: contentColumn.data
     property real backgroundHeight: dialogBackground.implicitHeight
     property real backgroundWidth: 350
@@ -31,6 +32,20 @@ Rectangle {
     onShowChanged: {
         dialogBackgroundHeightAnimation.easing.bezierCurve = (show ? Appearance.animationCurves.emphasizedDecel : Appearance.animationCurves.emphasizedAccel)
         dialogBackground.implicitHeight = show ? backgroundHeight : 0
+        if (show) {
+            scrimDismissReady = false;
+            scrimDismissDelayTimer.restart();
+        } else {
+            scrimDismissDelayTimer.stop();
+            scrimDismissReady = false;
+        }
+    }
+
+    Timer {
+        id: scrimDismissDelayTimer
+        interval: Math.max(80, Appearance.animation.elementMoveFast.duration / 2)
+        repeat: false
+        onTriggered: root.scrimDismissReady = true
     }
 
     radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
@@ -39,7 +54,10 @@ Rectangle {
         anchors.fill: parent
         acceptedButtons: Qt.AllButtons
         hoverEnabled: true
-        onPressed: root.dismiss()
+        onPressed: {
+            if (root.scrimDismissReady)
+                root.dismiss();
+        }
     }
 
     Rectangle {
