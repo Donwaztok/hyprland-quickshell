@@ -1,15 +1,14 @@
 pragma ComponentBehavior: Bound
 
-import "lock"
 import caelestia.config
 import caelestia.services
 import Quickshell
 import Quickshell.Wayland
 
+// Idle timeouts from Config.general.idle (no caelestia lock module — use session locker).
 Scope {
     id: root
 
-    required property Lock lock
     readonly property bool enabled: !Config.general.idle.inhibitWhenAudio || !Players.list.some(p => p.isPlaying)
 
     function handleIdleAction(action: var): void {
@@ -17,9 +16,9 @@ Scope {
             return;
 
         if (action === "lock")
-            lock.lock.locked = true;
+            Quickshell.execDetached(["loginctl", "lock-session"]);
         else if (action === "unlock")
-            lock.lock.locked = false;
+            Quickshell.execDetached(["loginctl", "unlock-session"]);
         else if (typeof action === "string")
             Hypr.dispatch(action);
         else
@@ -29,10 +28,10 @@ Scope {
     LogindManager {
         onAboutToSleep: {
             if (Config.general.idle.lockBeforeSleep)
-                root.lock.lock.locked = true;
+                Quickshell.execDetached(["loginctl", "lock-session"]);
         }
-        onLockRequested: root.lock.lock.locked = true
-        onUnlockRequested: root.lock.lock.unlock()
+        onLockRequested: Quickshell.execDetached(["loginctl", "lock-session"])
+        onUnlockRequested: Quickshell.execDetached(["loginctl", "unlock-session"])
     }
 
     Variants {

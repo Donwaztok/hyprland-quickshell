@@ -19,6 +19,7 @@ import "../caelestia/modules/drawers" as CaelestiaDrawers
 Scope {
     PanelLoader { component: CaelestiaCore.Shortcuts {} }
     PanelLoader { component: CaelestiaDrawers.Drawers {} }
+    PanelLoader { component: CaelestiaCore.HyprShellBridge {} }
     PanelLoader { component: Background {} }
     PanelLoader { component: Cheatsheet {} }
     PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
