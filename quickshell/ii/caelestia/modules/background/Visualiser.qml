@@ -15,6 +15,13 @@ Item {
     required property Item wallpaper
 
     readonly property bool shouldBeActive: Config.background.visualiser.enabled && (!Config.background.visualiser.autoHide || (Hypr.monitorFor(screen)?.activeWorkspace?.toplevels?.values.every(t => t.lastIpcObject?.floating) ?? true))
+    /// BarWrapper registers by screen name; ShellScreen object identity differs per surface.
+    readonly property int barExclusiveForLayout: {
+        void Visibilities.barsRevision;
+        const b = Visibilities.bars.get(screen.name);
+        return b ? b.exclusiveZone : Config.border.thickness;
+    }
+
     property real offset: shouldBeActive ? 0 : screen.height * 0.2
 
     opacity: shouldBeActive ? 1 : 0
@@ -57,7 +64,7 @@ Item {
 
                     anchors.fill: parent
                     anchors.margins: Config.border.thickness
-                    anchors.leftMargin: Visibilities.bars.get(root.screen).exclusiveZone + Appearance.spacing.small * Config.background.visualiser.spacing
+                    anchors.leftMargin: root.barExclusiveForLayout + Appearance.spacing.small * Config.background.visualiser.spacing
 
                     Side {
                         content: content

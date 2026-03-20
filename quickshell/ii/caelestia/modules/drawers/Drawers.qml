@@ -185,7 +185,7 @@ Variants {
 
                     disabled: scope.barDisabled
 
-                    Component.onCompleted: Visibilities.bars.set(scope.modelData, this)
+                    Component.onCompleted: Visibilities.registerBar(scope.modelData.name, bar)
                 }
             }
         }
