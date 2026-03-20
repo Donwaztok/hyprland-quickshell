@@ -17,7 +17,6 @@ DelegateChooser {
     signal openAudioOutputDialog()
     signal openAudioInputDialog()
     signal openBluetoothDialog()
-    signal openNightLightDialog()
     signal openWifiDialog()
 
     role: "type"
@@ -33,9 +32,6 @@ DelegateChooser {
         baseCellHeight: root.baseCellHeight
         cellSpacing: root.spacing
         cellSize: modelData.size
-        onOpenMenu: {
-            root.openNightLightDialog()
-        }
     } }
 
     DelegateChoice { roleValue: "audio"; AndroidAudioToggle {
@@ -190,22 +186,6 @@ DelegateChooser {
         cellSize: modelData.size
         onOpenMenu: {
             root.openWifiDialog()
-        }
-    } }
-
-    DelegateChoice { roleValue: "nightLight"; AndroidNightLightToggle {
-        required property int index
-        required property var modelData
-        buttonIndex: root.startingIndex + index
-        buttonData: modelData
-        editMode: root.editMode
-        expandedSize: modelData.size > 1
-        baseCellWidth: root.baseCellWidth
-        baseCellHeight: root.baseCellHeight
-        cellSpacing: root.spacing
-        cellSize: modelData.size
-        onOpenMenu: {
-            root.openNightLightDialog()
         }
     } }
 

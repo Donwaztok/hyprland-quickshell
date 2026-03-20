@@ -71,8 +71,6 @@ Singleton {
 
     property string bluetoothIcon: BluetoothStatus.connected ? "bluetooth-connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth-disabled"
 
-    property string nightLightIcon: Hyprsunset.active ? "weather-moon" : "weather-moon-off"
-
     property string notificationsIcon: Notifications.silent ? "alert-snooze" : "alert"
 
     property string powerProfileIcon: {

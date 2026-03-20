@@ -10,7 +10,6 @@ import qs.modules.common.models.quickToggles
 import qs.modules.common.widgets
 import qs.modules.waffle.looks
 import qs.modules.waffle.actionCenter.bluetooth
-import qs.modules.waffle.actionCenter.nightLight
 import qs.modules.waffle.actionCenter.volumeControl
 import qs.modules.waffle.actionCenter.wifi
 
@@ -24,9 +23,6 @@ DelegateChooser {
         ActionCenterToggleButton {
             toggleModel: AntiFlashbangToggle {}
             icon: "flash-off"
-            menu: Component {
-                NightLightControl {}
-            }
         }
     }
     DelegateChoice {
@@ -109,16 +105,6 @@ DelegateChooser {
             icon: WIcons.internetIcon
             menu: Component {
                 WifiControl {}
-            }
-        }
-    }
-    DelegateChoice {
-        roleValue: "nightLight"
-        ActionCenterToggleButton {
-            toggleModel: NightLightToggle {}
-            icon: WIcons.nightLightIcon
-            menu: Component {
-                NightLightControl {}
             }
         }
     }

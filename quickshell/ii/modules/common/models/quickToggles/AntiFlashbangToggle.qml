@@ -13,5 +13,5 @@ QuickToggleModel {
     mainAction: () => {
         Config.options.light.antiFlashbang.enable = !Config.options.light.antiFlashbang.enable;
     }
-    hasMenu: true
+    hasMenu: false
 }

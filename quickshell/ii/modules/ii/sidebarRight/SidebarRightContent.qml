@@ -13,7 +13,6 @@ import qs.modules.ii.sidebarRight.quickToggles
 import qs.modules.ii.sidebarRight.quickToggles.classicStyle
 
 import qs.modules.ii.sidebarRight.bluetoothDevices
-import qs.modules.ii.sidebarRight.nightLight
 import qs.modules.ii.sidebarRight.volumeMixer
 import qs.modules.ii.sidebarRight.wifiNetworks
 
@@ -25,7 +24,6 @@ Item {
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
     property bool showBluetoothDialog: false
-    property bool showNightLightDialog: false
     property bool showWifiDialog: false
     property bool editMode: false
 
@@ -149,11 +147,6 @@ Item {
     }
 
     ToggleDialog {
-        shownPropertyString: "showNightLightDialog"
-        dialog: NightLightDialog {}
-    }
-
-    ToggleDialog {
         shownPropertyString: "showWifiDialog"
         dialog: WifiDialog {}
         onShownChanged: {
@@ -207,9 +200,6 @@ Item {
             }
             function onOpenBluetoothDialog() {
                 root.showBluetoothDialog = true;
-            }
-            function onOpenNightLightDialog() {
-                root.showNightLightDialog = true;
             }
             function onOpenWifiDialog() {
                 root.showWifiDialog = true;

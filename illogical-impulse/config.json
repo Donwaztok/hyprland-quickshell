@@ -278,12 +278,6 @@
     "light": {
         "antiFlashbang": {
             "enable": false
-        },
-        "night": {
-            "automatic": true,
-            "colorTemperature": 5000,
-            "from": "19:00",
-            "to": "06:30"
         }
     },
     "lock": {
@@ -507,7 +501,6 @@
                 "easyEffects",
                 "powerProfile",
                 "idleInhibitor",
-                "nightLight",
                 "darkMode",
                 "antiFlashbang",
                 "cloudflareWarp",

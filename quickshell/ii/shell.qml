@@ -26,7 +26,6 @@ ShellRoot {
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
         Qt.callLater(() => MaterialThemeLoader.applyCaelestiaPaletteToIi())
-        Hyprsunset.load()
         FirstRunExperience.load()
         ConflictKiller.load()
         Cliphist.refresh()

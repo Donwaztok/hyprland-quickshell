@@ -48,7 +48,6 @@ ttf-twemoji                       # Twitter/Unicode emoji font
 
 # --------------------------------------------------- // Hyprland
 hyprland                          # Wayland compositor
-hyprsunset                        # day/night screen temperature
 wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
 
 # --------------------------------------------------- // KDE / system

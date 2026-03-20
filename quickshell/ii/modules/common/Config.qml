@@ -379,12 +379,6 @@ Singleton {
             }
 
             property JsonObject light: JsonObject {
-                property JsonObject night: JsonObject {
-                    property bool automatic: true
-                    property string from: "19:00" // Format: "HH:mm", 24-hour time
-                    property string to: "06:30"   // Format: "HH:mm", 24-hour time
-                    property int colorTemperature: 5000
-                }
                 property JsonObject antiFlashbang: JsonObject {
                     property bool enable: false
                 }
@@ -548,8 +542,7 @@ Singleton {
                             { "size": 2, "type": "bluetooth"  },
                             { "size": 1, "type": "idleInhibitor" },
                             { "size": 1, "type": "mic" },
-                            { "size": 2, "type": "audio" },
-                            { "size": 2, "type": "nightLight" }
+                            { "size": 2, "type": "audio" }
                         ]
                     }
                 }
@@ -637,7 +630,7 @@ Singleton {
                     property bool leftAlignApps: false
                 }
                 property JsonObject actionCenter: JsonObject {
-                    property list<string> toggles: [ "network", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "nightLight", "darkMode", "antiFlashbang", "cloudflareWarp", "mic", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker" ]
+                    property list<string> toggles: [ "network", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "darkMode", "antiFlashbang", "cloudflareWarp", "mic", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker" ]
                 }
                 property JsonObject calendar: JsonObject {
                     property bool force2CharDayOfWeek: true
