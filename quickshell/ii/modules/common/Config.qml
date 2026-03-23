@@ -84,8 +84,6 @@ Singleton {
         JsonAdapter {
             id: configOptionsJsonAdapter
 
-            property string panelFamily: "ii" // "ii", "waffle"
-
             property JsonObject policies: JsonObject {
                 property int ai: 1 // 0: No | 1: Yes | 2: Local
                 property int weeb: 1 // 0: No | 1: Open | 2: Closet
@@ -230,8 +228,7 @@ Singleton {
             }
 
             property JsonObject bar: JsonObject {
-                property real size: 0.8 // Horizontal bar height scale (e.g. 0.85 = smaller bar)
-                property real sizeVertical: 0.8 // Vertical bar width scale (when bar is on left/right)
+                property real size: 0.8 // Bar scale (height when horizontal, width when vertical)
                 property JsonObject autoHide: JsonObject {
                     property bool enable: false
                     property int hoverRegionWidth: 2
@@ -267,24 +264,6 @@ Singleton {
                     property bool showDarkModeToggle: true
                     property bool showPerformanceProfileToggle: false
                     property bool showScreenRecord: false
-                }
-                property JsonObject workspaces: JsonObject {
-                    // Defaults: GNOME = current config; Classic (commit inicial) = shown 10, alwaysShowNumbers false, numberMap ["1","2"]
-                    property string style: "gnome" // "classic" | "gnome"
-                    property bool monochromeIcons: true
-                    property int shown: 0 // GNOME default (dynamic); Classic default is 10
-                    property bool showAppIcons: true
-                    property bool alwaysShowNumbers: true // GNOME default; Classic default is false
-                    property int showNumberDelay: 300 // milliseconds
-                    property list<string> numberMap: [] // GNOME default; Classic default is ["1", "2"]
-                    property bool useNerdFont: false
-                    property int classicSlotWidth: 26 // Classic style: slot size (px)
-                    // GNOME style (current config)
-                    property int workspaceButtonWidth: 11
-                    property int activeSlotWidth: 32
-                    property real dashWidthFactor: 2.0
-                    property real dashMargin: 1
-                    property real indicatorSize: 8
                 }
                 property JsonObject weather: JsonObject {
                     property bool enable: false
@@ -616,26 +595,6 @@ Singleton {
                 }
             }
 
-            property JsonObject waffles: JsonObject {
-                // Some spots are kinda janky/awkward. Setting the following to
-                // false will make (some) stuff also be like that for accuracy.
-                // Example: the right-click menu of the Start button
-                property JsonObject tweaks: JsonObject {
-                    property bool switchHandlePositionFix: true
-                    property bool smootherMenuAnimations: true
-                    property bool smootherSearchBar: true
-                }
-                property JsonObject bar: JsonObject {
-                    property bool bottom: true
-                    property bool leftAlignApps: false
-                }
-                property JsonObject actionCenter: JsonObject {
-                    property list<string> toggles: [ "network", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "darkMode", "antiFlashbang", "cloudflareWarp", "mic", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker" ]
-                }
-                property JsonObject calendar: JsonObject {
-                    property bool force2CharDayOfWeek: true
-                }
-            }
         }
     }
 }

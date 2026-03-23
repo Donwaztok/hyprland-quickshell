@@ -1,4 +1,5 @@
 import qs.modules.ii.bar.weather
+import "../../../caelestia/modules/bar/components" as BarCe
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -101,7 +102,7 @@ Item { // Bar content region
             Layout.alignment: Qt.AlignVCenter
             padding: workspacesWidget.widgetPadding
 
-            Workspaces {
+            BarCe.Workspaces {
                 id: workspacesWidget
                 Layout.fillHeight: true
                 MouseArea {

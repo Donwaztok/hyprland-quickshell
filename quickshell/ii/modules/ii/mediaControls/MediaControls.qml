@@ -4,6 +4,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import caelestia.config as CaelestiaCfg
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -85,6 +86,14 @@ Scope {
             visible: true
             screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
 
+            readonly property string caPos: CaelestiaCfg.Config.loaded ? CaelestiaCfg.Config.bar.position : "top"
+            readonly property int caInset: CaelestiaCfg.Config.loaded
+                ? CaelestiaCfg.Config.bar.sizes.thickness + CaelestiaCfg.Config.border.thickness
+                : Appearance.sizes.baseBarHeight
+            readonly property bool caV: caPos === "left" || caPos === "right"
+            readonly property bool caBottom: caPos === "bottom"
+            readonly property bool caRightV: caPos === "right"
+
             exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
             implicitWidth: root.widgetWidth
@@ -93,16 +102,16 @@ Scope {
             WlrLayershell.namespace: "quickshell:mediaControls"
 
             anchors {
-                top: !Config.options.bar.bottom || Config.options.bar.vertical
-                bottom: Config.options.bar.bottom && !Config.options.bar.vertical
-                left: Config.options.bar.vertical && !Config.options.bar.bottom
-                right: Config.options.bar.vertical && Config.options.bar.bottom || !Config.options.bar.vertical
+                top: !caBottom || caV
+                bottom: caBottom && !caV
+                left: caV && !caRightV
+                right: caRightV || !caV
             }
             margins {
-                top: Config.options.bar.vertical ? ((panelWindow.screen.height / 2) - widgetHeight * 1.5) : Appearance.sizes.barHeight
-                bottom: Appearance.sizes.barHeight
-                left: Config.options.bar.vertical ? Appearance.sizes.barHeight : 0
-                right: Appearance.sizes.barHeight
+                top: caV ? ((panelWindow.screen.height / 2) - widgetHeight * 1.5) : caInset
+                bottom: caInset
+                left: caV ? caInset : 0
+                right: caV ? caInset : 0
             }
 
             mask: Region {

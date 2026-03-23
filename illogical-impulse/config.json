@@ -185,23 +185,6 @@
             "enableGPS": false,
             "fetchInterval": 10,
             "useUSCS": false
-        },
-        "workspaces": {
-            "activeSlotWidth": 32,
-            "alwaysShowNumbers": true,
-            "classicSlotWidth": 26,
-            "dashMargin": 1,
-            "dashWidthFactor": 2,
-            "indicatorSize": 8,
-            "monochromeIcons": true,
-            "numberMap": [
-            ],
-            "showAppIcons": true,
-            "showNumberDelay": 300,
-            "shown": 0,
-            "style": "gnome",
-            "useNerdFont": false,
-            "workspaceButtonWidth": 11
         }
     },
     "battery": {
@@ -334,7 +317,6 @@
         "rows": 2,
         "scale": 0.18
     },
-    "panelFamily": "ii",
     "policies": {
         "ai": 0,
         "weeb": 0
@@ -492,39 +474,6 @@
         "checkInterval": 120,
         "enableCheck": true,
         "stronglyAdviseUpdateThreshold": 200
-    },
-    "waffles": {
-        "actionCenter": {
-            "toggles": [
-                "network",
-                "bluetooth",
-                "easyEffects",
-                "powerProfile",
-                "idleInhibitor",
-                "darkMode",
-                "antiFlashbang",
-                "cloudflareWarp",
-                "mic",
-                "musicRecognition",
-                "notifications",
-                "onScreenKeyboard",
-                "gameMode",
-                "screenSnip",
-                "colorPicker"
-            ]
-        },
-        "bar": {
-            "bottom": true,
-            "leftAlignApps": false
-        },
-        "calendar": {
-            "force2CharDayOfWeek": true
-        },
-        "tweaks": {
-            "smootherMenuAnimations": true,
-            "smootherSearchBar": true,
-            "switchHandlePositionFix": true
-        }
     },
     "wallpaperSelector": {
         "useSystemFileDialog": false

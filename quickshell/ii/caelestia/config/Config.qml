@@ -156,6 +156,7 @@ Singleton {
             position: bar.position,
             persistent: bar.persistent,
             showOnHover: bar.showOnHover,
+            borderless: bar.borderless,
             dragThreshold: bar.dragThreshold,
             popouts: {
                 tray: bar.popouts.tray,
@@ -189,6 +190,27 @@ Singleton {
                 batteryWidth: bar.sizes.batteryWidth,
                 networkWidth: bar.sizes.networkWidth,
                 kbLayoutWidth: bar.sizes.kbLayoutWidth
+            },
+            workspaces: {
+                style: bar.workspaces.style,
+                shown: bar.workspaces.shown,
+                showAppIcons: bar.workspaces.showAppIcons,
+                alwaysShowNumbers: bar.workspaces.alwaysShowNumbers,
+                showNumberDelay: bar.workspaces.showNumberDelay,
+                numberMap: bar.workspaces.numberMap,
+                useNerdFont: bar.workspaces.useNerdFont,
+                classicSlotWidth: bar.workspaces.classicSlotWidth,
+                workspaceButtonWidth: bar.workspaces.workspaceButtonWidth,
+                activeSlotWidth: bar.workspaces.activeSlotWidth,
+                dashWidthFactor: bar.workspaces.dashWidthFactor,
+                dashMargin: bar.workspaces.dashMargin,
+                indicatorSize: bar.workspaces.indicatorSize,
+                dotSize: bar.workspaces.dotSize,
+                pillHeight: bar.workspaces.pillHeight,
+                superKey: {
+                    showNumbers: bar.workspaces.superKey.showNumbers,
+                    delayMs: bar.workspaces.superKey.delayMs
+                }
             },
             entries: bar.entries,
             excludedScreens: bar.excludedScreens

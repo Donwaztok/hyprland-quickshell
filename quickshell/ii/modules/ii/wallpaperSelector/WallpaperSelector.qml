@@ -3,6 +3,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import caelestia.config as CaelestiaCfg
 import QtQuick
 import QtQuick.Controls
 import Quickshell
@@ -22,6 +23,11 @@ Scope {
             readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
             property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
 
+            readonly property string caPos: CaelestiaCfg.Config.loaded ? CaelestiaCfg.Config.bar.position : "top"
+            readonly property int caInset: CaelestiaCfg.Config.loaded
+                ? CaelestiaCfg.Config.bar.sizes.thickness + CaelestiaCfg.Config.border.thickness
+                : Appearance.sizes.baseBarHeight
+
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.namespace: "quickshell:wallpaperSelector"
             WlrLayershell.layer: WlrLayer.Overlay
@@ -30,7 +36,9 @@ Scope {
 
             anchors.top: true
             margins {
-                top: Config?.options.bar.vertical ? Appearance.sizes.hyprlandGapsOut : Appearance.sizes.barHeight + Appearance.sizes.hyprlandGapsOut
+                top: (caPos === "left" || caPos === "right")
+                    ? Appearance.sizes.hyprlandGapsOut
+                    : (caPos === "top" ? caInset + Appearance.sizes.hyprlandGapsOut : Appearance.sizes.hyprlandGapsOut)
             }
 
             mask: Region {

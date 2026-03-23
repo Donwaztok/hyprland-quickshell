@@ -1,25 +1,26 @@
+pragma ComponentBehavior: Bound
+
 import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.models
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import caelestia.config as CaelestiaCfg
 import QtQuick
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Widgets
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
     property bool vertical: false
-    // Optional overrides for reuse outside ii bar (e.g. caelestia bar)
     property var screenOverride: null
     property var overrideActiveColor: undefined
     property var overrideInactiveColor: undefined
-    property bool borderless: Config.options.bar.borderless
+    property bool borderless: CaelestiaCfg.Config.bar.borderless
     readonly property var resolvedScreen: root.screenOverride ?? root.QsWindow.window?.screen
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.resolvedScreen) ?? Hyprland.focusedMonitor
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
@@ -27,11 +28,11 @@ Item {
     readonly property color activeIndicatorColor: root.overrideActiveColor ?? Appearance.colors.colPrimary
     readonly property color inactiveIndicatorColor: root.overrideInactiveColor ?? Appearance.m3colors.m3onSurfaceVariant
 
-    readonly property string workspaceStyle: Config.options.bar.workspaces.style || "gnome"
+    readonly property string workspaceStyle: CaelestiaCfg.Config.bar.workspaces.style || "gnome"
     readonly property bool isGnomeStyle: root.workspaceStyle === "gnome"
 
-    readonly property int workspacesShown: Math.max(1, Config.options.bar.workspaces.shown)
-    readonly property bool isDynamicMode: root.isGnomeStyle && (Config.options.bar.workspaces.shown === 0)
+    readonly property int workspacesShown: Math.max(1, CaelestiaCfg.Config.bar.workspaces.shown)
+    readonly property bool isDynamicMode: root.isGnomeStyle && (CaelestiaCfg.Config.bar.workspaces.shown === 0)
 
     readonly property int workspaceGroup: Math.floor((effectiveActiveWorkspaceId - 1) / Math.max(1, root.workspacesShown))
     readonly property int workspaceIndexInGroup: root.workspacesShown > 0 ? ((effectiveActiveWorkspaceId - 1) % root.workspacesShown) : 0
@@ -41,17 +42,17 @@ Item {
     property list<bool> workspaceOccupied: []
 
     property int widgetPadding: 4
-    property int workspaceButtonWidth: (Config.options.bar.workspaces.workspaceButtonWidth ?? 11)
-    property int activeSlotWidth: (Config.options.bar.workspaces.activeSlotWidth ?? 24)
+    property int workspaceButtonWidth: (CaelestiaCfg.Config.bar.workspaces.workspaceButtonWidth ?? 11)
+    property int activeSlotWidth: (CaelestiaCfg.Config.bar.workspaces.activeSlotWidth ?? 24)
     property real activeWorkspaceMargin: 1
-    property real dashWidthFactor: (Config.options.bar.workspaces.dashWidthFactor ?? 2.0)
-    property real dashMargin: (Config.options.bar.workspaces.dashMargin ?? 1)
-    readonly property real indicatorSize: (Config.options.bar.workspaces.indicatorSize ?? Config.options.bar.workspaces.dotSize ?? Config.options.bar.workspaces.pillHeight ?? 6)
+    property real dashWidthFactor: (CaelestiaCfg.Config.bar.workspaces.dashWidthFactor ?? 2.0)
+    property real dashMargin: (CaelestiaCfg.Config.bar.workspaces.dashMargin ?? 1)
+    readonly property real indicatorSize: (CaelestiaCfg.Config.bar.workspaces.indicatorSize ?? CaelestiaCfg.Config.bar.workspaces.dotSize ?? CaelestiaCfg.Config.bar.workspaces.pillHeight ?? 6)
     readonly property real pillWidth: (root.activeSlotWidth - root.dashMargin * 2) * root.dashWidthFactor
     readonly property real dotSize: root.indicatorSize
     readonly property real pillHeight: root.indicatorSize
     readonly property real maxDashWidth: root.activeSlotWidth - root.dashMargin * 2
-    property int classicSlotWidth: Config.options.bar.workspaces.classicSlotWidth ?? 26
+    property int classicSlotWidth: CaelestiaCfg.Config.bar.workspaces.classicSlotWidth ?? 26
 
     function updateOpenWorkspaces() {
         var monName = root.monitor?.name
@@ -144,10 +145,11 @@ Item {
 
     readonly property real totalWidth: root.vertical ? root.workspaceButtonWidth : (root.isGnomeStyle ? ((Math.max(1, root.slotCount) - 1) * root.workspaceButtonWidth + root.activeSlotWidth) : (root.workspacesShown * root.classicSlotWidth))
     readonly property real totalHeight: root.vertical ? (root.isGnomeStyle ? ((Math.max(1, root.slotCount) - 1) * root.workspaceButtonWidth + root.activeSlotWidth) : (root.workspacesShown * root.classicSlotWidth)) : root.workspaceButtonWidth
-    implicitWidth: root.vertical ? Appearance.sizes.verticalBarWidth : root.totalWidth
-    implicitHeight: root.vertical ? root.totalHeight : Appearance.sizes.barHeight
+    readonly property int barDepth: CaelestiaCfg.Config.bar.sizes.thickness + CaelestiaCfg.Config.border.thickness
 
-    // Scroll to switch workspaces
+    implicitWidth: root.vertical ? barDepth : root.totalWidth
+    implicitHeight: root.vertical ? root.totalHeight : barDepth
+
     WheelHandler {
         onWheel: (event) => {
             if (event.angleDelta.y < 0)
@@ -171,21 +173,20 @@ Item {
     property bool showNumbers: false
     Timer {
         id: showNumbersTimer
-        interval: Config?.options.bar.autoHide.showWhenPressingSuper.delay ?? 100
+        interval: CaelestiaCfg.Config.bar.workspaces.superKey.delayMs ?? 140
         repeat: false
         onTriggered: root.showNumbers = true
     }
     Connections {
         target: GlobalStates
         function onSuperDownChanged() {
-            if (!Config?.options.bar.autoHide.showWhenPressingSuper.enable) return
+            if (!CaelestiaCfg.Config.bar.workspaces.superKey.showNumbers) return
             if (GlobalStates.superDown) showNumbersTimer.restart()
             else { showNumbersTimer.stop(); root.showNumbers = false }
         }
         function onSuperReleaseMightTriggerChanged() { showNumbersTimer.stop() }
     }
 
-    // --- GNOME style ---
     Item {
         visible: root.isGnomeStyle
         anchors.fill: parent
@@ -255,7 +256,6 @@ Item {
         }
     }
 
-    // --- Classic style ---
     Item {
         visible: !root.isGnomeStyle
         anchors.fill: parent
@@ -316,13 +316,13 @@ Item {
                         property var biggestWindow: HyprlandData.biggestWindowForWorkspace(wsValue)
                         property var mainAppIconSource: Quickshell.iconPath(AppSearch.guessIcon(biggestWindow?.class), "image-missing")
                         StyledText {
-                            opacity: (root.showNumbers || Config.options.bar.workspaces.alwaysShowNumbers || (Config.options.bar.workspaces.showAppIcons && classicCell.biggestWindow && root.showNumbers) || (root.showNumbers && !Config.options.bar.workspaces.showAppIcons)) ? 1 : 0
+                            opacity: (root.showNumbers || CaelestiaCfg.Config.bar.workspaces.alwaysShowNumbers || (CaelestiaCfg.Config.bar.workspaces.showAppIcons && classicCell.biggestWindow && root.showNumbers) || (root.showNumbers && !CaelestiaCfg.Config.bar.workspaces.showAppIcons)) ? 1 : 0
                             anchors.centerIn: parent
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                             font.pixelSize: Appearance.font.barPixelSize.small - ((text.length - 1) * (text !== "10") * 2)
-                            font.family: Config.options?.bar.workspaces.useNerdFont ? Appearance.font.family.iconNerd : "sans-serif"
-                            text: (Config.options?.bar.workspaces.numberMap || [])[classicCell.wsValue - 1] || classicCell.wsValue
+                            font.family: CaelestiaCfg.Config.bar.workspaces.useNerdFont ? Appearance.font.family.iconNerd : "sans-serif"
+                            text: (CaelestiaCfg.Config.bar.workspaces.numberMap || [])[classicCell.wsValue - 1] || classicCell.wsValue
                             color: root.effectiveActiveWorkspaceId === classicCell.wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[classicCell.wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
                         }
                         Rectangle {
@@ -331,10 +331,10 @@ Item {
                             height: width
                             radius: width / 2
                             color: root.effectiveActiveWorkspaceId === classicCell.wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[classicCell.wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
-                            opacity: (Config.options?.bar.workspaces.alwaysShowNumbers || root.showNumbers || (Config.options?.bar.workspaces.showAppIcons && classicCell.biggestWindow)) ? 0 : 1
+                            opacity: (CaelestiaCfg.Config.bar.workspaces.alwaysShowNumbers || root.showNumbers || (CaelestiaCfg.Config.bar.workspaces.showAppIcons && classicCell.biggestWindow)) ? 0 : 1
                         }
                         IconImage {
-                            visible: Config.options.bar.workspaces.showAppIcons && classicCell.biggestWindow
+                            visible: CaelestiaCfg.Config.bar.workspaces.showAppIcons && classicCell.biggestWindow
                             anchors.bottom: parent.bottom
                             anchors.right: parent.right
                             source: classicCell.mainAppIconSource

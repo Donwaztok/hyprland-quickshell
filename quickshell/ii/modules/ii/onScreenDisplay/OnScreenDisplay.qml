@@ -2,6 +2,7 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import caelestia.config as CaelestiaCfg
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -87,6 +88,11 @@ Scope {
             id: osdRoot
             color: "transparent"
 
+            readonly property string caPos: CaelestiaCfg.Config.loaded ? CaelestiaCfg.Config.bar.position : "top"
+            readonly property int caInset: CaelestiaCfg.Config.loaded
+                ? CaelestiaCfg.Config.bar.sizes.thickness + CaelestiaCfg.Config.border.thickness
+                : Appearance.sizes.baseBarHeight
+
             Connections {
                 target: root
                 function onFocusedScreenChanged() {
@@ -97,8 +103,8 @@ Scope {
             WlrLayershell.namespace: "quickshell:onScreenDisplay"
             WlrLayershell.layer: WlrLayer.Overlay
             anchors {
-                top: !Config.options.bar.bottom
-                bottom: Config.options.bar.bottom
+                top: caPos !== "bottom"
+                bottom: caPos === "bottom"
             }
             mask: Region {
                 item: osdValuesWrapper
@@ -107,8 +113,10 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
             margins {
-                top: Appearance.sizes.barHeight
-                bottom: Appearance.sizes.barHeight
+                top: caPos === "top" ? caInset : Appearance.sizes.hyprlandGapsOut
+                bottom: caPos === "bottom" ? caInset : Appearance.sizes.hyprlandGapsOut
+                left: caPos === "left" ? caInset : Appearance.sizes.hyprlandGapsOut
+                right: caPos === "right" ? caInset : Appearance.sizes.hyprlandGapsOut
             }
 
             implicitWidth: columnLayout.implicitWidth

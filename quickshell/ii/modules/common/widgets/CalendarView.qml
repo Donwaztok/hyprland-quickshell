@@ -9,7 +9,6 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
-import qs.modules.waffle.looks
 
 Item {
     id: root
@@ -42,9 +41,17 @@ Item {
     property int contentWeekDiff: weekDiff // whole part of weekDiff
     property bool scrolling: false
 
+    readonly property Component weekScrollAnimation: Component {
+        NumberAnimation {
+            duration: 250
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.0, 0.0, 0.25, 1.0, 1, 1]
+        }
+    }
+
     Behavior on weekDiff {
         id: weekScrollBehavior
-        animation: Looks.transition.scroll.createObject(this)
+        animation: root.weekScrollAnimation.createObject(this)
     }
     Timer {
         id: scrollAnimationCheckTimer

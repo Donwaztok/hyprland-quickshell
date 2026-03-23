@@ -5,12 +5,14 @@ JsonObject {
     property string position: "left"
     property bool persistent: true
     property bool showOnHover: true
+    property bool borderless: false
     property int dragThreshold: 20
     property Popouts popouts: Popouts {}
     property Tray tray: Tray {}
     property Status status: Status {}
     property Clock clock: Clock {}
     property Sizes sizes: Sizes {}
+    property Workspaces workspaces: Workspaces {}
     property list<string> excludedScreens: []
 
     property list<var> entries: [
@@ -73,5 +75,29 @@ JsonObject {
         property int batteryWidth: 250
         property int networkWidth: 320
         property int kbLayoutWidth: 320
+    }
+
+    component WorkspaceSuperKey: JsonObject {
+        property bool showNumbers: true
+        property int delayMs: 140
+    }
+
+    component Workspaces: JsonObject {
+        property string style: "gnome" // "classic" | "gnome"
+        property int shown: 0 // 0 = dynamic (GNOME)
+        property bool showAppIcons: true
+        property bool alwaysShowNumbers: true
+        property int showNumberDelay: 300
+        property list<string> numberMap: []
+        property bool useNerdFont: false
+        property int classicSlotWidth: 26
+        property int workspaceButtonWidth: 11
+        property int activeSlotWidth: 32
+        property real dashWidthFactor: 2.0
+        property real dashMargin: 1
+        property real indicatorSize: 8
+        property real dotSize: 8
+        property real pillHeight: 8
+        property WorkspaceSuperKey superKey: WorkspaceSuperKey {}
     }
 }

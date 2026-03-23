@@ -9,6 +9,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs.modules.ii.bar as Bar
+import "../../../caelestia/modules/bar/components" as BarCe
 
 Item { // Bar content region
     id: root
@@ -107,7 +108,7 @@ Item { // Bar content region
             vertical: true
             padding: 6
 
-            Bar.Workspaces {
+            BarCe.Workspaces {
                 id: workspacesWidget
                 vertical: true
                 MouseArea {

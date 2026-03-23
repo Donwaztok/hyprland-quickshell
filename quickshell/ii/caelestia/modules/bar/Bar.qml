@@ -4,7 +4,6 @@ import caelestia.services
 import caelestia.config
 import "popouts" as BarPopouts
 import "components"
-import "../../../modules/ii/bar" as IiBar
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -134,7 +133,7 @@ Item {
                 DelegateChoice {
                     roleValue: "workspaces"
                     delegate: WrappedLoader {
-                        sourceComponent: IiBar.Workspaces {
+                        sourceComponent: Workspaces {
                             vertical: root.isVertical
                             screenOverride: root.screen
                             overrideActiveColor: Colours.palette.m3primary
