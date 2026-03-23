@@ -1,10 +1,12 @@
 pragma ComponentBehavior: Bound
+import qs
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.services
 import qs.modules.ii.sidebarRight.calendar
 import qs.modules.ii.sidebarRight.todo
 import qs.modules.ii.sidebarRight.pomodoro
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
@@ -54,6 +56,20 @@ Rectangle {
             collapsedBottomWidgetGroupRow.opacity = 0;
         }
         collapseCleanFadeTimer.start();
+    }
+
+    function openSessionMenu() {
+        GlobalStates.sidebarRightOpen = false;
+        openSessionMenuTimer.restart();
+    }
+
+    Timer {
+        id: openSessionMenuTimer
+        interval: 280
+        repeat: false
+        onTriggered: {
+            Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "drawers", "open", "session"]);
+        }
     }
 
     Timer {
@@ -114,10 +130,26 @@ Rectangle {
             property int remainingTasks: Todo.list.filter(task => !task.done).length
             Layout.margins: 10
             Layout.leftMargin: 0
+            Layout.fillWidth: true
+            elide: Text.ElideRight
             // text: `${DateTime.collapsedCalendarFormat}   •   ${remainingTasks} task${remainingTasks > 1 ? "s" : ""}`
             text: Translation.tr("%1   •   %2 tasks").arg(DateTime.collapsedCalendarFormat).arg(remainingTasks)
             font.pixelSize: Appearance.font.pixelSize.large
             color: Appearance.colors.colOnLayer1
+        }
+
+        CalendarHeaderButton {
+            Layout.margins: 10
+            Layout.leftMargin: 0
+            forceCircle: true
+            tooltipText: Translation.tr("Session")
+            downAction: () => root.openSessionMenu()
+            contentItem: MaterialSymbol {
+                text: "power_settings_new"
+                iconSize: Appearance.font.pixelSize.larger
+                horizontalAlignment: Text.AlignHCenter
+                color: Appearance.colors.colOnLayer1
+            }
         }
     }
 
@@ -181,6 +213,22 @@ Rectangle {
                 }
                 contentItem: MaterialSymbol {
                     text: "keyboard_arrow_down"
+                    iconSize: Appearance.font.pixelSize.larger
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Appearance.colors.colOnLayer1
+                }
+            }
+
+            CalendarHeaderButton {
+                anchors.left: parent.left
+                anchors.leftMargin: 5
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+                forceCircle: true
+                tooltipText: Translation.tr("Session")
+                downAction: () => root.openSessionMenu()
+                contentItem: MaterialSymbol {
+                    text: "power_settings_new"
                     iconSize: Appearance.font.pixelSize.larger
                     horizontalAlignment: Text.AlignHCenter
                     color: Appearance.colors.colOnLayer1

@@ -287,7 +287,7 @@ Item {
                 toggled: false
                 buttonIcon: "power_settings_new"
                 onClicked: {
-                    GlobalStates.sessionOpen = true;
+                    Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "drawers", "open", "session"]);
                 }
                 StyledToolTip {
                     text: Translation.tr("Session")

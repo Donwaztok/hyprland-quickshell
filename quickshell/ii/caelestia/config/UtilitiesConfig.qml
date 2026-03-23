@@ -59,6 +59,10 @@ JsonObject {
             enabled: true
         },
         {
+            id: "session",
+            enabled: true
+        },
+        {
             id: "vpn",
             enabled: false
         }

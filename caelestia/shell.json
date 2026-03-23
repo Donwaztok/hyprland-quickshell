@@ -487,6 +487,10 @@
         "id": "dnd"
       },
       {
+        "enabled": true,
+        "id": "session"
+      },
+      {
         "enabled": false,
         "id": "vpn"
       }

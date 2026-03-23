@@ -27,13 +27,13 @@ StyledRect {
         return Config.utilities.quickToggles.filter(item => {
             if (!item.enabled)
                 return false;
-            
+
             if (seenIds.has(item.id)) {
                 return false;
             }
 
             if (item.id === "vpn") {
-                return Config.utilities.vpn.provider.some(p => 
+                return Config.utilities.vpn.provider.some(p =>
                     typeof p === "object" ? (p.enabled === true) : false
                 );
             }
@@ -43,7 +43,7 @@ StyledRect {
         });
     }
     readonly property int splitIndex: Math.ceil(quickToggles.length / 2)
-    readonly property bool needExtraRow: quickToggles.length > 6
+    readonly property bool needExtraRow: quickToggles.length > 7
 
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
@@ -143,6 +143,19 @@ StyledRect {
                         icon: "notifications_off"
                         checked: Notifs.dnd
                         onClicked: Notifs.dnd = !Notifs.dnd
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "session"
+                    delegate: Toggle {
+                        icon: "power_settings_new"
+                        inactiveOnColour: Colours.palette.m3onSurfaceVariant
+                        toggle: false
+                        onClicked: {
+                            // Setting utilities=false first destroys this component before a nested Timer fires.
+                            // Session=true hides utilities via Utilities.Wrapper.shouldBeActive.
+                            root.visibilities.session = true;
+                        }
                     }
                 }
                 DelegateChoice {
