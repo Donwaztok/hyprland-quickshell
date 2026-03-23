@@ -161,29 +161,6 @@ ContentPage {
     }
 
     ContentSection {
-        icon: "shelf_auto_hide"
-        title: Translation.tr("Tray")
-
-        ConfigSwitch {
-            buttonIcon: "keep"
-            text: Translation.tr('Make icons pinned by default')
-            checked: Config.options.tray.invertPinnedItems
-            onCheckedChanged: {
-                Config.options.tray.invertPinnedItems = checked;
-            }
-        }
-
-        ConfigSwitch {
-            buttonIcon: "colors"
-            text: Translation.tr('Tint icons')
-            checked: Config.options.tray.monochromeIcons
-            onCheckedChanged: {
-                Config.options.tray.monochromeIcons = checked;
-            }
-        }
-    }
-
-    ContentSection {
         icon: "widgets"
         title: Translation.tr("Utility buttons")
 

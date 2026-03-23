@@ -128,6 +128,7 @@
     "position": "left",
     "persistent": true,
     "showOnHover": true,
+    "borderless": false,
     "dragThreshold": 20,
     "popouts": {
       "tray": true,
@@ -161,6 +162,27 @@
       "batteryWidth": 250,
       "networkWidth": 320,
       "kbLayoutWidth": 320
+    },
+    "workspaces": {
+      "style": "gnome",
+      "shown": 0,
+      "showAppIcons": true,
+      "alwaysShowNumbers": true,
+      "showNumberDelay": 300,
+      "numberMap": [],
+      "useNerdFont": false,
+      "classicSlotWidth": 26,
+      "workspaceButtonWidth": 11,
+      "activeSlotWidth": 32,
+      "dashWidthFactor": 2,
+      "dashMargin": 1,
+      "indicatorSize": 8,
+      "dotSize": 8,
+      "pillHeight": 8,
+      "superKey": {
+        "showNumbers": true,
+        "delayMs": 140
+      }
     },
     "entries": [
       {

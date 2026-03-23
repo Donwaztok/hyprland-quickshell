@@ -48,11 +48,13 @@ Item { // Bar content region
 
     MouseArea { // Top section
         id: barTopSectionMouseArea
-        anchors.top: parent.top
+        anchors {
+            top: parent.top
+            left: parent.left
+            right: parent.right
+        }
         implicitHeight: topSectionColumnLayout.implicitHeight
-        implicitWidth: Appearance.sizes.baseVerticalBarWidth
         height: (root.height - middleSection.height) / 2
-        width: Appearance.sizes.verticalBarWidth
         hoverEnabled: true
 
         onPressed: event => {
@@ -166,7 +168,6 @@ Item { // Bar content region
             right: parent.right
             bottom: parent.bottom
         }
-        implicitWidth: Appearance.sizes.baseVerticalBarWidth
         implicitHeight: bottomSectionColumnLayout.implicitHeight
         hoverEnabled: true
         
@@ -184,13 +185,6 @@ Item { // Bar content region
             Item { 
                 Layout.fillWidth: true
                 Layout.fillHeight: true 
-            }
-
-            Bar.SysTray {
-                vertical: true
-                Layout.fillWidth: true
-                Layout.fillHeight: false
-                invertSide: Config?.options.bar.bottom
             }
 
             RippleButton { // Right sidebar button

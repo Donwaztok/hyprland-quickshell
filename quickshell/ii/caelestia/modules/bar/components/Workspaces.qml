@@ -145,10 +145,11 @@ Item {
 
     readonly property real totalWidth: root.vertical ? root.workspaceButtonWidth : (root.isGnomeStyle ? ((Math.max(1, root.slotCount) - 1) * root.workspaceButtonWidth + root.activeSlotWidth) : (root.workspacesShown * root.classicSlotWidth))
     readonly property real totalHeight: root.vertical ? (root.isGnomeStyle ? ((Math.max(1, root.slotCount) - 1) * root.workspaceButtonWidth + root.activeSlotWidth) : (root.workspacesShown * root.classicSlotWidth)) : root.workspaceButtonWidth
-    readonly property int barDepth: CaelestiaCfg.Config.bar.sizes.thickness + CaelestiaCfg.Config.border.thickness
+    // Match Bar.qml / Tray / StatusIcons: bar lane uses thickness only (border is outside the layer).
+    readonly property int barLane: CaelestiaCfg.Config.bar.sizes.thickness
 
-    implicitWidth: root.vertical ? barDepth : root.totalWidth
-    implicitHeight: root.vertical ? root.totalHeight : barDepth
+    implicitWidth: root.vertical ? barLane : root.totalWidth
+    implicitHeight: root.vertical ? root.totalHeight : barLane
 
     WheelHandler {
         onWheel: (event) => {
