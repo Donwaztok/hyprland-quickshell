@@ -9,6 +9,10 @@ RowLayout {
 
     required property var lock
 
+    function refocusLock(): void {
+        centerPane.refocusPasswordInput();
+    }
+
     spacing: Appearance.spacing.large * 2
 
     ColumnLayout {
@@ -57,6 +61,8 @@ RowLayout {
     }
 
     Center {
+        id: centerPane
+
         lock: root.lock
     }
 

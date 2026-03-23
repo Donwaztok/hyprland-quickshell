@@ -13,6 +13,10 @@ ColumnLayout {
     id: root
 
     required property var lock
+
+    function refocusPasswordInput(): void {
+        passwordFocusArea.forceActiveFocus();
+    }
     readonly property real centerScale: Math.min(1, (lock.screen?.height ?? 1440) / 1440)
     readonly property int centerWidth: Config.lock.sizes.centerWidth * centerScale
 
@@ -109,6 +113,8 @@ ColumnLayout {
     }
 
     StyledRect {
+        id: passwordFocusArea
+
         Layout.alignment: Qt.AlignHCenter
 
         implicitWidth: root.centerWidth * 0.8

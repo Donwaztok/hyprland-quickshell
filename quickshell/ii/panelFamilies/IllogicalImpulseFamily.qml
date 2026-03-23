@@ -1,12 +1,12 @@
 import QtQuick
 import Quickshell
 
+import "."
 import qs.modules.common
 import caelestia.config as CaelestiaCfg
 import caelestia.modules.background as CaelestiaBackground
 import qs.modules.ii.cheatsheet
 import qs.modules.ii.dock
-import qs.modules.ii.lock
 import qs.modules.ii.mediaControls
 import qs.modules.ii.onScreenKeyboard
 import qs.modules.ii.polkit
@@ -26,7 +26,10 @@ Scope {
     }
     PanelLoader { component: Cheatsheet {} }
     PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
-    PanelLoader { component: Lock {} }
+    PanelLoader {
+        extraCondition: CaelestiaCfg.Config.loaded
+        component: CaelestiaLockPanel {}
+    }
     PanelLoader { component: MediaControls {} }
     PanelLoader { component: OnScreenKeyboard {} }
     PanelLoader { component: Overlay {} }

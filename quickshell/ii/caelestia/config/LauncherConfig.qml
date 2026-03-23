@@ -9,7 +9,7 @@ JsonObject {
     property string actionPrefix: ">"
     property string clipboardPrefix: ";"
     property string pendingOpenPrefix: ""
-    property bool enableDangerousActions: false // Allow actions that can cause losing data, like shutdown, reboot and logout
+    property bool enableDangerousActions: false // Show launcher actions marked dangerous (add your own via shell.json)
     property int dragThreshold: 50
     property bool vimKeybinds: false
     property list<string> favouriteApps: []
@@ -50,14 +50,6 @@ JsonObject {
             dangerous: false
         },
         {
-            name: "Transparency",
-            icon: "opacity",
-            description: "Change shell transparency",
-            command: ["autocomplete", "transparency"],
-            enabled: false,
-            dangerous: false
-        },
-        {
             name: "Random",
             icon: "casino",
             description: "Switch to a random wallpaper",
@@ -82,34 +74,10 @@ JsonObject {
             dangerous: false
         },
         {
-            name: "Shutdown",
-            icon: "power_settings_new",
-            description: "Shutdown the system",
-            command: ["systemctl", "poweroff"],
-            enabled: true,
-            dangerous: true
-        },
-        {
-            name: "Reboot",
-            icon: "cached",
-            description: "Reboot the system",
-            command: ["systemctl", "reboot"],
-            enabled: true,
-            dangerous: true
-        },
-        {
-            name: "Logout",
-            icon: "exit_to_app",
-            description: "Log out of the current session",
-            command: ["loginctl", "terminate-user", ""],
-            enabled: true,
-            dangerous: true
-        },
-        {
             name: "Lock",
             icon: "lock",
             description: "Lock the current session",
-            command: ["loginctl", "lock-session"],
+            command: ["bash", "-c", "hyprctl dispatch global quickshell:lock 2>/dev/null || loginctl lock-session"],
             enabled: true,
             dangerous: false
         },

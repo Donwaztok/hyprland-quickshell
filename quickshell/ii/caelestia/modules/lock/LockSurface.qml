@@ -13,6 +13,10 @@ WlSessionLockSurface {
     required property WlSessionLock lock
     required property Pam pam
 
+    function refocusLockInput(): void {
+        content.refocusLock();
+    }
+
     readonly property alias unlocking: unlockAnim.running
 
     color: "transparent"

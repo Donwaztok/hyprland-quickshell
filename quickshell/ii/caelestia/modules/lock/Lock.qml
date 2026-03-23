@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
-import caelestia.components.misc
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 
@@ -14,6 +14,7 @@ Scope {
         signal unlock
 
         LockSurface {
+            id: lockSurface
             lock: lock
             pam: pam
         }
@@ -25,20 +26,34 @@ Scope {
         lock: lock
     }
 
-    CustomShortcut {
+    // Default appid is "quickshell" so hyprctl matches: global quickshell:lock (hypridle, keybinds).
+    GlobalShortcut {
         name: "lock"
         description: "Lock the current session"
         onPressed: lock.locked = true
     }
 
-    CustomShortcut {
+    GlobalShortcut {
         name: "unlock"
         description: "Unlock the current session"
         onPressed: lock.unlock()
     }
 
+    GlobalShortcut {
+        name: "lockFocus"
+        description: "Re-focus the lock screen password field (e.g. after resume)"
+        onPressed: {
+            if (lock.locked)
+                lockSurface.refocusLockInput();
+        }
+    }
+
     IpcHandler {
         target: "lock"
+
+        function activate(): void {
+            lock.locked = true;
+        }
 
         function lock(): void {
             lock.locked = true;
@@ -50,6 +65,11 @@ Scope {
 
         function isLocked(): bool {
             return lock.locked;
+        }
+
+        function focus(): void {
+            if (lock.locked)
+                lockSurface.refocusLockInput();
         }
     }
 }
