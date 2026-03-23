@@ -523,7 +523,7 @@
     "dragThreshold": 80
   },
   "services": {
-    "weatherLocation": "",
+    "weatherLocation": "-22.1756875,-47.3835841",
     "useFahrenheit": false,
     "useFahrenheitPerformance": false,
     "useTwelveHourClock": false,

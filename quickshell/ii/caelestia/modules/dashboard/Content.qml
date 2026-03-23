@@ -15,6 +15,18 @@ Item {
     required property PersistentProperties state
     required property FileDialog facePicker
 
+    function clampCurrentTab(): void {
+        const n = dashboardTabs.length;
+        if (n <= 0)
+            return;
+        if (state.currentTab >= n)
+            state.currentTab = n - 1;
+        else if (state.currentTab < 0)
+            state.currentTab = 0;
+    }
+
+    Component.onCompleted: Qt.callLater(() => root.clampCurrentTab())
+
     readonly property var dashboardTabs: {
         const allTabs = [
             {
@@ -81,21 +93,22 @@ Item {
             id: view
 
             readonly property int currentIndex: root.state.currentTab
-            readonly property Item currentItem: row.children[currentIndex]
+            readonly property int safeCurrentIndex: paneRepeater.count > 0 ? Math.min(Math.max(0, currentIndex), paneRepeater.count - 1) : 0
+            readonly property Item currentItem: paneRepeater.count > 0 ? paneRepeater.itemAt(safeCurrentIndex) : null
 
             anchors.fill: parent
 
             flickableDirection: Flickable.HorizontalFlick
 
-            implicitWidth: currentItem.implicitWidth
-            implicitHeight: currentItem.implicitHeight
+            implicitWidth: currentItem ? currentItem.implicitWidth : 0
+            implicitHeight: currentItem ? currentItem.implicitHeight : 0
 
-            contentX: currentItem.x
+            contentX: currentItem ? currentItem.x : 0
             contentWidth: row.implicitWidth
             contentHeight: row.implicitHeight
 
             onContentXChanged: {
-                if (!moving)
+                if (!moving || !currentItem)
                     return;
 
                 const x = contentX - currentItem.x;
@@ -106,19 +119,24 @@ Item {
             }
 
             onDragEnded: {
+                if (!currentItem)
+                    return;
+
                 const x = contentX - currentItem.x;
                 if (x > currentItem.implicitWidth / 10)
                     root.state.currentTab = Math.min(root.state.currentTab + 1, tabs.count - 1);
                 else if (x < -currentItem.implicitWidth / 10)
                     root.state.currentTab = Math.max(root.state.currentTab - 1, 0);
                 else
-                    contentX = Qt.binding(() => currentItem.x);
+                    contentX = Qt.binding(() => currentItem ? currentItem.x : 0);
             }
 
             RowLayout {
                 id: row
 
                 Repeater {
+                    id: paneRepeater
+
                     model: ScriptModel {
                         values: root.dashboardTabs
                     }
@@ -134,7 +152,10 @@ Item {
                         sourceComponent: modelData.component
 
                         Component.onCompleted: active = Qt.binding(() => {
-                            const current = view.currentIndex;
+                            const n = paneRepeater.count;
+                            if (n <= 0)
+                                return false;
+                            const current = Math.min(Math.max(0, root.state.currentTab), n - 1);
                             if (index === current)
                                 return true;
                             if (index === current - 1 || index === current + 1)
@@ -174,6 +195,14 @@ Item {
             Behavior on contentX {
                 Anim {}
             }
+        }
+    }
+
+    Connections {
+        target: paneRepeater
+
+        function onCountChanged(): void {
+            root.clampCurrentTab();
         }
     }
 

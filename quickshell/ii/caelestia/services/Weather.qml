@@ -38,14 +38,26 @@ Item {
             }
         } else if (!loc || timer.elapsed() > 900) {
             Requests.get("https://ipinfo.io/json", text => {
-                const response = JSON.parse(text);
-                if (response.loc) {
-                    loc = response.loc;
-                    city = response.city ?? "";
-                    timer.restart();
+                try {
+                    const response = JSON.parse(text);
+                    if (response.loc) {
+                        loc = response.loc;
+                        city = response.city ?? "";
+                        timer.restart();
+                    }
+                } catch (e) {
+                    console.warn("[Weather] ipinfo parse failed:", e);
                 }
             });
         }
+    }
+
+    function coordFallbackLabel(lat: string, lon: string): string {
+        const la = parseFloat(lat);
+        const lo = parseFloat(lon);
+        if (isNaN(la) || isNaN(lo))
+            return "";
+        return `${la.toFixed(3)}, ${lo.toFixed(3)}`;
     }
 
     function fetchCityFromCoords(coords: string): void {
@@ -55,31 +67,59 @@ Item {
         }
 
         const [lat, lon] = coords.split(",").map(s => s.trim());
+        if (!lat || !lon || isNaN(parseFloat(lat)) || isNaN(parseFloat(lon))) {
+            city = coordFallbackLabel(lat, lon) || qsTr("Invalid coordinates");
+            return;
+        }
+
+        function setCityOrCoords(name: string): void {
+            const label = (name && String(name).trim()) ? String(name).trim() : coordFallbackLabel(lat, lon);
+            city = label;
+            if (name && String(name).trim())
+                cachedCities.set(coords, city);
+        }
 
         const fallbackToBigDataCloud = () => {
-            const fallbackUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+            const fallbackUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&localityLanguage=en`;
             Requests.get(fallbackUrl, text => {
-                const geo = JSON.parse(text);
-                const geoCity = geo.city || geo.locality;
-                if (geoCity) {
-                    city = geoCity;
-                    cachedCities.set(coords, geoCity);
-                } else {
-                    city = "Unknown City";
+                try {
+                    const geo = JSON.parse(text);
+                    const geoCity = geo.city || geo.locality || geo.principalSubdivision;
+                    if (geoCity) {
+                        city = geoCity;
+                        cachedCities.set(coords, geoCity);
+                    } else {
+                        setCityOrCoords("");
+                    }
+                } catch (e) {
+                    console.warn("[Weather] BigDataCloud reverse-geocode parse failed:", e);
+                    setCityOrCoords("");
                 }
-            });
+            }, () => setCityOrCoords(""));
         };
 
-        const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=geocodejson`;
+        // jsonv2 is stable and matches common OSM address fields (geocodejson was often empty / wrong shape)
+        const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&format=jsonv2`;
         Requests.get(nominatimUrl, text => {
-            const geo = JSON.parse(text).features?.[0]?.properties.geocoding;
-            if (geo) {
-                const geoCity = geo.type === "city" ? geo.name : geo.city;
+            try {
+                const j = JSON.parse(text);
+                const a = j.address || {};
+                const geoCity = a.city || a.town || a.village || a.municipality || a.hamlet || a.county || a.state_district || a.state;
                 if (geoCity) {
                     city = geoCity;
                     cachedCities.set(coords, geoCity);
                     return;
                 }
+                if (j.display_name) {
+                    const first = String(j.display_name).split(",").map(s => s.trim())[0];
+                    if (first) {
+                        city = first;
+                        cachedCities.set(coords, city);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn("[Weather] Nominatim parse failed:", e);
             }
             fallbackToBigDataCloud();
         }, fallbackToBigDataCloud);
@@ -89,12 +129,18 @@ Item {
         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`;
 
         Requests.get(url, text => {
-            const json = JSON.parse(text);
-            if (json.results && json.results.length > 0) {
-                const result = json.results[0];
-                loc = result.latitude + "," + result.longitude;
-                city = result.name;
-            } else {
+            try {
+                const json = JSON.parse(text);
+                if (json.results && json.results.length > 0) {
+                    const result = json.results[0];
+                    loc = result.latitude + "," + result.longitude;
+                    city = result.name;
+                } else {
+                    loc = "";
+                    reload();
+                }
+            } catch (e) {
+                console.warn("[Weather] Geocoding search parse failed:", e);
                 loc = "";
                 reload();
             }
@@ -107,7 +153,13 @@ Item {
             return;
 
         Requests.get(url, text => {
-            const json = JSON.parse(text);
+            let json;
+            try {
+                json = JSON.parse(text);
+            } catch (e) {
+                console.warn("[Weather] Forecast parse failed:", e);
+                return;
+            }
             if (!json.current || !json.daily)
                 return;
 

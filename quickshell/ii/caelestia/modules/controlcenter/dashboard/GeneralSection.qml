@@ -83,6 +83,85 @@ SectionContainer {
         }
     }
 
+    StyledText {
+        Layout.fillWidth: true
+        Layout.topMargin: Appearance.spacing.small
+
+        text: qsTr("Weather location")
+        font.pointSize: Appearance.font.size.normal
+        font.weight: 500
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+
+        text: qsTr("City name, or latitude and longitude separated by a comma. Leave empty for automatic location (IP).")
+        wrapMode: Text.WordWrap
+        font.pointSize: Appearance.font.size.small
+        color: Colours.palette.m3outline
+    }
+
+    StyledTextField {
+        Layout.fillWidth: true
+
+        placeholderText: qsTr("e.g. Lisbon or 38.72,-9.14")
+        text: root.rootItem.weatherLocation
+        selectByMouse: true
+
+        onEditingFinished: {
+            const t = text.trim();
+            if (t !== root.rootItem.weatherLocation) {
+                root.rootItem.weatherLocation = t;
+                root.rootItem.saveConfig();
+            }
+        }
+    }
+
+    readonly property string weatherApiDocsUrl: "https://open-meteo.com/en/docs"
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.small
+
+        MaterialIcon {
+            text: "open_in_new"
+            color: Colours.palette.m3primary
+            font.pointSize: Appearance.font.size.small
+        }
+
+        CustomMouseArea {
+            Layout.fillWidth: true
+            implicitHeight: weatherApiLinkLabel.height
+            cursorShape: Qt.PointingHandCursor
+
+            onClicked: Qt.openUrlExternally(root.weatherApiDocsUrl)
+
+            StyledText {
+                id: weatherApiLinkLabel
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+
+                text: qsTr("Open-Meteo API documentation (forecast & geocoding)")
+                wrapMode: Text.WordWrap
+                font.pointSize: Appearance.font.size.small
+                font.underline: true
+                color: Colours.palette.m3primary
+            }
+        }
+    }
+
+    StyledText {
+        Layout.fillWidth: true
+
+        text: weatherApiDocsUrl
+        wrapMode: Text.WrapAnywhere
+        font.pointSize: Appearance.font.size.smaller
+        font.family: Appearance.font.family.mono
+        color: Colours.palette.m3outline
+    }
+
     SliderInput {
         Layout.fillWidth: true
 
