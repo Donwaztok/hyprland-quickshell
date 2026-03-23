@@ -117,7 +117,7 @@
       }
     },
     "visualiser": {
-      "enabled": true,
+      "enabled": false,
       "autoHide": true,
       "blur": false,
       "rounding": 1,
