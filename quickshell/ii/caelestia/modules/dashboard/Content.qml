@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import caelestia.components
-import caelestia.components.filedialog
 import caelestia.config
 import Quickshell
 import Quickshell.Widgets
@@ -13,7 +12,6 @@ Item {
 
     required property PersistentProperties visibilities
     required property PersistentProperties state
-    required property FileDialog facePicker
 
     function clampCurrentTab(): void {
         const n = dashboardTabs.length;
@@ -171,7 +169,6 @@ Item {
                 Dash {
                     visibilities: root.visibilities
                     state: root.state
-                    facePicker: root.facePicker
                 }
             }
 

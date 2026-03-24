@@ -1,5 +1,4 @@
 import caelestia.components
-import caelestia.components.filedialog
 import caelestia.services
 import caelestia.config
 import "dash"
@@ -11,7 +10,6 @@ GridLayout {
 
     required property PersistentProperties visibilities
     required property PersistentProperties state
-    required property FileDialog facePicker
 
     rowSpacing: Appearance.spacing.normal
     columnSpacing: Appearance.spacing.normal
@@ -29,7 +27,6 @@ GridLayout {
 
             visibilities: root.visibilities
             state: root.state
-            facePicker: root.facePicker
         }
     }
 

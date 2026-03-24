@@ -1,7 +1,5 @@
 import caelestia.components
 import caelestia.components.effects
-import caelestia.components.images
-import caelestia.components.filedialog
 import caelestia.services
 import caelestia.config
 import caelestia.utils
@@ -13,7 +11,6 @@ Row {
 
     required property PersistentProperties visibilities
     required property PersistentProperties state
-    required property FileDialog facePicker
 
     padding: Appearance.padding.large
     spacing: Appearance.spacing.normal
@@ -25,84 +22,24 @@ Row {
         radius: Appearance.rounding.large
         color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
 
+        ColouredIcon {
+            id: osLogoIcon
+
+            anchors.fill: parent
+            anchors.margins: Appearance.padding.normal
+
+            source: SysInfo.osLogo
+            colour: Colours.palette.m3primary
+        }
+
         MaterialIcon {
             anchors.centerIn: parent
 
-            text: "person"
+            text: "computer"
             fill: 1
             grade: 200
             font.pointSize: Math.floor(info.implicitHeight / 2) || 1
-            visible: pfp.status !== Image.Ready
-        }
-
-        CachingImage {
-            id: pfp
-
-            anchors.fill: parent
-            path: `${Paths.home}/.face`
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-
-            StyledRect {
-                anchors.fill: parent
-
-                color: Qt.alpha(Colours.palette.m3scrim, 0.5)
-                opacity: parent.containsMouse ? 1 : 0
-
-                Behavior on opacity {
-                    Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
-                    }
-                }
-            }
-
-            StyledRect {
-                anchors.centerIn: parent
-
-                implicitWidth: selectIcon.implicitHeight + Appearance.padding.small * 2
-                implicitHeight: selectIcon.implicitHeight + Appearance.padding.small * 2
-
-                radius: Appearance.rounding.normal
-                color: Colours.palette.m3primary
-                scale: parent.containsMouse ? 1 : 0.5
-                opacity: parent.containsMouse ? 1 : 0
-
-                StateLayer {
-                    color: Colours.palette.m3onPrimary
-
-                    function onClicked(): void {
-                        root.visibilities.launcher = false;
-                        root.facePicker.open();
-                    }
-                }
-
-                MaterialIcon {
-                    id: selectIcon
-
-                    anchors.centerIn: parent
-                    anchors.horizontalCenterOffset: -font.pointSize * 0.02
-
-                    text: "frame_person"
-                    color: Colours.palette.m3onPrimary
-                    font.pointSize: Appearance.font.size.extraLarge
-                }
-
-                Behavior on scale {
-                    Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
-                    }
-                }
-
-                Behavior on opacity {
-                    Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
-                    }
-                }
-            }
+            visible: osLogoIcon.status !== Image.Ready
         }
     }
 
