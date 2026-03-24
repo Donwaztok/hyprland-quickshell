@@ -115,10 +115,14 @@ Item {
 
             onPressed: event => {
                 startY = event.y;
-                if (event.button === Qt.RightButton)
-                    root.requestToggleExpand(!root.expanded);
-                else if (event.button === Qt.MiddleButton)
+                if (event.button === Qt.RightButton) {
+                    if (root.expanded)
+                        modelData.close();
+                    else
+                        root.requestToggleExpand(true);
+                } else if (event.button === Qt.MiddleButton) {
                     modelData.close();
+                }
             }
             onPositionChanged: event => {
                 if (pressed && !root.expanded) {

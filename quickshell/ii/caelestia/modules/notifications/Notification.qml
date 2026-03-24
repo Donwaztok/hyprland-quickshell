@@ -46,7 +46,7 @@ StyledRect {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: root.expanded && body.hoveredLink ? Qt.PointingHandCursor : pressed ? Qt.ClosedHandCursor : undefined
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         preventStealing: true
 
         onEntered: root.modelData.timer.stop()
@@ -61,7 +61,7 @@ StyledRect {
         onPressed: event => {
             root.modelData.timer.stop();
             startY = event.y;
-            if (event.button === Qt.MiddleButton)
+            if (event.button === Qt.MiddleButton || event.button === Qt.RightButton)
                 root.modelData.close();
         }
         onReleased: event => {
