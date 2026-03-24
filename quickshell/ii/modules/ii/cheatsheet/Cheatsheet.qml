@@ -1,34 +1,24 @@
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import caelestia.services
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt.labs.synchronizer
 import Qt5Compat.GraphicalEffects
 import Quickshell.Io
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
-Scope { // Scope
+Scope {
     id: root
-    property var tabButtonList: [
-        {
-            "icon": "keyboard",
-            "name": Translation.tr("Keybinds")
-        },
-        {
-            "icon": "experiment",
-            "name": Translation.tr("Elements")
-        },
-    ]
 
     Loader {
         id: cheatsheetLoader
         active: false
 
-        sourceComponent: PanelWindow { // Window
+        sourceComponent: PanelWindow {
             id: cheatsheetRoot
             visible: cheatsheetLoader.active
 
@@ -46,8 +36,6 @@ Scope { // Scope
             implicitWidth: cheatsheetBackground.width + Appearance.sizes.elevationMargin * 2
             implicitHeight: cheatsheetBackground.height + Appearance.sizes.elevationMargin * 2
             WlrLayershell.namespace: "quickshell:cheatsheet"
-            // Hyprland 0.49: Focus is always exclusive and setting this breaks mouse focus grab
-            // WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
             color: "transparent"
 
             mask: Region {
@@ -67,43 +55,28 @@ Scope { // Scope
                 }
             }
 
-            // Background
             StyledRectangularShadow {
                 target: cheatsheetBackground
             }
             Rectangle {
                 id: cheatsheetBackground
                 anchors.centerIn: parent
-                color: Appearance.colors.colLayer0
+                color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
                 border.width: 1
-                border.color: Appearance.colors.colLayer0Border
+                border.color: Colours.palette.m3outlineVariant
                 radius: Appearance.rounding.windowRounding
                 property real padding: 20
                 implicitWidth: cheatsheetColumnLayout.implicitWidth + padding * 2
                 implicitHeight: cheatsheetColumnLayout.implicitHeight + padding * 2
+                focus: cheatsheetRoot.visible
 
-                Keys.onPressed: event => { // Esc to close
+                Keys.onPressed: event => {
                     if (event.key === Qt.Key_Escape) {
                         cheatsheetRoot.hide();
                     }
-                    if (event.modifiers === Qt.ControlModifier) {
-                        if (event.key === Qt.Key_PageDown) {
-                            tabBar.incrementCurrentIndex();
-                            event.accepted = true;
-                        } else if (event.key === Qt.Key_PageUp) {
-                            tabBar.decrementCurrentIndex();
-                            event.accepted = true;
-                        } else if (event.key === Qt.Key_Tab) {
-                            tabBar.setCurrentIndex((tabBar.currentIndex + 1) % root.tabButtonList.length);
-                            event.accepted = true;
-                        } else if (event.key === Qt.Key_Backtab) {
-                            tabBar.setCurrentIndex((tabBar.currentIndex - 1 + root.tabButtonList.length) % root.tabButtonList.length);
-                            event.accepted = true;
-                        }
-                    }
                 }
 
-                RippleButton { // Close button
+                RippleButton {
                     id: closeButton
                     focus: cheatsheetRoot.visible
                     implicitWidth: 40
@@ -125,53 +98,18 @@ Scope { // Scope
                         horizontalAlignment: Text.AlignHCenter
                         font.pixelSize: Appearance.font.pixelSize.title
                         text: "close"
+                        color: Colours.palette.m3onSurface
                     }
                 }
 
-                ColumnLayout { // Real content
+                ColumnLayout {
                     id: cheatsheetColumnLayout
                     anchors.centerIn: parent
                     spacing: 10
 
-                    Toolbar {
+                    CheatsheetKeybinds {
                         Layout.alignment: Qt.AlignHCenter
-                        enableShadow: false
-                        ToolbarTabBar {
-                            id: tabBar
-                            tabButtonList: root.tabButtonList
-
-                            Synchronizer on currentIndex {
-                                property alias source: swipeView.currentIndex
-                            }
-                        }
-                    }
-
-                    SwipeView { // Content pages
-                        id: swipeView
-                        Layout.topMargin: 5
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        spacing: 10
-                        currentIndex: Persistent.states.cheatsheet.tabIndex
-                        onCurrentIndexChanged: {
-                            Persistent.states.cheatsheet.tabIndex = currentIndex;
-                        }
-
-                        implicitWidth: Math.max.apply(null, contentChildren.map(child => child.implicitWidth || 0))
-                        implicitHeight: Math.max.apply(null, contentChildren.map(child => child.implicitHeight || 0))
-
-                        clip: true
-                        layer.enabled: true
-                        layer.effect: OpacityMask {
-                            maskSource: Rectangle {
-                                width: swipeView.width
-                                height: swipeView.height
-                                radius: Appearance.rounding.small
-                            }
-                        }
-
-                        CheatsheetKeybinds {}
-                        CheatsheetPeriodicTable {}
+                        Layout.topMargin: 8
                     }
                 }
             }

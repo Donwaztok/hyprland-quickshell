@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import caelestia.services
 import QtQuick
 import QtQuick.Layouts
 
@@ -12,6 +13,8 @@ Item {
     property real spacing: 20
     property real titleSpacing: 7
     property real padding: 4
+    /// Horizontal gap between separate keycaps in one shortcut row
+    property real keySpacing: 6
     implicitWidth: row.implicitWidth + padding * 2
     implicitHeight: row.implicitHeight + padding * 2
     // Excellent symbol explaination and source :
@@ -110,7 +113,7 @@ Item {
                                     pixelSize: Appearance.font.pixelSize.title
                                     variableAxes: Appearance.font.variableAxes.title
                                 }
-                                color: Appearance.colors.colOnLayer0
+                                color: Colours.palette.m3onSurface
                                 text: keybindSection.modelData.name
                             }
 
@@ -125,19 +128,14 @@ Item {
                                         var result = [];
                                         for (var i = 0; i < keybindSection.modelData.keybinds.length; i++) {
                                             const keybind = keybindSection.modelData.keybinds[i];
-
-                                            if (!Config.options.cheatsheet.splitButtons) {
-                                                for (var j = 0; j < keybind.mods.length; j++) {
-                                                    keybind.mods[j] = keySubstitutions[keybind.mods[j]] || keybind.mods[j];
-                                                }
-                                                keybind.mods = [keybind.mods.join(' ') ]
-                                                keybind.mods[0] += !keyBlacklist.includes(keybind.key) && keybind.mods[0].length ? ' ' : ''
-                                                keybind.mods[0] += !keyBlacklist.includes(keybind.key) ? (keySubstitutions[keybind.key] || keybind.key) : ''
-                                            } 
+                                            var mods = [];
+                                            for (var j = 0; j < keybind.mods.length; j++) {
+                                                mods.push(keySubstitutions[keybind.mods[j]] || keybind.mods[j]);
+                                            }
 
                                             result.push({
                                                 "type": "keys",
-                                                "mods": keybind.mods,
+                                                "mods": mods,
                                                 "key": keybind.key,
                                             });
                                             result.push({
@@ -160,26 +158,32 @@ Item {
                                         Component {
                                             id: keysComponent
                                             Row {
-                                                spacing: 4
+                                                spacing: root.keySpacing
                                                 Repeater {
                                                     model: modelData.mods
                                                     delegate: KeyboardKey {
                                                         required property var modelData
-                                                        key: keySubstitutions[modelData] || modelData
+                                                        key: modelData
                                                         pixelSize: Config.options.cheatsheet.fontSize.key
+                                                        borderColor: Colours.palette.m3outline
+                                                        keyColor: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+                                                        textColor: Colours.palette.m3onSurface
                                                     }
                                                 }
                                                 StyledText {
                                                     id: keybindPlus
-                                                    visible: Config.options.cheatsheet.splitButtons && !keyBlacklist.includes(modelData.key) && modelData.mods.length > 0
+                                                    visible: !keyBlacklist.includes(modelData.key) && modelData.mods.length > 0
                                                     text: "+"
+                                                    color: Colours.palette.m3onSurface
                                                 }
                                                 KeyboardKey {
                                                     id: keybindKey
-                                                    visible: Config.options.cheatsheet.splitButtons && !keyBlacklist.includes(modelData.key)
+                                                    visible: !keyBlacklist.includes(modelData.key)
                                                     key: keySubstitutions[modelData.key] || modelData.key
                                                     pixelSize: Config.options.cheatsheet.fontSize.key
-                                                    color: Appearance.colors.colOnLayer0
+                                                    borderColor: Colours.palette.m3outline
+                                                    keyColor: Colours.layer(Colours.palette.m3surfaceContainerHigh, 1)
+                                                    textColor: Colours.palette.m3onSurface
                                                 }
                                             }
                                         }
@@ -195,6 +199,7 @@ Item {
                                                     id: commentText
                                                     anchors.centerIn: parent
                                                     font.pixelSize: Config.options.cheatsheet.fontSize.comment || Appearance.font.pixelSize.smaller
+                                                    color: Colours.palette.m3onSurfaceVariant
                                                     text: modelData.comment
                                                 }
                                             }
