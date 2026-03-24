@@ -288,10 +288,6 @@ Singleton {
                 property int suspend: 3
             }
 
-            property JsonObject calendar: JsonObject {
-                property string locale: "en-GB"
-            }
-
             property JsonObject cheatsheet: JsonObject {
                 // Use a nerdfont to see the icons
                 // 0: 󰖳  | 1: 󰌽 | 2: 󰘳 | 3:  | 4: 󰨡
@@ -343,21 +339,14 @@ Singleton {
                 }
             }
 
+            // Blur/clock on ii background when Hyprland reports locked (see AbstractBackgroundWidget, ClockWidget).
             property JsonObject lock: JsonObject {
-                property bool useHyprlock: false
-                property bool launchOnStartup: false
                 property JsonObject blur: JsonObject {
                     property bool enable: true
-                    property real radius: 100
                     property real extraZoom: 1.1
                 }
                 property bool centerClock: true
                 property bool showLockedText: true
-                property JsonObject security: JsonObject {
-                    property bool unlockKeyring: true
-                    property bool requirePasswordToPower: false
-                }
-                property bool materialShapeChars: true
             }
 
             property JsonObject media: JsonObject {
@@ -412,14 +401,6 @@ Singleton {
             property JsonObject resources: JsonObject {
                 property int updateInterval: 3000
                 property int historyLength: 60
-            }
-
-            property JsonObject tray: JsonObject {
-                property bool monochromeIcons: true
-                property bool showItemId: false
-                property bool invertPinnedItems: true // Makes the below a whitelist for the tray and blacklist for the pinned area
-                property list<var> pinnedItems: [ "Fcitx" ]
-                property bool filterPassive: true
             }
 
             property JsonObject musicRecognition: JsonObject {
@@ -539,7 +520,6 @@ Singleton {
                 }
                 property JsonObject triggerCondition: JsonObject {
                     property list<string> networkNameKeywords: ["airport", "cafe", "college", "company", "eduroam", "free", "guest", "public", "school", "university"]
-                    property list<string> fileKeywords: ["anime", "booru", "ecchi", "hentai", "yande.re", "konachan", "breast", "nipples", "pussy", "nsfw", "spoiler", "girl"]
                     property list<string> linkKeywords: ["hentai", "porn", "sukebei", "hitomi.la", "rule34", "gelbooru", "fanbox", "dlsite"]
                 }
             }

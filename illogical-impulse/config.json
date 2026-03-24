@@ -192,9 +192,6 @@
         "low": 20,
         "suspend": 3
     },
-    "calendar": {
-        "locale": "en-GB"
-    },
     "cheatsheet": {
         "fontSize": {
             "comment": 12,
@@ -246,18 +243,10 @@
     "lock": {
         "blur": {
             "enable": true,
-            "extraZoom": 1.1,
-            "radius": 100
+            "extraZoom": 1.1
         },
         "centerClock": true,
-        "launchOnStartup": false,
-        "materialShapeChars": true,
-        "security": {
-            "requirePasswordToPower": false,
-            "unlockKeyring": true
-        },
-        "showLockedText": true,
-        "useHyprlock": false
+        "showLockedText": true
     },
     "media": {
         "filterDuplicatePlayers": true
@@ -412,15 +401,6 @@
         "secondPrecision": false,
         "shortDateFormat": "dd/MM"
     },
-    "tray": {
-        "filterPassive": true,
-        "invertPinnedItems": false,
-        "monochromeIcons": false,
-        "pinnedItems": [
-            "Fcitx"
-        ],
-        "showItemId": false
-    },
     "updates": {
         "adviseUpdateThreshold": 75,
         "checkInterval": 120,
@@ -437,20 +417,6 @@
             "wallpaper": false
         },
         "triggerCondition": {
-            "fileKeywords": [
-                "anime",
-                "booru",
-                "ecchi",
-                "hentai",
-                "yande.re",
-                "konachan",
-                "breast",
-                "nipples",
-                "pussy",
-                "nsfw",
-                "spoiler",
-                "girl"
-            ],
             "linkKeywords": [
                 "hentai",
                 "porn",
