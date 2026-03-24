@@ -1,6 +1,5 @@
 import caelestia.config
 import caelestia.services
-import caelestia.modules.osd as Osd
 import caelestia.modules.notifications as Notifications
 import caelestia.modules.session as Session
 import caelestia.modules.launcher as Launcher
@@ -19,7 +18,6 @@ Item {
     required property PersistentProperties visibilities
     required property Item bar
 
-    readonly property alias osd: osd
     readonly property alias notifications: notifications
     readonly property alias session: session
     readonly property alias launcher: launcher
@@ -34,18 +32,6 @@ Item {
     anchors.rightMargin: Math.max(Config.border.thickness, bar.rightMargin)
     anchors.topMargin: Math.max(Config.border.thickness, bar.topMargin)
     anchors.bottomMargin: Math.max(Config.border.thickness, bar.bottomMargin)
-
-    Osd.Wrapper {
-        id: osd
-
-        clip: sidebar.width > 0
-        screen: root.screen
-        visibilities: root.visibilities
-
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.right: parent.right
-        anchors.rightMargin: sidebar.width
-    }
 
     Notifications.Wrapper {
         id: notifications

@@ -419,7 +419,7 @@
     "groupPreviewNum": 3
   },
   "osd": {
-    "enabled": true,
+    "enabled": false,
     "hideDelay": 2000,
     "enableBrightness": true,
     "enableMicrophone": false

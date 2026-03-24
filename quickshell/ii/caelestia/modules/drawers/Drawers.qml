@@ -146,7 +146,6 @@ Variants {
                 id: visibilities
 
                 property bool bar
-                property bool osd
                 property bool session
                 property bool launcher
                 property bool dashboard

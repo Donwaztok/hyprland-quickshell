@@ -44,7 +44,7 @@ Item {
             Anim {
                 target: root
                 property: "implicitWidth"
-                easing.bezierCurve: root.panels.osd.width > 0 ? Appearance.anim.curves.expressiveDefaultSpatial : Appearance.anim.curves.emphasized
+                easing.bezierCurve: Appearance.anim.curves.emphasized
             }
         }
     ]

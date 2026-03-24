@@ -1,5 +1,6 @@
 import qs.modules.common
 import qs.modules.common.widgets
+import caelestia.services
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
@@ -14,7 +15,7 @@ Item {
 
     property real valueIndicatorVerticalPadding: 9
     property real valueIndicatorLeftPadding: 10
-    property real valueIndicatorRightPadding: 20 // An icon is circle ish, a column isn't, hence the extra padding
+    property real valueIndicatorRightPadding: 20
 
     implicitWidth: Appearance.sizes.osdWidth + 2 * Appearance.sizes.elevationMargin
     implicitHeight: valueIndicator.implicitHeight + 2 * Appearance.sizes.elevationMargin
@@ -29,12 +30,12 @@ Item {
             margins: Appearance.sizes.elevationMargin
         }
         radius: Appearance.rounding.full
-        color: Appearance.colors.colLayer0
+        color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
 
         implicitWidth: valueRow.implicitWidth
         implicitHeight: valueRow.implicitHeight
 
-        RowLayout { // Icon on the left, stuff on the right
+        RowLayout {
             id: valueRow
             Layout.margins: 10
             anchors.fill: parent
@@ -48,12 +49,12 @@ Item {
                 Layout.topMargin: valueIndicatorVerticalPadding
                 Layout.bottomMargin: valueIndicatorVerticalPadding
 
-                MaterialSymbol { // Icon
+                MaterialSymbol {
                     anchors {
                         centerIn: parent
                         alignWhenCentered: !root.rotateIcon
                     }
-                    color: Appearance.colors.colOnLayer0
+                    color: Colours.palette.m3onSurface
                     renderType: Text.QtRendering
 
                     text: root.icon
@@ -66,37 +67,38 @@ Item {
                     Behavior on rotation {
                         animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
                     }
-                
                 }
             }
-            ColumnLayout { // Stuff
+            ColumnLayout {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.rightMargin: valueIndicatorRightPadding
                 spacing: 5
 
-                RowLayout { // Name fill left, value on the right end
-                    Layout.leftMargin: valueProgressBar.height / 2 // Align text with progressbar radius curve's left end
-                    Layout.rightMargin: valueProgressBar.height / 2 // Align text with progressbar radius curve's left end
+                RowLayout {
+                    Layout.leftMargin: valueProgressBar.height / 2
+                    Layout.rightMargin: valueProgressBar.height / 2
 
                     StyledText {
-                        color: Appearance.colors.colOnLayer0
+                        color: Colours.palette.m3onSurface
                         font.pixelSize: Appearance.font.pixelSize.small
                         Layout.fillWidth: true
                         text: root.name
                     }
 
                     StyledText {
-                        color: Appearance.colors.colOnLayer0
+                        color: Colours.palette.m3onSurface
                         font.pixelSize: Appearance.font.pixelSize.small
                         Layout.fillWidth: false
                         text: Math.round(root.value * 100)
                     }
                 }
-                
+
                 StyledProgressBar {
                     id: valueProgressBar
                     Layout.fillWidth: true
                     value: root.value
+                    highlightColor: Colours.palette.m3primary
+                    trackColor: Colours.palette.m3primaryContainer
                 }
             }
         }

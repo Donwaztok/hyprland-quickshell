@@ -18,12 +18,12 @@ Scope {
 
     CustomShortcut {
         name: "showall"
-        description: "Toggle launcher, dashboard and osd"
+        description: "Toggle launcher, dashboard and utilities"
         onPressed: {
             if (root.hasFullscreen)
                 return;
             const v = Visibilities.getForActive();
-            v.launcher = v.dashboard = v.osd = v.utilities = !(v.launcher || v.dashboard || v.osd || v.utilities);
+            v.launcher = v.dashboard = v.utilities = !(v.launcher || v.dashboard || v.utilities);
         }
     }
 

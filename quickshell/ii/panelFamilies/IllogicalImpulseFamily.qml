@@ -8,6 +8,7 @@ import caelestia.modules.background as CaelestiaBackground
 import qs.modules.ii.cheatsheet
 import qs.modules.ii.mediaControls
 import qs.modules.ii.onScreenKeyboard
+import qs.modules.ii.onScreenDisplay
 import qs.modules.ii.polkit
 import qs.modules.ii.regionSelector
 import "../caelestia/modules" as CaelestiaCore
@@ -26,6 +27,7 @@ Scope {
         component: CaelestiaLockPanel {}
     }
     PanelLoader { component: MediaControls {} }
+    PanelLoader { component: OnScreenDisplay {} }
     PanelLoader { component: OnScreenKeyboard {} }
     PanelLoader { component: Polkit {} }
     PanelLoader { component: RegionSelector {} }
