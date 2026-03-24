@@ -1,4 +1,5 @@
 import caelestia.config
+import caelestia.services
 import caelestia.modules.osd as Osd
 import caelestia.modules.notifications as Notifications
 import caelestia.modules.session as Session
@@ -146,5 +147,11 @@ Item {
         anchors.top: notifications.bottom
         anchors.bottom: utilities.top
         anchors.right: parent.right
+    }
+
+    Component.onCompleted: {
+        const mon = Hypr.monitorFor(screen);
+        if (mon)
+            Visibilities.registerPopouts(mon, popouts);
     }
 }

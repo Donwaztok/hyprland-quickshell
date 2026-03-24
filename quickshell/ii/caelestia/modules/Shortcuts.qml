@@ -1,6 +1,5 @@
 import caelestia.components.misc
 import caelestia.config
-import caelestia.modules.controlcenter
 import caelestia.services
 import Quickshell
 import Quickshell.Io
@@ -14,7 +13,7 @@ Scope {
     CustomShortcut {
         name: "controlCenter"
         description: "Open control center"
-        onPressed: WindowFactory.create()
+        onPressed: Visibilities.openControlCenter("")
     }
 
     CustomShortcut {
@@ -148,7 +147,7 @@ Scope {
         target: "controlCenter"
 
         function open(): void {
-            WindowFactory.create();
+            Visibilities.openControlCenter("");
         }
     }
 

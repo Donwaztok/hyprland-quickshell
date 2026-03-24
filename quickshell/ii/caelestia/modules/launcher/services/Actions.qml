@@ -4,7 +4,6 @@ import ".."
 import caelestia.services
 import caelestia.config
 import caelestia.utils
-import caelestia.modules.controlcenter
 import Quickshell
 import QtQuick
 
@@ -46,7 +45,7 @@ Searcher {
                 Colours.setMode(command[1]);
             } else if (command[0] === "caelestia" && command.length >= 4 && command[1] === "shell" && command[2] === "controlCenter" && command[3] === "open") {
                 list.visibilities.launcher = false;
-                WindowFactory.create();
+                Visibilities.openControlCenter("");
             } else if (command[0] === "caelestia" && command.length > 1) {
                 list.visibilities.launcher = false;
                 CaelestiaCli.exec(command.slice(1));
