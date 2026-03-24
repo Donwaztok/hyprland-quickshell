@@ -6,7 +6,6 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    required property var props
     required property var visibilities
     required property Item popouts
 
@@ -21,19 +20,9 @@ Item {
 
         IdleInhibit {}
 
-        Record {
-            props: root.props
-            visibilities: root.visibilities
-            z: 1
-        }
-
         Toggles {
             visibilities: root.visibilities
             popouts: root.popouts
         }
-    }
-
-    RecordingDeleteModal {
-        props: root.props
     }
 }

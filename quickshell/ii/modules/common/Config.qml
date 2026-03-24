@@ -261,7 +261,6 @@ Singleton {
                     property bool showMicToggle: false
                     property bool showDarkModeToggle: true
                     property bool showPerformanceProfileToggle: false
-                    property bool showScreenRecord: false
                 }
                 property JsonObject weather: JsonObject {
                     property bool enable: false
@@ -466,10 +465,6 @@ Singleton {
                     property bool showVolume: true
                     property bool showBrightness: true
                 }
-            }
-
-            property JsonObject screenRecord: JsonObject {
-                property string savePath: Directories.videos.replace("file://","") // strip "file://"
             }
 
             property JsonObject screenSnip: JsonObject {

@@ -91,16 +91,6 @@ ContentPage {
 
         MaterialTextArea {
             Layout.fillWidth: true
-            placeholderText: Translation.tr("Video Recording Path")
-            text: Config.options.screenRecord.savePath
-            wrapMode: TextEdit.Wrap
-            onTextChanged: {
-                Config.options.screenRecord.savePath = text;
-            }
-        }
-        
-        MaterialTextArea {
-            Layout.fillWidth: true
             placeholderText: Translation.tr("Screenshot Path (leave empty to just copy)")
             text: Config.options.screenSnip.savePath
             wrapMode: TextEdit.Wrap

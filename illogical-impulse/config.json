@@ -172,7 +172,6 @@
             "showDarkModeToggle": false,
             "showMicToggle": false,
             "showPerformanceProfileToggle": false,
-            "showScreenRecord": false,
             "showScreenSnip": false
         },
         "verbose": true,
@@ -301,9 +300,6 @@
     "resources": {
         "historyLength": 60,
         "updateInterval": 3000
-    },
-    "screenRecord": {
-        "savePath": "/home/don/Videos"
     },
     "screenSnip": {
         "savePath": ""
