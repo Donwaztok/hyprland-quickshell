@@ -24,7 +24,6 @@ Singleton {
     property bool screenUnlockFailed: false
     property bool superDown: false
     property bool superReleaseMightTrigger: true
-    property bool wallpaperSelectorOpen: false
     property bool workspaceShowNumbers: false
 
     onSidebarRightOpenChanged: {

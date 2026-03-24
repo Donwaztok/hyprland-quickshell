@@ -407,10 +407,6 @@ Singleton {
         property real baseVerticalBarWidth: Math.round(46 * Config.options.bar.size)
         property real verticalBarWidth: Config.options.bar.cornerStyle === 1 ? 
             (baseVerticalBarWidth + root.sizes.hyprlandGapsOut * 2) : baseVerticalBarWidth
-        property real wallpaperSelectorWidth: 1200
-        property real wallpaperSelectorHeight: 690
-        property real wallpaperSelectorItemMargins: 8
-        property real wallpaperSelectorItemPadding: 6
     }
 
     syntaxHighlightingTheme: root.m3colors.darkmode ? "Monokai" : "ayu Light"

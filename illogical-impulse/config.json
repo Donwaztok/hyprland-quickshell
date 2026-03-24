@@ -449,9 +449,6 @@
         "enableCheck": true,
         "stronglyAdviseUpdateThreshold": 200
     },
-    "wallpaperSelector": {
-        "useSystemFileDialog": false
-    },
     "windows": {
         "centerTitle": true,
         "showTitlebar": true

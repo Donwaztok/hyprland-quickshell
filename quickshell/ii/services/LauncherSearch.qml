@@ -8,6 +8,9 @@ import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Io
 
+import caelestia.config as CaelestiaCfg
+import caelestia.services
+
 Singleton {
     id: root
 
@@ -108,7 +111,13 @@ Singleton {
         {
             action: "wallpaper",
             execute: () => {
-                GlobalStates.wallpaperSelectorOpen = true;
+                if (!CaelestiaCfg.Config.loaded)
+                    return;
+                const v = Visibilities.getForActive();
+                if (!v)
+                    return;
+                CaelestiaCfg.Config.launcher.pendingOpenPrefix = `${CaelestiaCfg.Config.launcher.actionPrefix}wallpaper`;
+                v.launcher = true;
             }
         },
         {

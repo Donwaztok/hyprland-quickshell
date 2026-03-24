@@ -466,8 +466,6 @@
   "Generate translation with Gemini": "Сгенерировать перевод с Gemini",
   "Generating...\nDon't close this window!": "Генерация...\nНе закрывайте окно!",
   "Generate\nTypically takes 2 minutes": "Сгенерировать\nОбычно ~2 мин",
-  "Use system file picker": "Сист. выборщик",
-  "Wallpaper selector": "Выбор обоев",
   "When the previous option is off and this is on,\nyou can still hover the corner's end to open sidebar,\nand the remaining area can be used for volume/brightness scroll": "Если предыдущий параметр выключен, а этот включён,\nможно навести на край угла для открытия панели,\nоставшаяся область работает для прокрутки громкости/яркости",
   "Copy path": "Копировать путь",
   "Windows": "Окон",

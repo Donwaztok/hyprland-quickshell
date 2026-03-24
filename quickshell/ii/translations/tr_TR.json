@@ -502,8 +502,6 @@
   "Generate translation with Gemini": "Gemini ile çeviri oluştur",
   "Generating...\nDon't close this window!": "Oluşturuluyor...\nBu pencereyi kapatmayın!",
   "Generate\nTypically takes 2 minutes": "Oluştur\nGenellikle 2 dakika sürer",
-  "Use system file picker": "Sistem dosya seçiciyi kullan",
-  "Wallpaper selector": "Duvar kağıdı seçici",
   "but force at absolute corner": "ancak mutlak köşede zorla",
   "When the previous option is off and this is on,\nyou can still hover the corner's end to open sidebar,\nand the remaining area can be used for volume/brightness scroll": "Önceki seçenek kapalı ve bu açık olduğunda,\nkenar çubuğunu açmak için köşenin ucunun üzerine gelebilirsiniz,\nve kalan alan ses/parlaklık kaydırması için kullanılabilir",
   "Copy path": "Yolu kopyala",
