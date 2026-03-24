@@ -20,7 +20,7 @@ Row {
         implicitHeight: info.implicitHeight
 
         radius: Appearance.rounding.large
-        color: Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
+        color: "transparent"
 
         ColouredIcon {
             id: osLogoIcon
