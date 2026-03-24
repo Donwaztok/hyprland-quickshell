@@ -6,7 +6,6 @@ import qs.modules.common
 import caelestia.config as CaelestiaCfg
 import caelestia.modules.background as CaelestiaBackground
 import qs.modules.ii.cheatsheet
-import qs.modules.ii.dock
 import qs.modules.ii.mediaControls
 import qs.modules.ii.onScreenKeyboard
 import qs.modules.ii.polkit
@@ -24,7 +23,6 @@ Scope {
         component: CaelestiaBackground.Background {}
     }
     PanelLoader { component: Cheatsheet {} }
-    PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
     PanelLoader {
         extraCondition: CaelestiaCfg.Config.loaded
         component: CaelestiaLockPanel {}

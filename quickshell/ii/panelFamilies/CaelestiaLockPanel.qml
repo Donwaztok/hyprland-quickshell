@@ -6,7 +6,7 @@ import Quickshell
 import QtQuick
 
 // Wraps Caelestia session lock and keeps ii GlobalStates.screenLocked in sync
-// (dock, on-screen keyboard, notification popup, background widgets).
+// (on-screen keyboard, notification popup, background widgets).
 Scope {
     Lock {
         id: caLock

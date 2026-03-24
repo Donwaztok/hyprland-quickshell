@@ -212,20 +212,6 @@
         "autoKillNotificationDaemons": false,
         "autoKillTrays": false
     },
-    "dock": {
-        "enable": false,
-        "height": 60,
-        "hoverRegionHeight": 2,
-        "hoverToReveal": true,
-        "ignoredAppRegexes": [
-        ],
-        "monochromeIcons": true,
-        "pinnedApps": [
-            "org.kde.dolphin",
-            "kitty"
-        ],
-        "pinnedOnStartup": false
-    },
     "hacks": {
         "arbitraryRaceConditionDelay": 20
     },
