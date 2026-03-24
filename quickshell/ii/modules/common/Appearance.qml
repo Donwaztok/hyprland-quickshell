@@ -370,7 +370,7 @@ Singleton {
                 easing.bezierCurve: root.animation.clickBounce.bezierCurve
             }}
         }
-        
+
         property QtObject scroll: QtObject {
             property int duration: 200
             property int type: Easing.BezierSpline
@@ -385,7 +385,7 @@ Singleton {
 
     sizes: QtObject {
         property real baseBarHeight: Math.round(40 * Config.options.bar.size)
-        property real barHeight: Config.options.bar.cornerStyle === 1 ? 
+        property real barHeight: Config.options.bar.cornerStyle === 1 ?
             (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
         property real barCenterSideModuleWidth: Config.options?.bar.verbose ? 360 : 140
         property real barCenterSideModuleWidthShortened: 280
@@ -396,15 +396,13 @@ Singleton {
         property real fabShadowRadius: 5
         property real fabHoveredShadowRadius: 7
         property real hyprlandGapsOut: 5
-        property real mediaControlsWidth: 440
-        property real mediaControlsHeight: 160
         property real osdWidth: 180
         property real searchWidthCollapsed: 210
         property real searchWidth: 360
         property real sidebarWidth: 460
         property real sidebarWidthExtended: 750
         property real baseVerticalBarWidth: Math.round(46 * Config.options.bar.size)
-        property real verticalBarWidth: Config.options.bar.cornerStyle === 1 ? 
+        property real verticalBarWidth: Config.options.bar.cornerStyle === 1 ?
             (baseVerticalBarWidth + root.sizes.hyprlandGapsOut * 2) : baseVerticalBarWidth
     }
 

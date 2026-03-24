@@ -12,7 +12,6 @@ Singleton {
     property bool barOpen: true
     property bool sidebarLeftOpen: false
     property bool sidebarRightOpen: false
-    property bool mediaControlsOpen: false
     property bool osdVolumeOpen: false
     property bool overviewOpen: false
     property bool regionSelectorOpen: false

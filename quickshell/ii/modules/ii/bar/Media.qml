@@ -28,7 +28,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton | Qt.LeftButton
+        acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton
         onPressed: (event) => {
             if (event.button === Qt.MiddleButton) {
                 activePlayer.togglePlaying();
@@ -36,8 +36,6 @@ Item {
                 activePlayer.previous();
             } else if (event.button === Qt.ForwardButton || event.button === Qt.RightButton) {
                 activePlayer.next();
-            } else if (event.button === Qt.LeftButton) {
-                GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
             }
         }
     }
@@ -61,7 +59,7 @@ Item {
                 anchors.centerIn: parent
                 width: mediaCircProg.implicitSize
                 height: mediaCircProg.implicitSize
-                
+
                 MaterialSymbol {
                     anchors.centerIn: parent
                     fill: 1

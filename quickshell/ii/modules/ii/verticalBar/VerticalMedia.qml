@@ -27,7 +27,7 @@ MouseArea {
         onTriggered: activePlayer.positionChanged()
     }
 
-    acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton | Qt.LeftButton
+    acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton
     hoverEnabled: !Config.options.bar.tooltips.clickToShow
     onPressed: (event) => {
         if (event.button === Qt.MiddleButton) {
@@ -36,8 +36,6 @@ MouseArea {
             activePlayer.previous();
         } else if (event.button === Qt.ForwardButton || event.button === Qt.RightButton) {
             activePlayer.next();
-        } else if (event.button === Qt.LeftButton) {
-            GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
         }
     }
 
@@ -55,7 +53,7 @@ MouseArea {
             anchors.centerIn: parent
             width: mediaCircProg.implicitSize
             height: mediaCircProg.implicitSize
-            
+
             MaterialSymbol {
                 anchors.centerIn: parent
                 fill: 1
@@ -68,7 +66,7 @@ MouseArea {
 
     Bar.StyledPopup {
         hoverTarget: root
-        active: GlobalStates.mediaControlsOpen ? false : root.containsMouse
+        active: root.containsMouse
 
         Column {
             anchors.centerIn: parent

@@ -6,7 +6,6 @@ import qs.modules.common
 import caelestia.config as CaelestiaCfg
 import caelestia.modules.background as CaelestiaBackground
 import qs.modules.ii.cheatsheet
-import qs.modules.ii.mediaControls
 import qs.modules.ii.onScreenDisplay
 import qs.modules.ii.polkit
 import qs.modules.ii.regionSelector
@@ -25,7 +24,6 @@ Scope {
         extraCondition: CaelestiaCfg.Config.loaded
         component: CaelestiaLockPanel {}
     }
-    PanelLoader { component: MediaControls {} }
     PanelLoader { component: OnScreenDisplay {} }
     PanelLoader { component: Polkit {} }
     PanelLoader { component: RegionSelector {} }
