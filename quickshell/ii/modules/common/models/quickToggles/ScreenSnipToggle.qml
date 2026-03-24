@@ -13,7 +13,6 @@ QuickToggleModel {
     icon: "screenshot_region"
 
     mainAction: () => {
-        GlobalStates.sidebarRightOpen = false;
         delayedActionTimer.start();
     }
     Timer {

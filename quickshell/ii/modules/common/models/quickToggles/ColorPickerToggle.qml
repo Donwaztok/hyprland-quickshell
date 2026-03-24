@@ -13,7 +13,6 @@ QuickToggleModel {
     icon: "colorize"
 
     mainAction: () => {
-        GlobalStates.sidebarRightOpen = false;
         delayedActionTimer.start();
     }
     Timer {

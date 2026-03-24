@@ -203,7 +203,6 @@ Item { // Notification item area
 
                     onLinkActivated: (link) => {
                         Qt.openUrlExternally(link)
-                        GlobalStates.sidebarRightOpen = false
                     }
                     
                     PointingHandLinkHover {}

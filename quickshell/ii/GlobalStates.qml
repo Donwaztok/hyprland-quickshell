@@ -1,5 +1,4 @@
 import qs.modules.common
-import qs.services
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -9,11 +8,7 @@ pragma ComponentBehavior: Bound
 
 Singleton {
     id: root
-    property bool barOpen: true
-    property bool sidebarLeftOpen: false
-    property bool sidebarRightOpen: false
     property bool osdVolumeOpen: false
-    property bool overviewOpen: false
     property bool regionSelectorOpen: false
     property bool searchOpen: false
     property bool screenLocked: false
@@ -22,13 +17,6 @@ Singleton {
     property bool superDown: false
     property bool superReleaseMightTrigger: true
     property bool workspaceShowNumbers: false
-
-    onSidebarRightOpenChanged: {
-        if (GlobalStates.sidebarRightOpen) {
-            Notifications.timeoutAll();
-            Notifications.markAllRead();
-        }
-    }
 
     GlobalShortcut {
         name: "workspaceNumber"
