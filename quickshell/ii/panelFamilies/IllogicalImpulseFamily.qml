@@ -12,7 +12,6 @@ import qs.modules.ii.onScreenKeyboard
 import qs.modules.ii.polkit
 import qs.modules.ii.regionSelector
 import qs.modules.ii.screenCorners
-import qs.modules.ii.overlay
 import qs.modules.ii.wallpaperSelector
 import "../caelestia/modules" as CaelestiaCore
 import "../caelestia/modules/drawers" as CaelestiaDrawers
@@ -32,7 +31,6 @@ Scope {
     }
     PanelLoader { component: MediaControls {} }
     PanelLoader { component: OnScreenKeyboard {} }
-    PanelLoader { component: Overlay {} }
     PanelLoader { component: Polkit {} }
     PanelLoader { component: RegionSelector {} }
     PanelLoader { component: ScreenCorners {} }

@@ -315,11 +315,6 @@ Singleton {
                 property bool autoKillTrays: false
             }
 
-            property JsonObject crosshair: JsonObject {
-                // Valorant crosshair format. Use https://www.vcrdb.net/builder
-                property string code: "0;P;d;1;0l;10;0o;2;1b;0"
-            }
-
             property JsonObject dock: JsonObject {
                 property bool enable: false
                 property bool monochromeIcons: true
@@ -400,16 +395,6 @@ Singleton {
             property JsonObject osk: JsonObject {
                 property string layout: "qwerty_full"
                 property bool pinnedOnStartup: false
-            }
-
-            property JsonObject overlay: JsonObject {
-                property bool openingZoomAnimation: true
-                property bool darkenScreen: true
-                property real clickthroughOpacity: 0.8
-                property JsonObject floatingImage: JsonObject {
-                    property string imageSource: "https://media.tenor.com/H5U5bJzj3oAAAAAi/kukuru.gif"
-                    property real scale: 0.5
-                }
             }
 
             property JsonObject overview: JsonObject {
