@@ -19,7 +19,6 @@
     },
     "appearance": {
         "extraBackgroundTint": true,
-        "fakeScreenRounding": 0,
         "fonts": {
             "expressive": "Space Grotesk",
             "iconNerd": "JetBrains Mono NF",
@@ -360,17 +359,6 @@
             "zerochan": {
                 "username": "[unset]"
             }
-        },
-        "cornerOpen": {
-            "bottom": false,
-            "clickless": false,
-            "clicklessCornerEnd": true,
-            "clicklessCornerVerticalOffset": 1,
-            "cornerRegionHeight": 5,
-            "cornerRegionWidth": 250,
-            "enable": true,
-            "valueScroll": true,
-            "visualize": false
         },
         "keepRightSidebarLoaded": true,
         "quickSliders": {
