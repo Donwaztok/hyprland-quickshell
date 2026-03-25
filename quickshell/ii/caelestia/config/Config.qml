@@ -17,7 +17,6 @@ Singleton {
     property alias controlCenter: adapter.controlCenter
     property alias launcher: adapter.launcher
     property alias notifs: adapter.notifs
-    property alias osd: adapter.osd
     property alias session: adapter.session
     property alias winfo: adapter.winfo
     property alias lock: adapter.lock
@@ -51,7 +50,6 @@ Singleton {
             controlCenter: serializeControlCenter(),
             launcher: serializeLauncher(),
             notifs: serializeNotifs(),
-            osd: serializeOsd(),
             session: serializeSession(),
             winfo: serializeWinfo(),
             lock: serializeLock(),
@@ -281,15 +279,6 @@ Singleton {
         };
     }
 
-    function serializeOsd(): var {
-        return {
-            enabled: osd.enabled,
-            hideDelay: osd.hideDelay,
-            enableBrightness: osd.enableBrightness,
-            enableMicrophone: osd.enableMicrophone
-        };
-    }
-
     function serializeSession(): var {
         return {
             enabled: session.enabled,
@@ -469,7 +458,6 @@ Singleton {
             property ControlCenterConfig controlCenter: ControlCenterConfig {}
             property LauncherConfig launcher: LauncherConfig {}
             property NotifsConfig notifs: NotifsConfig {}
-            property OsdConfig osd: OsdConfig {}
             property SessionConfig session: SessionConfig {}
             property WInfoConfig winfo: WInfoConfig {}
             property LockConfig lock: LockConfig {}

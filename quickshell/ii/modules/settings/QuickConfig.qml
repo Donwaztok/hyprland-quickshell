@@ -7,6 +7,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import caelestia.services
 
 ContentPage {
     forceWidth: true
@@ -74,7 +75,7 @@ ContentPage {
                     sourceSize.width: parent.implicitWidth
                     sourceSize.height: parent.implicitHeight
                     fillMode: Image.PreserveAspectCrop
-                    source: Config.options.background.wallpaperPath
+                    source: Wallpapers.current ? Qt.resolvedUrl(Wallpapers.current) : ""
                     cache: false
                     layer.enabled: true
                     layer.effect: OpacityMask {

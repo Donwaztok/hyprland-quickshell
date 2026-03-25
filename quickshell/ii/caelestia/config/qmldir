@@ -11,7 +11,6 @@ GeneralConfig 1.0 GeneralConfig.qml
 LauncherConfig 1.0 LauncherConfig.qml
 LockConfig 1.0 LockConfig.qml
 NotifsConfig 1.0 NotifsConfig.qml
-OsdConfig 1.0 OsdConfig.qml
 ServiceConfig 1.0 ServiceConfig.qml
 SessionConfig 1.0 SessionConfig.qml
 SidebarConfig 1.0 SidebarConfig.qml

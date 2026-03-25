@@ -418,12 +418,6 @@
     "actionOnClick": false,
     "groupPreviewNum": 3
   },
-  "osd": {
-    "enabled": false,
-    "hideDelay": 2000,
-    "enableBrightness": true,
-    "enableMicrophone": false
-  },
   "session": {
     "enabled": true,
     "dragThreshold": 30,

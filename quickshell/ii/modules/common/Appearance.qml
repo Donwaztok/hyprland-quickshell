@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import caelestia.services
 import qs.modules.common.functions
 pragma Singleton
 pragma ComponentBehavior: Bound
@@ -18,13 +19,19 @@ Singleton {
     // Transparency. The quadratic functions were derived from analysis of hand-picked transparency values.
     ColorQuantizer {
         id: wallColorQuant
-        property string wallpaperPath: Config.options.background.wallpaperPath
+        property string wallpaperPath: Wallpapers.current || ""
         property bool wallpaperIsVideo: wallpaperPath.endsWith(".mp4") || wallpaperPath.endsWith(".webm") || wallpaperPath.endsWith(".mkv") || wallpaperPath.endsWith(".avi") || wallpaperPath.endsWith(".mov")
-        source: Qt.resolvedUrl(wallpaperIsVideo ? Config.options.background.thumbnailPath : Config.options.background.wallpaperPath)
+        // Video wallpapers: skip sampling (no ii thumbnail path); fall back to default vibrancy below.
+        source: (wallpaperPath.length > 0 && !wallpaperIsVideo) ? Qt.resolvedUrl(wallpaperPath) : Qt.resolvedUrl("")
         depth: 0 // 2^0 = 1 color
         rescaleSize: 10
     }
-    property real wallpaperVibrancy: (wallColorQuant.colors[0]?.hslSaturation + wallColorQuant.colors[0]?.hslLightness) / 2
+    property real wallpaperVibrancy: {
+        const c = wallColorQuant.colors[0];
+        if (!c)
+            return 0.35;
+        return (c.hslSaturation + c.hslLightness) / 2;
+    }
     property real autoBackgroundTransparency: { // y = 0.5768x^2 - 0.759x + 0.2896
         let x = wallpaperVibrancy
         let y = 0.5768 * (x * x) - 0.759 * (x) + 0.2896
