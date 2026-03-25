@@ -34,7 +34,7 @@ The script runs **entirely locally** and:
 | Path | Description |
 |------|-------------|
 | `hypr/` | Hyprland configs, scripts, hyprlock, hypridle. `hypr/source/`: SDDM Candy tarball, desktop files. |
-| `quickshell/ii/` | Quickshell bar and widgets. |
+| `quickshell/donwaztok/` | Quickshell bar and widgets (Donwaztok shell). |
 | `fish/` | Fish shell. |
 | `kitty/`, `foot/` | Terminals. |
 | `fuzzel/` | Launcher. |

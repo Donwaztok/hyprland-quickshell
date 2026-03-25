@@ -36,10 +36,8 @@
 !zshrc.d/**
 !mpv/
 !mpv/**
-!illogical-impulse/
-!illogical-impulse/**
-!caelestia/
-!caelestia/**
+!donwaztok/
+!donwaztok/**
 
 # Arquivos soltos em .config (end-4)
 !starship.toml
