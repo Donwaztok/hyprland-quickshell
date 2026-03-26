@@ -60,29 +60,6 @@ ContentPage {
                     ]
                 }
             }
-            ContentSubsection {
-                title: qsTr("Automatically hide")
-                Layout.fillWidth: false
-
-                ConfigSelectionArray {
-                    currentValue: Config.options.bar.autoHide.enable
-                    onSelected: newValue => {
-                        Config.options.bar.autoHide.enable = newValue; // Update local copy
-                    }
-                    options: [
-                        {
-                            displayName: qsTr("No"),
-                            icon: "close",
-                            value: false
-                        },
-                        {
-                            displayName: qsTr("Yes"),
-                            icon: "check",
-                            value: true
-                        }
-                    ]
-                }
-            }
         }
 
         ConfigRow {
@@ -157,61 +134,6 @@ ContentPage {
             to: 120
             stepSize: 5
             onValueChanged: Config.options.bar.size = value / 100
-        }
-    }
-
-    ContentSection {
-        icon: "widgets"
-        title: qsTr("Utility buttons")
-
-        ConfigRow {
-            uniform: true
-            ConfigSwitch {
-                buttonIcon: "content_cut"
-                text: qsTr("Screen snip")
-                checked: Config.options.bar.utilButtons.showScreenSnip
-                onCheckedChanged: {
-                    Config.options.bar.utilButtons.showScreenSnip = checked;
-                }
-            }
-            ConfigSwitch {
-                buttonIcon: "colorize"
-                text: qsTr("Color picker")
-                checked: Config.options.bar.utilButtons.showColorPicker
-                onCheckedChanged: {
-                    Config.options.bar.utilButtons.showColorPicker = checked;
-                }
-            }
-        }
-        ConfigRow {
-            uniform: true
-            ConfigSwitch {
-                buttonIcon: "mic"
-                text: qsTr("Mic toggle")
-                checked: Config.options.bar.utilButtons.showMicToggle
-                onCheckedChanged: {
-                    Config.options.bar.utilButtons.showMicToggle = checked;
-                }
-            }
-        }
-        ConfigRow {
-            uniform: true
-            ConfigSwitch {
-                buttonIcon: "dark_mode"
-                text: qsTr("Dark/Light toggle")
-                checked: Config.options.bar.utilButtons.showDarkModeToggle
-                onCheckedChanged: {
-                    Config.options.bar.utilButtons.showDarkModeToggle = checked;
-                }
-            }
-            ConfigSwitch {
-                buttonIcon: "speed"
-                text: qsTr("Performance Profile toggle")
-                checked: Config.options.bar.utilButtons.showPerformanceProfileToggle
-                onCheckedChanged: {
-                    Config.options.bar.utilButtons.showPerformanceProfileToggle = checked;
-                }
-            }
         }
     }
 
@@ -404,30 +326,6 @@ ContentPage {
                 DwCfg.Config.bar.workspaces.superKey.delayMs = value
                 DwCfg.Config.save()
             }
-        }
-    }
-
-    ContentSection {
-        icon: "tooltip"
-        title: qsTr("Tooltips")
-        ConfigSwitch {
-            buttonIcon: "ads_click"
-            text: qsTr("Click to show")
-            checked: Config.options.bar.tooltips.clickToShow
-            onCheckedChanged: {
-                Config.options.bar.tooltips.clickToShow = checked;
-            }
-        }
-    }
-
-    ContentSection {
-        icon: "bug_report"
-        title: qsTr("Debug")
-        ConfigSwitch {
-            buttonIcon: "view_week"
-            text: qsTr("Show layout borders")
-            checked: Config.options.bar.debugLayout ?? false
-            onCheckedChanged: Config.options.bar.debugLayout = checked
         }
     }
 }

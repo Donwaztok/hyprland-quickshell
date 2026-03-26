@@ -3,7 +3,6 @@ import QtQuick;
 /**
  * An AI model representation.
  * - name: Friendly name of the model
- * - icon: Icon name of the model
  * - description: Description of the model
  * - endpoint: Endpoint of the model
  * - model: Model code (like gpt-4.1 or gemini-2.5-flash)
@@ -17,7 +16,6 @@ import QtQuick;
 
 QtObject {
     property string name
-    property string icon
     property string description
     property string homepage
     property string endpoint

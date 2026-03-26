@@ -83,7 +83,6 @@ Singleton {
             },
             anim: {
                 mediaGifSpeedAdjustment: 300,
-                sessionGifSpeed: 0.7,
                 durations: {
                     scale: appearance.anim.durations.scale
                 }
@@ -362,7 +361,6 @@ Singleton {
     function serializePaths(): var {
         return {
             wallpaperDir: paths.wallpaperDir,
-            sessionGif: paths.sessionGif,
             mediaGif: paths.mediaGif
         };
     }

@@ -244,7 +244,6 @@ Singleton {
 
     // Model properties:
     // - name: Name of the model
-    // - icon: Icon name of the model
     // - description: Description of the model
     // - endpoint: Endpoint of the model
     // - model: Model name of the model
@@ -257,7 +256,6 @@ Singleton {
     property var models: Config.options.policies.ai === 2 ? {} : {
         "gemini-2.5-flash": aiModelComponent.createObject(this, {
             "name": "Gemini 2.5 Flash",
-            "icon": "google-gemini-symbolic",
             "description": qsTr("Online | Google's model\nNewer model that's slower than its predecessor but should deliver higher quality answers"),
             "homepage": "https://aistudio.google.com",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent",
@@ -270,7 +268,6 @@ Singleton {
         }),
         "gemini-3-flash": aiModelComponent.createObject(this, {
             "name": "Gemini 3 Flash",
-            "icon": "google-gemini-symbolic",
             "description": qsTr("Online | Google's model\nPro-level intelligence at the speed and pricing of Flash."),
             "homepage": "https://aistudio.google.com",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent",
@@ -283,7 +280,6 @@ Singleton {
         }),
         "mistral-medium-3": aiModelComponent.createObject(this, {
             "name": "Mistral Medium 3",
-            "icon": "mistral-symbolic",
             "description": qsTr("Online | %1's model | Delivers fast, responsive and well-formatted answers. Disadvantages: not very eager to do stuff; might make up unknown function calls").arg("Mistral"),
             "homepage": "https://mistral.ai/news/mistral-medium-3",
             "endpoint": "https://api.mistral.ai/v1/chat/completions",
@@ -328,14 +324,6 @@ Singleton {
         root.addUserModels() // Config onReadyChanged above might not fire if config is loaded before this service
     }
 
-    function guessModelLogo(model) {
-        if (model.includes("llama")) return "ollama-symbolic";
-        if (model.includes("gemma")) return "google-gemini-symbolic";
-        if (model.includes("deepseek")) return "deepseek-symbolic";
-        if (/^phi\d*:/i.test(model)) return "microsoft-symbolic";
-        return "ollama-symbolic";
-    }
-
     function guessModelName(model) {
         const replaced = model.replace(/-/g, ' ').replace(/:/g, ' ');
         let words = replaced.split(' ');
@@ -369,7 +357,6 @@ Singleton {
                         const safeModelName = root.safeModelName(model);
                         root.addModel(safeModelName, {
                             "name": guessModelName(model),
-                            "icon": guessModelLogo(model),
                             "description": qsTr("Local Ollama model | %1").arg(model),
                             "homepage": `https://ollama.com/library/${model}`,
                             "endpoint": "http://localhost:11434/v1/chat/completions",
@@ -477,10 +464,6 @@ Singleton {
                 .arg(model.name).arg(model.key_get_link).arg(model.key_get_description ?? qsTr("<i>No further instruction provided</i>")).arg("/key"), 
             Ai.interfaceRole
         );
-    }
-
-    function getModel() {
-        return models[currentModelId];
     }
 
     function setModel(modelId, feedback = true, setPersistentState = true) {

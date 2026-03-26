@@ -102,7 +102,6 @@ Singleton {
                         "description": "This is a custom model. Edit the config to add more! | Anyway, this is DeepSeek R1 Distill LLaMA 70B",
                         "endpoint": "https://openrouter.ai/api/v1/chat/completions",
                         "homepage": "https://openrouter.ai/deepseek/deepseek-r1-distill-llama-70b:free", // Not mandatory
-                        "icon": "spark-symbolic", // Not mandatory
                         "key_get_link": "https://openrouter.ai/settings/keys", // Not mandatory
                         "key_id": "openrouter",
                         "model": "deepseek/deepseek-r1-distill-llama-70b:free",
@@ -170,40 +169,12 @@ Singleton {
 
             property JsonObject bar: JsonObject {
                 property real size: 0.8 // Bar scale (height when horizontal, width when vertical)
-                property JsonObject autoHide: JsonObject {
-                    property bool enable: false
-                    property int hoverRegionWidth: 2
-                    property bool pushWindows: false
-                    property JsonObject showWhenPressingSuper: JsonObject {
-                        property bool enable: true
-                        property int delay: 140
-                    }
-                }
                 property bool bottom: false // Instead of top
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
-                property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
                 property bool borderless: false // legacy: no grouping (kept for compat)
                 property int groupStyle: 0 // 0: Pills | 1: Line-separated | 2: Empty (no divider)
-                property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/donwaztok/assets/icons
-                property bool showBackground: true
                 property bool verbose: true
-                property bool debugLayout: false // Draw borders around bar components for layout debug
                 property bool vertical: false
-                property JsonObject resources: JsonObject {
-                    property bool alwaysShowGpu: true
-                    property bool alwaysShowCpu: true
-                    property int memoryWarningThreshold: 95
-                    property int gpuWarningThreshold: 90
-                    property int cpuWarningThreshold: 90
-                }
-                property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
-                property JsonObject utilButtons: JsonObject {
-                    property bool showScreenSnip: true
-                    property bool showColorPicker: false
-                    property bool showMicToggle: false
-                    property bool showDarkModeToggle: true
-                    property bool showPerformanceProfileToggle: false
-                }
                 property JsonObject weather: JsonObject {
                     property bool enable: false
                     property bool enableGPS: true // gps based location
@@ -215,9 +186,6 @@ Singleton {
                     property JsonObject notifications: JsonObject {
                         property bool showUnreadCount: false
                     }
-                }
-                property JsonObject tooltips: JsonObject {
-                    property bool clickToShow: false
                 }
             }
 
