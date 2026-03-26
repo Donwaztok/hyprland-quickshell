@@ -5,12 +5,10 @@ CircularProgress 1.0 CircularProgress.qml
 CollapsibleSection 1.0 CollapsibleSection.qml
 CustomMouseArea 1.0 CustomMouseArea.qml
 CustomSpinBox 1.0 CustomSpinBox.qml
-FilledSlider 1.0 FilledSlider.qml
 IconButton 1.0 IconButton.qml
 IconTextButton 1.0 IconTextButton.qml
 Menu 1.0 Menu.qml
 MenuItem 1.0 MenuItem.qml
-SpinBoxRow 1.0 SpinBoxRow.qml
 SplitButton 1.0 SplitButton.qml
 SplitButtonRow 1.0 SplitButtonRow.qml
 StyledInputField 1.0 StyledInputField.qml
