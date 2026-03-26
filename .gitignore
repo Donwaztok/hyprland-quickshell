@@ -32,8 +32,6 @@
 !kde-material-you-colors/**
 !xdg-desktop-portal/
 !xdg-desktop-portal/**
-!zshrc.d/
-!zshrc.d/**
 !mpv/
 !mpv/**
 !donwaztok/
