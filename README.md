@@ -1,6 +1,6 @@
 # Hyprland + Quickshell
 
-Dotfiles for Hyprland, Quickshell, Fish, Kitty, Fuzzel, and related tools (inspired by [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)).
+Dotfiles for Hyprland, Quickshell, Zsh, Kitty, Fuzzel, and related tools (inspired by [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)).
 
 **Repository:** [github.com/Donwaztok/hyprland-quickshell](https://github.com/Donwaztok/hyprland-quickshell)
 
@@ -35,12 +35,12 @@ The script runs **entirely locally** and:
 |------|-------------|
 | `hypr/` | Hyprland configs, scripts, hyprlock, hypridle. `hypr/source/`: SDDM Candy tarball, desktop files. |
 | `quickshell/donwaztok/` | Quickshell bar and widgets (Donwaztok shell). |
-| `fish/` | Fish shell. |
 | `kitty/`, `foot/` | Terminals. |
+| `.zshrc` | Zsh (Oh My Zsh, Powerlevel10k, etc.). |
 | `fuzzel/` | Launcher. |
 | `wlogout/` | Logout menu. |
 | `fontconfig/`, `matugen/` | Fonts and Material colors. |
-| `starship.toml` | Fish prompt. |
+| `starship.toml` | Shell prompt (Starship; usable from zsh). |
 | `kdeglobals`, `Kvantum/`, `kde-material-you-colors/` | KDE/Qt theme. |
 | `app.lst` | Package list used by `install.sh`. |
 | `install.sh` | Single install script. |

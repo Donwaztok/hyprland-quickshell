@@ -14,8 +14,6 @@
 !mako/**
 !btop/
 !btop/**
-!fish/
-!fish/**
 !quickshell/
 !quickshell/**
 !fontconfig/
@@ -57,10 +55,6 @@
 # -----------------------------------------------------------------------------
 # Re-ignorar dentro das pastas rastreadas (cache, estado, gerados)
 # -----------------------------------------------------------------------------
-# Fish: variáveis por máquina / histórico
-fish/fish_variables
-fish_history
-
 # Python / Quickshell
 **/__pycache__/
 **/.venv/

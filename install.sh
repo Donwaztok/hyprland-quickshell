@@ -175,6 +175,6 @@ fi
 echo ""
 echo -e "\033[0;32m[OK]\033[0m Installation complete."
 echo "  - Repo: https://github.com/Donwaztok/hyprland-quickshell"
-echo "  - Configs: ~/.config (hypr, quickshell, fish, etc.)"
+echo "  - Configs: ~/.config (hypr, quickshell, zsh, etc.)"
 echo "  - Super+/ = keybinds, Super+Enter = terminal"
 echo "  - SDDM/GRUB/GTK/icons applied"
