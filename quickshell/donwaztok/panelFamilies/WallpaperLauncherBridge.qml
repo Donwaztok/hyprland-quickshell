@@ -3,8 +3,8 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 
-import donwaztok.config as DwCfg
-import donwaztok.services
+import qs.config as DwCfg
+import qs.services.m3
 
 /**
  * Hyprland globals quickshell:wallpaperSelectorToggle / wallpaperSelectorRandom and IPC

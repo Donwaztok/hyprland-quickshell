@@ -1,4 +1,4 @@
-import donwaztok.services
+import qs.services.m3
 import QtQuick
 import QtQuick.Layouts
 import qs.modules.common

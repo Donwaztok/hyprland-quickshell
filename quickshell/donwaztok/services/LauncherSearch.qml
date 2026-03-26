@@ -8,8 +8,8 @@ import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Io
 
-import donwaztok.config as DwCfg
-import donwaztok.services
+import qs.config as DwCfg
+import qs.services.m3
 
 Singleton {
     id: root

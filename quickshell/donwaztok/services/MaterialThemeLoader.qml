@@ -1,7 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
-import donwaztok.services
+import qs.services.m3
 import qs.modules.common
 import QtQuick
 import Quickshell

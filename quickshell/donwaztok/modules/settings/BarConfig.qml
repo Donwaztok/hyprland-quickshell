@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
-import donwaztok.config as DwCfg
+import qs.config as DwCfg
 
 ContentPage {
     forceWidth: true

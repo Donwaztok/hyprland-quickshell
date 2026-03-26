@@ -1,4 +1,4 @@
-import donwaztok.services
+import qs.services.m3
 import qs.modules.common
 import qs.modules.common.models
 import qs.services

@@ -1,6 +1,6 @@
 import qs.modules.common
 import qs.modules.common.widgets
-import donwaztok.services
+import qs.services.m3
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets

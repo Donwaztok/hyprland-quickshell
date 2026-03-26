@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import Quickshell
-import donwaztok.config
+import qs.config
 
 Singleton {
     id: root

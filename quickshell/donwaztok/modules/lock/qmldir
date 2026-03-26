@@ -1,0 +1,13 @@
+module qs.modules.lock
+Lock 1.0 Lock.qml
+LockSurface 1.0 LockSurface.qml
+Pam 1.0 Pam.qml
+Center 1.0 Center.qml
+Content 1.0 Content.qml
+Fetch 1.0 Fetch.qml
+InputField 1.0 InputField.qml
+Media 1.0 Media.qml
+NotifDock 1.0 NotifDock.qml
+NotifGroup 1.0 NotifGroup.qml
+Resources 1.0 Resources.qml
+WeatherInfo 1.0 WeatherInfo.qml

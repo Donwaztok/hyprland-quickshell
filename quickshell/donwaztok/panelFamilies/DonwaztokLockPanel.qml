@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs
-import donwaztok.modules.lock
+import qs.modules.lock
 import Quickshell
 import QtQuick
 

@@ -7,7 +7,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
-import donwaztok.services
+import qs.services.m3
 
 ContentPage {
     forceWidth: true

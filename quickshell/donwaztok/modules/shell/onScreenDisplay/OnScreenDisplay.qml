@@ -2,7 +2,7 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
-import donwaztok.config as DwCfg
+import qs.config as DwCfg
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
