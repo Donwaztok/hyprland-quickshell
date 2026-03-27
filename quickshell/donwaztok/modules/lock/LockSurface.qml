@@ -13,6 +13,12 @@ WlSessionLockSurface {
     required property WlSessionLock lock
     required property Pam pam
 
+    readonly property bool lockBlurEnabled: Config.shellOptions?.lock?.blur?.enable ?? true
+    readonly property real lockBlurZoom: {
+        const z = Config.shellOptions?.lock?.blur?.extraZoom;
+        return (typeof z === "number" && z > 0) ? z : 1.0;
+    }
+
     function refocusLockInput(): void {
         content.refocusLock();
     }
@@ -163,20 +169,28 @@ WlSessionLockSurface {
         }
     }
 
-    ScreencopyView {
-        id: background
-
+    Item {
+        id: bgClip
         anchors.fill: parent
-        captureSource: root.screen
-        opacity: 0
+        clip: true
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            autoPaddingEnabled: false
-            blurEnabled: true
-            blur: 1
-            blurMax: 64
-            blurMultiplier: 1
+        ScreencopyView {
+            id: background
+
+            anchors.centerIn: parent
+            width: parent.width * (root.lockBlurEnabled ? root.lockBlurZoom : 1)
+            height: parent.height * (root.lockBlurEnabled ? root.lockBlurZoom : 1)
+            captureSource: root.screen
+            opacity: 0
+
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                autoPaddingEnabled: false
+                blurEnabled: root.lockBlurEnabled
+                blur: 1
+                blurMax: 64
+                blurMultiplier: 1
+            }
         }
     }
 

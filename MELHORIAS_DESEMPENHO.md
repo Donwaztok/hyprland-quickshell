@@ -2,7 +2,7 @@
 
 Documento gerado por varredura do repositório em `~/.config` (Hyprland, Quickshell Donwaztok, `app.lst`, `install.sh`, shell). Objetivo: manter o setup **pequeno e previsível em CPU/GPU/RAM**, com sugestões que vão de ajustes rápidos a remoção de funcionalidades caras.
 
-**Alterações já aplicadas no repo:** blur do compositor desativado (`decoration.blur.enabled = false`) e layerrules de blur removidas; removidos geoclue, EasyEffects, Cava/visualizador de áudio e `QML2_IMPORT_PATH` fixo (passa a vir de `hypr/hyprland/env.conf`); `cliphist wipe` no arranque; duplicados de `layerrule` para `indicator.*` eliminados.
+**Alterações já aplicadas no repo:** blur do compositor desativado (`decoration.blur.enabled = false`) e layerrules de blur removidas; removidos geoclue, EasyEffects, Cava/visualizador de áudio e `QML2_IMPORT_PATH` fixo (passa a vir de `hypr/hyprland/env.conf`); `cliphist wipe` no arranque; duplicados de `layerrule` para `indicator.*` eliminados. **Bloqueio:** `misc.session_lock_xray = true` (compositor mostra o fundo no lock); o desfoque do fundo é o `MultiEffect` em `LockSurface.qml`, ligado a `options.lock.blur` em `donwaztok/config.json` (`enable`, `extraZoom`).
 
 **Código Quickshell morto removido (limpeza):** singletons e UI sem referências — `LauncherApps` / `options.launcher.pinnedApps`; `LauncherSearch` + `LauncherSearchResult` + `Todo`; `SessionWarnings`; `Privacy`; `Booru` + `BooruResponseData` + estado `booru` em `Persistent` + opções `options.booru`; reconhecimento musical (`SongRec`, `MusicRecognitionToggle`, script `recognize-music.sh`, `options.musicRecognition` e secção em Definições). Pastas `Directories` só usadas por booru/todo também foram enxugadas.
 
@@ -13,6 +13,7 @@ Documento gerado por varredura do repositório em `~/.config` (Hyprland, Quicksh
 | Área | Estado atual | Risco de custo |
 |------|----------------|----------------|
 | **Hyprland — blur** | Blur **desligado** em `general.conf`; sem `layerrule` de blur | **Baixo** (GPU) |
+| **Tela de bloqueio** | `session_lock_xray` + blur Qt (só ao bloquear; configurável em `options.lock.blur`) | **Médio** só durante o lock |
 | **Arranque (`exec-once`)** | Quickshell, `cliphist wipe`, **dois** `wl-paste --watch` com `qs … ipc`; opcionalmente apps em `custom/execs.conf` | **Médio** (picos ao copiar; login depende dos teus `exec-once` custom) |
 | **`app.lst`** | Mistura essencial (Hyprland, portals, quickshell) com **stack KDE**, vários browsers/IDEs, extras (ex.: gamemode) | **Médio** em disco, atualizações AUR e processos em background |
 | **Quickshell** | Visualizador/cava removidos; alguns timers agressivos **só quando funcionalidades estão ativas**; `ResourceUsage` usa truque de **1 ms** no primeiro tick | **Baixo a médio** conforme módulos usados |

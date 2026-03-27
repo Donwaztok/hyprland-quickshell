@@ -25,6 +25,9 @@ Singleton {
     readonly property ServiceConfig services: DonwaztokConfigStore.topLevel.services
     readonly property UserPaths paths: DonwaztokConfigStore.topLevel.paths
 
+    /// M3 / `options` block in donwaztok/config.json (lock blur, AI, search, etc.)
+    readonly property var shellOptions: DonwaztokConfigStore.shellOptions
+
     // Bar UI scale vs 36px design baseline (avoids a separate singleton that would circular-import Config via qs.utils).
     readonly property real barThicknessScale: (bar.sizes.thickness > 0) ? (bar.sizes.thickness / 36) : 1
 
