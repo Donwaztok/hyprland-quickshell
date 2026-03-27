@@ -1,6 +1,17 @@
 {
     "appearance": {
         "anim": {
+            "curves": {
+                "emphasized": null,
+                "emphasizedAccel": null,
+                "emphasizedDecel": null,
+                "expressiveDefaultSpatial": null,
+                "expressiveEffects": null,
+                "expressiveFastSpatial": null,
+                "standard": null,
+                "standardAccel": null,
+                "standardDecel": null
+            },
             "durations": {
                 "expressiveDefaultSpatial": 250,
                 "expressiveEffects": 100,
@@ -11,8 +22,7 @@
                 "scale": 0.5,
                 "small": 100
             },
-            "mediaGifSpeedAdjustment": 300,
-            "sessionGifSpeed": 0.7
+            "mediaGifSpeedAdjustment": 300
         },
         "font": {
             "family": {
@@ -497,7 +507,6 @@
     },
     "paths": {
         "mediaGif": "root:/assets/bongocat.gif",
-        "sessionGif": "root:/donwaztok/assets/kurukuru.gif",
         "wallpaperDir": "~/Pictures/Wallpapers"
     },
     "services": {
@@ -582,26 +591,11 @@
                 "reading": "Readex Pro",
                 "title": "Google Sans Flex"
             },
-            "palette": {
-                "accentColor": "",
-                "type": "scheme-rainbow"
-            },
             "transparency": {
                 "automatic": true,
                 "backgroundTransparency": 0.11,
                 "contentTransparency": 0.57,
                 "enable": true
-            },
-            "wallpaperTheming": {
-                "enableAppsAndShell": true,
-                "enableQtApps": true,
-                "enableTerminal": true,
-                "terminalGenerationProps": {
-                    "forceDarkMode": true,
-                    "harmonizeThreshold": 100,
-                    "harmony": 0.6,
-                    "termFgBoost": 0.35
-                }
             }
         },
         "apps": {
@@ -623,50 +617,16 @@
             }
         },
         "bar": {
-            "autoHide": {
-                "enable": false,
-                "hoverRegionWidth": 2,
-                "pushWindows": false,
-                "showWhenPressingSuper": {
-                    "delay": 140,
-                    "enable": true
-                }
-            },
             "borderless": true,
             "bottom": false,
             "cornerStyle": 0,
-            "debugLayout": false,
-            "floatStyleShadow": true,
             "groupStyle": 2,
             "indicators": {
                 "notifications": {
                     "showUnreadCount": false
                 }
             },
-            "resources": {
-                "alwaysShowCpu": true,
-                "alwaysShowGpu": true,
-                "cpuWarningThreshold": 90,
-                "gpuWarningThreshold": 90,
-                "memoryWarningThreshold": 95
-            },
-            "screenList": [
-                "DP-2",
-                "HDMI-A-2"
-            ],
-            "showBackground": true,
             "size": 0.8,
-            "tooltips": {
-                "clickToShow": false
-            },
-            "topLeftIcon": "spark",
-            "utilButtons": {
-                "showColorPicker": false,
-                "showDarkModeToggle": false,
-                "showMicToggle": false,
-                "showPerformanceProfileToggle": false,
-                "showScreenSnip": false
-            },
             "verbose": true,
             "vertical": false,
             "weather": {

@@ -60,6 +60,17 @@ Singleton {
         return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
     }
 
+    /** Maps JSON scheme keys to M3Palette property names (m3 + camelCase, except *_paletteKeyColor). */
+    function schemeKeyToM3PropName(name: string): string {
+        if (name.startsWith("term"))
+            return name;
+        if (name.endsWith("_paletteKeyColor"))
+            return "m3" + name;
+        if (name.indexOf("_") >= 0)
+            return "m3" + toCamelCase(name);
+        return "m3" + name;
+    }
+
     function load(data: string, isPreview: bool): void {
         const colours = isPreview ? preview : current;
         const scheme = JSON.parse(data);
@@ -73,9 +84,8 @@ Singleton {
         }
 
         for (const [name, colour] of Object.entries(scheme.colours)) {
-            const camel = name.indexOf("_") >= 0 ? toCamelCase(name) : name;
-            const propName = camel.startsWith("term") ? camel : `m3${camel}`;
-            if (colours.hasOwnProperty(propName))
+            const propName = schemeKeyToM3PropName(name);
+            if (propName in colours)
                 colours[propName] = `#${colour}`;
         }
         root.schemeApplied();
@@ -113,30 +123,36 @@ Singleton {
             flavour: "tonalspot",
             mode: "dark",
             colours: {
-                primary_paletteKeyColor: "FFD369",
+                primary_paletteKeyColor: "ffd369",
                 secondary_paletteKeyColor: "cac5c8",
                 tertiary_paletteKeyColor: "d1c3c6",
                 neutral_paletteKeyColor: "948f94",
                 neutral_variant_paletteKeyColor: "49464a",
-                background: "141313",
-                onBackground: "ffffff",
-                surface: "141313",
-                surfaceDim: "141313",
-                surfaceBright: "3a3939",
-                surfaceContainerLowest: "0f0e0e",
-                surfaceContainerLow: "1c1b1c",
+                background: "131313",
+                onBackground: "e2e2e2",
+                surface: "1c1b1c",
+                surfaceDim: "0f0e0e",
+                surfaceBright: "2b2a2a",
+                surfaceContainerLowest: "0e0d0d",
+                surfaceContainerLow: "1c1b1b",
                 surfaceContainer: "201f20",
                 surfaceContainerHigh: "2b2a2a",
                 surfaceContainerHighest: "363435",
-                onSurface: "ffffff",
-                surfaceVariant: "49464a",
-                onSurfaceVariant: "ffffff",
+                onSurface: "e2e2e2",
+                surfaceVariant: "49454f",
+                onSurfaceVariant: "cac5ca",
+                inverseSurface: "e6e1e1",
+                inverseOnSurface: "313030",
                 outline: "948f94",
                 outlineVariant: "49464a",
-                primary: "FFD369",
-                onPrimary: "3d3000",
-                primaryContainer: "4a3f00",
-                onPrimaryContainer: "ffe082",
+                shadow: "000000",
+                scrim: "000000",
+                surfaceTint: "ffd369",
+                primary: "ffd369",
+                onPrimary: "1e1b12",
+                primaryContainer: "524415",
+                onPrimaryContainer: "f2e6b3",
+                inversePrimary: "ffd369",
                 secondary: "cac5c8",
                 onSecondary: "323032",
                 secondaryContainer: "4d4b4d",
@@ -145,6 +161,18 @@ Singleton {
                 onTertiary: "372e30",
                 tertiaryContainer: "31292b",
                 onTertiaryContainer: "c1b4b7",
+                primaryFixed: "ffe8a8",
+                primaryFixedDim: "e6c258",
+                onPrimaryFixed: "1d1607",
+                onPrimaryFixedVariant: "6b5c2e",
+                secondaryFixed: "e6e1e4",
+                secondaryFixedDim: "cac5c8",
+                onSecondaryFixed: "1d1b1d",
+                onSecondaryFixedVariant: "484648",
+                tertiaryFixed: "eddfe1",
+                tertiaryFixedDim: "d1c3c6",
+                onTertiaryFixed: "211a1c",
+                onTertiaryFixedVariant: "4e4447",
                 error: "ffb4ab",
                 onError: "690005",
                 errorContainer: "93000a",
@@ -156,31 +184,31 @@ Singleton {
             flavour: "tonalspot",
             mode: "light",
             colours: {
-                primary_paletteKeyColor: "7d3d56",
+                primary_paletteKeyColor: "c9a227",
                 secondary_paletteKeyColor: "6f4a52",
                 tertiary_paletteKeyColor: "80543a",
                 neutral_paletteKeyColor: "72666a",
                 neutral_variant_paletteKeyColor: "7a6c70",
-                background: "fef7f9",
-                onBackground: "201318",
-                surface: "fef7f9",
-                surfaceDim: "ded8da",
-                surfaceBright: "fef7f9",
+                background: "fff8f0",
+                onBackground: "1d1b16",
+                surface: "fff8f0",
+                surfaceDim: "e8e0d8",
+                surfaceBright: "fff8f0",
                 surfaceContainerLowest: "ffffff",
-                surfaceContainerLow: "f8f1f3",
-                surfaceContainer: "f2ebed",
-                surfaceContainerHigh: "ece5e7",
-                surfaceContainerHighest: "e6dfe1",
-                onSurface: "201318",
-                surfaceVariant: "514347",
-                onSurfaceVariant: "524347",
-                outline: "847377",
-                outlineVariant: "d5c2c6",
-                primary: "9d3d5c",
+                surfaceContainerLow: "f5efe6",
+                surfaceContainer: "efe8de",
+                surfaceContainerHigh: "e9e2d8",
+                surfaceContainerHighest: "e3dcd2",
+                onSurface: "1d1b16",
+                surfaceVariant: "e0d8cc",
+                onSurfaceVariant: "4f4739",
+                outline: "817667",
+                outlineVariant: "d2c8b8",
+                primary: "6e5d00",
                 onPrimary: "ffffff",
-                primaryContainer: "ffd9e3",
-                onPrimaryContainer: "3b071d",
-                secondary: "8b5a64",
+                primaryContainer: "eee2a8",
+                onPrimaryContainer: "211c00",
+                secondary: "6f4a52",
                 onSecondary: "ffffff",
                 secondaryContainer: "ffd9e3",
                 onSecondaryContainer: "351f26",
@@ -270,36 +298,36 @@ Singleton {
     }
 
     component M3Palette: QtObject {
-        property color m3primary_paletteKeyColor: "#FFD369"
+        property color m3primary_paletteKeyColor: "#ffd369"
         property color m3secondary_paletteKeyColor: "#cac5c8"
         property color m3tertiary_paletteKeyColor: "#d1c3c6"
         property color m3neutral_paletteKeyColor: "#948f94"
         property color m3neutral_variant_paletteKeyColor: "#49464a"
-        property color m3background: "#141313"
-        property color m3onBackground: "#ffffff"
-        property color m3surface: "#141313"
-        property color m3surfaceDim: "#141313"
-        property color m3surfaceBright: "#3a3939"
-        property color m3surfaceContainerLowest: "#0f0e0e"
-        property color m3surfaceContainerLow: "#1c1b1c"
+        property color m3background: "#131313"
+        property color m3onBackground: "#e2e2e2"
+        property color m3surface: "#1c1b1c"
+        property color m3surfaceDim: "#0f0e0e"
+        property color m3surfaceBright: "#2b2a2a"
+        property color m3surfaceContainerLowest: "#0e0d0d"
+        property color m3surfaceContainerLow: "#1c1b1b"
         property color m3surfaceContainer: "#201f20"
         property color m3surfaceContainerHigh: "#2b2a2a"
         property color m3surfaceContainerHighest: "#363435"
-        property color m3onSurface: "#ffffff"
-        property color m3surfaceVariant: "#49464a"
-        property color m3onSurfaceVariant: "#ffffff"
+        property color m3onSurface: "#e2e2e2"
+        property color m3surfaceVariant: "#49454f"
+        property color m3onSurfaceVariant: "#cac5ca"
         property color m3inverseSurface: "#e6e1e1"
         property color m3inverseOnSurface: "#313030"
         property color m3outline: "#948f94"
         property color m3outlineVariant: "#49464a"
         property color m3shadow: "#000000"
         property color m3scrim: "#000000"
-        property color m3surfaceTint: "#FFD369"
-        property color m3primary: "#FFD369"
-        property color m3onPrimary: "#3d3000"
-        property color m3primaryContainer: "#4a3f00"
-        property color m3onPrimaryContainer: "#ffe082"
-        property color m3inversePrimary: "#615d63"
+        property color m3surfaceTint: "#ffd369"
+        property color m3primary: "#ffd369"
+        property color m3onPrimary: "#1e1b12"
+        property color m3primaryContainer: "#524415"
+        property color m3onPrimaryContainer: "#f2e6b3"
+        property color m3inversePrimary: "#ffd369"
         property color m3secondary: "#cac5c8"
         property color m3onSecondary: "#323032"
         property color m3secondaryContainer: "#4d4b4d"
@@ -316,10 +344,10 @@ Singleton {
         property color m3onSuccess: "#213528"
         property color m3successContainer: "#374B3E"
         property color m3onSuccessContainer: "#D1E9D6"
-        property color m3primaryFixed: "#ffe082"
-        property color m3primaryFixedDim: "#FFD369"
-        property color m3onPrimaryFixed: "#1d1b1f"
-        property color m3onPrimaryFixedVariant: "#49454b"
+        property color m3primaryFixed: "#ffe8a8"
+        property color m3primaryFixedDim: "#e6c258"
+        property color m3onPrimaryFixed: "#1d1607"
+        property color m3onPrimaryFixedVariant: "#6b5c2e"
         property color m3secondaryFixed: "#e6e1e4"
         property color m3secondaryFixedDim: "#cac5c8"
         property color m3onSecondaryFixed: "#1d1b1d"
@@ -331,7 +359,7 @@ Singleton {
         property color term0: "#EDE4E4"
         property color term1: "#B52755"
         property color term2: "#A97363"
-        property color term3: "#AF535D"
+        property color term3: "#FFD369"
         property color term4: "#A67F7C"
         property color term5: "#B2416B"
         property color term6: "#8D76AD"
@@ -339,7 +367,7 @@ Singleton {
         property color term8: "#0E0D0D"
         property color term9: "#B52755"
         property color term10: "#A97363"
-        property color term11: "#AF535D"
+        property color term11: "#FFD369"
         property color term12: "#A67F7C"
         property color term13: "#B2416B"
         property color term14: "#8D76AD"

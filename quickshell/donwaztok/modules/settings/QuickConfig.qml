@@ -173,52 +173,6 @@ ContentPage {
             }
         }
 
-        ConfigSelectionArray {
-            currentValue: Config.options.appearance.palette.type
-            onSelected: newValue => {
-                Config.options.appearance.palette.type = newValue;
-                Quickshell.execDetached(["bash", "-c", `${Directories.wallpaperSwitchScriptPath} --noswitch`]);
-            }
-            options: [
-                {
-                    "value": "auto",
-                    "displayName": qsTr("Auto")
-                },
-                {
-                    "value": "scheme-content",
-                    "displayName": qsTr("Content")
-                },
-                {
-                    "value": "scheme-expressive",
-                    "displayName": qsTr("Expressive")
-                },
-                {
-                    "value": "scheme-fidelity",
-                    "displayName": qsTr("Fidelity")
-                },
-                {
-                    "value": "scheme-fruit-salad",
-                    "displayName": qsTr("Fruit Salad")
-                },
-                {
-                    "value": "scheme-monochrome",
-                    "displayName": qsTr("Monochrome")
-                },
-                {
-                    "value": "scheme-neutral",
-                    "displayName": qsTr("Neutral")
-                },
-                {
-                    "value": "scheme-rainbow",
-                    "displayName": qsTr("Rainbow")
-                },
-                {
-                    "value": "scheme-tonal-spot",
-                    "displayName": qsTr("Tonal Spot")
-                }
-            ]
-        }
-
         ConfigSwitch {
             buttonIcon: "ev_shadow"
             text: qsTr("Transparency")

@@ -22,12 +22,8 @@
 !fuzzel/**
 !foot/
 !foot/**
-!matugen/
-!matugen/**
 !Kvantum/
 !Kvantum/**
-!kde-material-you-colors/
-!kde-material-you-colors/**
 !xdg-desktop-portal/
 !xdg-desktop-portal/**
 !mpv/

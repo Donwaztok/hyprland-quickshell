@@ -1,17 +1,14 @@
-# Hyprland + Quickshell
+# Hyprland + Quickshell (Donwaztok)
 
-Dotfiles for Hyprland, Quickshell, Zsh, Kitty, Fuzzel, and related tools (inspired by [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)).
+Dotfiles para Hyprland, Quickshell, Zsh, Kitty, Fuzzel e ferramentas relacionadas (inspirado em [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)).
 
-**Repository:** [github.com/Donwaztok/hyprland-quickshell](https://github.com/Donwaztok/hyprland-quickshell)
+**Repositório:** [github.com/Donwaztok/hyprland-quickshell](https://github.com/Donwaztok/hyprland-quickshell)
 
-## Requirements
+---
 
-- **Arch Linux** (or derivative)
-- AUR access (yay)
+## Requisitos e instalação
 
-## Installation
-
-Clone into `~/.config` and run the install script:
+- **Arch Linux** (ou derivado) com acesso ao AUR (`yay`).
 
 ```bash
 git clone https://github.com/Donwaztok/hyprland-quickshell.git ~/.config
@@ -20,43 +17,154 @@ chmod +x install.sh
 ./install.sh
 ```
 
-The script runs **entirely locally** and:
+O `install.sh` configura mirrors, instala pacotes de `app.lst`, temas (cursor, SDDM, GTK, ícones, GRUB), desktop files em `~/.local/share/applications/` e serviços (sddm, NetworkManager, bluetooth, ydotool).
 
-1. **Pacman** – configures mirrors (BR/US), Color, multilib (first run only).
-2. **Yay** – installs if missing.
-3. **Packages** – installs everything listed in `app.lst` (via yay).
-4. **Themes & appearance** – Bibata cursor, SDDM Candy, GTK Graphite, Tela icons, GRUB Particle-circle.
-5. **Desktop files** – copies `hypr/source/*.desktop` to `~/.local/share/applications/`.
-6. **Services** – enables sddm, NetworkManager, bluetooth, ydotool; adds user to groups (video, input, i2c).
+**Atalhos úteis:** Super+/ — lista de atalhos; Super+Enter — terminal (Kitty).
 
-## Structure
+**Pacotes:** lista plana em `app.lst`; instalação típica com `yay --removemake --cleanafter -S $(awk '!/^#/ {print $1}' app.lst)`. O shell Quickshell depende de `quickshell-git` (AUR).
 
-| Path | Description |
-|------|-------------|
-| `hypr/` | Hyprland configs, scripts, hyprlock, hypridle. `hypr/source/`: SDDM Candy tarball, desktop files. |
-| `quickshell/donwaztok/` | Quickshell bar and widgets (Donwaztok shell). |
-| `kitty/`, `foot/` | Terminals. |
-| `.zshrc` | Zsh (Oh My Zsh, Powerlevel10k, etc.). |
-| `fuzzel/` | Launcher. |
-| `wlogout/` | Logout menu. |
-| `fontconfig/`, `matugen/` | Fonts and Material colors. |
-| `starship.toml` | Shell prompt (Starship; usable from zsh). |
-| `kdeglobals`, `Kvantum/`, `kde-material-you-colors/` | KDE/Qt theme. |
-| `app.lst` | Package list used by `install.sh`. |
-| `install.sh` | Single install script. |
+---
 
-## After installation
+## Árvore lógica do repositório (ficheiros versionados)
 
-- **Super+/** – keybind list.
-- **Super+Enter** – terminal (Kitty).
-- Configs live in `~/.config`; edit and version as you like.
+Contagem aproximada por diretório de topo: **quickshell/** (maior parte do repo), **hypr/**, restantes (Kvantum, kitty, fuzzel, etc.).
 
-## app.lst
-
-Flat list of packages (Arch + AUR). `install.sh` installs them with:
-
-```bash
-yay --removemake --cleanafter -S $(awk '!/^#/ {print $1}' app.lst)
+```
+~/.config/  (raiz do clone)
+├── app.lst
+├── install.sh
+├── .zshrc
+├── starship.toml
+├── kdeglobals, konsolerc, dolphinrc, darklyrc
+├── *-flags.conf          # chrome, code, thorium
+├── donwaztok/
+│   └── config.json       # JSON M3 + chave "shell"; lido por DonwaztokConfigStore (Quickshell)
+├── hypr/
+│   ├── hyprland.conf     # Ordem de source (ver secção Hyprland)
+│   ├── workspaces.conf, monitors.conf
+│   ├── hypridle.conf, hyprlock.conf
+│   ├── custom/           # Overrides do utilizador (env, execs, general, rules, keybinds, scripts)
+│   ├── hyprland/         # Defaults partilháveis (env, execs, general, rules, keybinds, colors, scripts/)
+│   ├── hyprlock/
+│   ├── themes/
+│   └── source/           # SDDM tarball, .desktop
+├── quickshell/donwaztok/ # Shell Quickshell ($qsConfig = donwaztok)
+│   ├── shell.qml         # Entrada; QML2_IMPORT_PATH deve apontar para esta pasta
+│   ├── GlobalStates.qml, ReloadPopup.qml, welcome.qml, settings.qml, killDialog.qml
+│   ├── panelFamilies/    # DonwaztokFamily, DonwaztokLockPanel, pontes
+│   ├── config/           # qs.config (Config, Appearance, DonwaztokConfigStore, …)
+│   ├── components/       # qs.components (+ controls, effects, filedialog, images, …)
+│   ├── modules/          # qs.modules (bar, drawers, launcher, lock, shell, …)
+│   ├── services/         # qs.services (raiz) + m3/ → qs.services.m3
+│   ├── utils/            # qs.utils (Paths, Icons, …)
+│   ├── assets/, defaults/ (ex.: prompts AI), scripts/
+│   └── …
+├── kitty/, foot/, fuzzel/, wlogout/, mako/, btop/, fastfetch/, mpv/
+├── fontconfig/, Kvantum/, xdg-desktop-portal/
+└── …
 ```
 
-At minimum you need `quickshell-git` (AUR) for the bar. Add or install any other packages (e.g. MicroTeX, custom Bibata) as needed.
+**Pastas sob `quickshell/donwaztok/`** devem permanecer **ao lado** de `shell.qml` (o motor resolve `import qs.*` e `shellPath()` relativamente a essa raiz; não encapsular tudo dentro de um único `qml/` sem alinhar paths).
+
+---
+
+## Hyprland: ordem de carregamento
+
+Definido em `hypr/hyprland.conf`:
+
+1. `hyprland/env.conf` → `custom/env.conf`
+2. Defaults: `hyprland/execs.conf`, `general.conf`, `rules.conf`, `colors.conf`, `keybinds.conf`
+3. Custom: `custom/execs.conf`, `general.conf`, `rules.conf`, `keybinds.conf`
+4. `workspaces.conf`, `monitors.conf`
+
+Variável **`$qsConfig = donwaztok`** alinha o binário `qs` com esta configuração Quickshell.
+
+---
+
+## Quickshell Donwaztok: módulos e arranque
+
+| Import / URI | Pasta |
+|--------------|--------|
+| `qs.utils` | `utils/` |
+| `qs.config` | `config/` |
+| `qs.components` | `components/` |
+| `qs.modules` e submódulos | `modules/` |
+| `qs.services` | `services/*.qml` |
+| `qs.services.m3` | `services/m3/` |
+
+**Configuração JSON:** `~/.config/donwaztok/config.json`. Chave **`shell`**: opções partilhadas com módulos; chaves de topo (**appearance**, **bar**, **general**, …) são o bloco M3 (acesso via `qs.config` / `DonwaztokConfigStore`).
+
+**Estado em runtime:** `~/.local/state/donwaztok/` (ver `Paths.state` em `utils/Paths.qml`). Keyring da aplicação: **`donwaztok`**.
+
+**Ambiente:** `DONWAZTOK_VIRTUAL_ENV` (venv Python para thumbnails / scripts auxiliares), definido em `hypr/hyprland/env.conf`.
+
+**Tema fixo:** não há Matugen nem JSON de paleta. Cores M3 da shell vivem em `quickshell/donwaztok/services/m3/Colours.qml` (`builtinSchemes` + defaults do componente `M3Palette`); `MaterialThemeLoader` só copia `Colours` → `Appearance.m3colors` para componentes partilhados. Hyprland, Fuzzel e hyprlock continuam em `hypr/` e `fuzzel/`.
+
+**Claro / escuro:** continua via `gsettings` (`switchwall.sh --mode dark|light --noswitch`, botões na shell, ações do launcher `dark` / `light`). Não há scripts Kvantum que recolorem o tema a partir de `material_colors.scss` (removidos).
+
+### Árvore de arranque (`shell.qml`)
+
+```mermaid
+flowchart TD
+  S[shell.qml ShellRoot]
+  S --> R[ReloadPopup]
+  S --> OC[Component.onCompleted]
+  OC --> MTL[MaterialThemeLoader]
+  OC --> FRE[FirstRunExperience]
+  OC --> CK[ConflictKiller]
+  OC --> CH[Cliphist.refresh]
+  OC --> WP[Wallpapers.load]
+  OC --> UP[Updates.load]
+  S --> F[DonwaztokFamily Scope]
+  F --> SH[Shortcuts]
+  F --> DR[Drawers]
+  F --> BG[Background]
+  F --> CHS[Cheatsheet]
+  F --> LK[DonwaztokLockPanel]
+  F --> OSD[OnScreenDisplay]
+  F --> PK[Polkit]
+  F --> RS[RegionSelector]
+  F --> WB[WallpaperLauncherBridge]
+```
+
+**Nota sobre duplicação intencional de nomes:** existem ficheiros homónimos em `services/` e `services/m3/` (por exemplo `Audio.qml`, `Network.qml`, `Wallpapers.qml`, `Weather.qml`, `Brightness.qml`) com **APIs diferentes** — por isso o módulo `qs.services.m3` está separado de `qs.services`.
+
+---
+
+## Pontos de melhoria e problemas a resolver
+
+### Desempenho
+
+- **Hyprland blur** (`hyprland/general.conf`): `passes = 3` e `size = 10` são exigentes em GPU; testar `passes = 2` ou blur desativado em hardware fraco.
+- **Clipboard / `wl-paste`:** dois watchers (texto e imagem) disparam IPC ao Quickshell em cada cópia — avaliar debounce ou consolidar lógica se houver picos de CPU.
+- **`exec-once`:** vários serviços arrancam de seguida (EasyEffects, geoclue, hypridle); em arranque lento, considerar lazy start para componentes não críticos.
+- **Quickshell:** animações e MPRIS/cava atualizam UI continuamente — rever intervalos e `Timer` nos serviços que fazem polling.
+
+### Estrutura e manutenção
+
+- **Caminho absoluto em `shell.qml`:** `QML2_IMPORT_PATH=/home/don/.config/quickshell/donwaztok` impede clonar para outro utilizador sem editar o ficheiro. Preferir documentar variável de ambiente no `env.conf` ou caminho relativo ao `~` gerado por script.
+- **Dupla camada Hyprland `hyprland/` + `custom/`:** é boa para updates upstream, mas convém uma convenção clara (o que nunca editar em `hyprland/` vs o que só vive em `custom/`) para reduzir conflitos em merges.
+- **Paleta Quickshell vs GTK/Hypr:** ao mudar `Colours.qml`, alinha manualmente `hypr/hyprland/colors.conf`, `fuzzel/fuzzel_theme.ini` e GTK se quiseres aspeto consistente.
+- **`.gitignore` com lista branca:** ficheiros novos fora dos padrões `!` não entram no git por defeito — útil para dotfiles, mas fácil esquecer de adicionar exceções para nova documentação ou scripts.
+
+### Duplicação e consolidação
+
+- **Serviços `services/` vs `services/m3/`:** não é bug, mas aumenta carga cognitiva; renomear (prefixo `M3Audio` vs `ShellAudio`) ou documentar num único índice reduz erros de import.
+- **Scripts shell em `hypr/hyprland/scripts/` e `hypr/custom/scripts/`:** verificar se há padrões repetidos (hyprctl, notificações) passíveis de funções partilhadas.
+- **Ícones de distro em `assets/icons/`:** muitos SVG semelhantes — possível gerar ou symlink a partir de um tema ícone se quiseres reduzir manutenção.
+
+### Segurança e ambiente
+
+- **Keyring legado:** se existirem segredos com `application=illogical-impulse`, limpar com `secret-tool clear application illogical-impulse` após migração; novas chaves via Definições Donwaztok usam `donwaztok`.
+- **Variáveis opcionais:** `DONWAZTOK_WALLPAPERS_DIR`, `DONWAZTOK_XKB_RULES_PATH` — documentar no `env.conf` quando usadas.
+
+### Instalação e pacotes
+
+- **`install.sh` + `app.lst`:** lista longa e opinativa (temas, GRUB, SDDM); para utilizadores mínimos, considerar `app.lst.core` + `app.lst.extra` ou perfis documentados.
+- **Reprodutibilidade:** versões AUR (`-git`) mudam frequentemente — fixar notas de versão conhecidas no doc ou tags no repositório ajuda a suporte.
+
+---
+
+## Manutenção deste documento
+
+Atualizar quando alterares `DonwaztokFamily.qml`, o schema JSON (`shell` / topo M3), a árvore em `modules/`, `services/` ou a ordem de `source` no Hyprland.

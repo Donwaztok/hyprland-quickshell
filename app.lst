@@ -33,11 +33,9 @@ adw-gtk-theme-git                 # libadwaita theme for GTK3
 bibata-cursor-theme               # cursor theme
 breeze                            # KDE default theme
 breeze-plus                       # Breeze theme variants
-darkly-bin                        # dark color scheme generator
 fontconfig                        # font configuration
 gtk4                              # GTK4 toolkit
 libadwaita                        # GNOME design library (GTK4)
-matugen-bin                       # Material You color generator
 otf-space-grotesk                 # Space Grotesk font
 ttf-cascadia-code-nerd            # coding font (Nerd Font)
 ttf-jetbrains-mono-nerd           # JetBrains Mono (Nerd Font)
