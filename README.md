@@ -27,7 +27,7 @@ O `install.sh` configura mirrors, instala pacotes de `app.lst`, temas (cursor, S
 
 ## Árvore lógica do repositório (ficheiros versionados)
 
-Contagem aproximada por diretório de topo: **quickshell/** (maior parte do repo), **hypr/**, restantes (Kvantum, kitty, fuzzel, etc.).
+Contagem aproximada por diretório de topo: **quickshell/** (maior parte do repo), **hypr/**, restantes (kitty, fuzzel, etc.).
 
 ```
 ~/.config/  (raiz do clone)
@@ -60,9 +60,22 @@ Contagem aproximada por diretório de topo: **quickshell/** (maior parte do repo
 │   ├── assets/, defaults/ (ex.: prompts AI), scripts/
 │   └── …
 ├── kitty/, foot/, fuzzel/, wlogout/, mako/, btop/, fastfetch/, mpv/
-├── fontconfig/, Kvantum/, xdg-desktop-portal/
+├── fontconfig/, xdg-desktop-portal/
 └── …
 ```
+
+**O que ainda faz sentido versionar**
+
+| Grupo | Ficheiros | Uso no teu setup |
+|-------|-----------|------------------|
+| **Hypr / shell** | `hypr/`, `quickshell/`, `fuzzel/`, `wlogout/`, `xdg-desktop-portal/` | Atalhos, `qs`, launcher, portal (GTK para diálogos de ficheiros). |
+| **Terminal / media** | `kitty/`, `foot/`, `mpv/` | `TERMINAL=kitty`, fallback foot nos keybinds; vídeo/wallpaper. |
+| **Info / notificações** | `mako/`, `btop/`, `fastfetch/` | Notificações, monitorização, fetch. |
+| **Fontes** | `fontconfig/` | Subpixel / famílias. |
+| **Apps específicos** | `*-flags.conf`, `starship.toml`, `.zshrc` | Chromium/VS Code/Thorium, prompt, shell. |
+| **KDE/Qt “desktop”** | `kdeglobals`, `konsolerc`, `dolphinrc`, `darklyrc` | Ainda úteis se usares **Dolphin** (Super+E tenta dolphin primeiro), **Konsole** ou `QT_QPA_PLATFORMTHEME=kde` em `hypr/hyprland/env.conf`. São mais “preferências de apps” do que do Quickshell — podes deixá-las **só na máquina** (`git rm --cached …` + ignorar no `.gitignore`) se quiseres um repo só com Hyprland+shell. |
+
+**Kvantum** foi removido do repositório (tema Qt via Kvantum já não usado).
 
 **Pastas sob `quickshell/donwaztok/`** devem permanecer **ao lado** de `shell.qml` (o motor resolve `import qs.*` e `shellPath()` relativamente a essa raiz; não encapsular tudo dentro de um único `qml/` sem alinhar paths).
 
@@ -100,7 +113,7 @@ Variável **`$qsConfig = donwaztok`** alinha o binário `qs` com esta configura�
 
 **Tema fixo:** não há Matugen nem JSON de paleta. Cores M3 da shell vivem em `quickshell/donwaztok/services/m3/Colours.qml` (`builtinSchemes` + defaults do componente `M3Palette`); `MaterialThemeLoader` só copia `Colours` → `Appearance.m3colors` para componentes partilhados. Hyprland, Fuzzel e hyprlock continuam em `hypr/` e `fuzzel/`.
 
-**Claro / escuro:** continua via `gsettings` (`switchwall.sh --mode dark|light --noswitch`, botões na shell, ações do launcher `dark` / `light`). Não há scripts Kvantum que recolorem o tema a partir de `material_colors.scss` (removidos).
+**Claro / escuro:** continua via `gsettings` (`switchwall.sh --mode dark|light --noswitch`, botões na shell, ações do launcher `dark` / `light`).
 
 ### Árvore de arranque (`shell.qml`)
 

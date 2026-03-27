@@ -22,8 +22,6 @@
 !fuzzel/**
 !foot/
 !foot/**
-!Kvantum/
-!Kvantum/**
 !xdg-desktop-portal/
 !xdg-desktop-portal/**
 !mpv/
