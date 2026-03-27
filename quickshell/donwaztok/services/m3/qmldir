@@ -1,6 +1,5 @@
 module qs.services.m3
 AppDb 1.0 AppDb.qml
-CavaProvider 1.0 CavaProvider.qml
 BeatTracker 1.0 BeatTracker.qml
 CircularBuffer 1.0 CircularBuffer.qml
 FileSystemEntry 1.0 FileSystemEntry.qml

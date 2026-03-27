@@ -9,7 +9,6 @@ import Quickshell
 import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Shapes
 
 Item {
     id: root
@@ -34,8 +33,8 @@ Item {
         return `${mins}:${secs}`;
     }
 
-    implicitWidth: cover.implicitWidth + Config.dashboard.sizes.mediaVisualiserSize * 2 + details.implicitWidth + details.anchors.leftMargin + bongocat.implicitWidth + bongocat.anchors.leftMargin * 2 + Appearance.padding.large * 2
-    implicitHeight: Math.max(cover.implicitHeight + Config.dashboard.sizes.mediaVisualiserSize * 2, details.implicitHeight, bongocat.implicitHeight) + Appearance.padding.large * 2
+    implicitWidth: cover.implicitWidth + details.anchors.leftMargin + details.implicitWidth + bongocat.anchors.leftMargin + bongocat.implicitWidth + Appearance.padding.large * 2
+    implicitHeight: Math.max(cover.implicitHeight, details.implicitHeight, bongocat.implicitHeight) + Appearance.padding.large * 2
 
     Behavior on playerProgress {
         Anim {
@@ -52,64 +51,7 @@ Item {
     }
 
     ServiceRef {
-        service: Audio.cava
-    }
-
-    ServiceRef {
         service: Audio.beatTracker
-    }
-
-    Shape {
-        id: visualiser
-
-        readonly property real centerX: width / 2
-        readonly property real centerY: height / 2
-        readonly property real innerX: cover.implicitWidth / 2 + Appearance.spacing.small
-        readonly property real innerY: cover.implicitHeight / 2 + Appearance.spacing.small
-        property color colour: Colours.palette.m3primary
-
-        anchors.fill: cover
-        anchors.margins: -Config.dashboard.sizes.mediaVisualiserSize
-
-        asynchronous: true
-        preferredRendererType: Shape.CurveRenderer
-        data: visualiserBars.instances
-    }
-
-    Variants {
-        id: visualiserBars
-
-        model: Array.from({
-            length: Config.services.visualiserBars
-        }, (_, i) => i)
-
-        ShapePath {
-            id: visualiserBar
-
-            required property int modelData
-            readonly property real value: Math.max(1e-3, Math.min(1, Audio.cava.values[modelData]))
-
-            readonly property real angle: modelData * 2 * Math.PI / Config.services.visualiserBars
-            readonly property real magnitude: value * Config.dashboard.sizes.mediaVisualiserSize
-            readonly property real cos: Math.cos(angle)
-            readonly property real sin: Math.sin(angle)
-
-            capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
-            strokeWidth: 360 / Config.services.visualiserBars - Appearance.spacing.small / 4
-            strokeColor: Colours.palette.m3primary
-
-            startX: visualiser.centerX + (visualiser.innerX + strokeWidth / 2) * cos
-            startY: visualiser.centerY + (visualiser.innerY + strokeWidth / 2) * sin
-
-            PathLine {
-                x: visualiser.centerX + (visualiser.innerX + visualiserBar.strokeWidth / 2 + visualiserBar.magnitude) * visualiserBar.cos
-                y: visualiser.centerY + (visualiser.innerY + visualiserBar.strokeWidth / 2 + visualiserBar.magnitude) * visualiserBar.sin
-            }
-
-            Behavior on strokeColor {
-                CAnim {}
-            }
-        }
     }
 
     StyledClippingRect {
@@ -117,7 +59,7 @@ Item {
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        anchors.leftMargin: Appearance.padding.large + Config.dashboard.sizes.mediaVisualiserSize
+        anchors.leftMargin: Appearance.padding.large
 
         implicitWidth: Config.dashboard.sizes.mediaCoverArtSize
         implicitHeight: Config.dashboard.sizes.mediaCoverArtSize
@@ -151,7 +93,7 @@ Item {
         id: details
 
         anchors.verticalCenter: parent.verticalCenter
-        anchors.left: visualiser.right
+        anchors.left: cover.right
         anchors.leftMargin: Appearance.spacing.normal
 
         spacing: Appearance.spacing.small
@@ -361,14 +303,14 @@ Item {
         anchors.left: details.right
         anchors.leftMargin: Appearance.spacing.normal
 
-        implicitWidth: visualiser.width
-        implicitHeight: visualiser.height
+        implicitWidth: cover.implicitWidth
+        implicitHeight: cover.implicitHeight
 
         AnimatedImage {
             anchors.centerIn: parent
 
-            width: visualiser.width * 0.75
-            height: visualiser.height * 0.75
+            width: cover.implicitWidth * 0.75
+            height: cover.implicitHeight * 0.75
 
             playing: Players.active?.isPlaying ?? false
             speed: Audio.beatTracker.bpm / Appearance.anim.mediaGifSpeedAdjustment // qmllint disable unresolved-type

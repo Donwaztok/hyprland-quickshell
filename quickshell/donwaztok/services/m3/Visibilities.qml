@@ -8,7 +8,7 @@ Singleton {
     property var bars: new Map()
     /// Bar popouts wrapper per Hyprland monitor (for detached / modal control center).
     property var popoutsByMonitor: new Map()
-    /// Bumped when a bar registers so bindings (e.g. Visualiser) re-evaluate.
+    /// Bumped when a bar registers so bindings re-evaluate.
     property int barsRevision: 0
 
     function registerBar(screenName: string, barWrapper: var): void {

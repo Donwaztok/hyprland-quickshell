@@ -76,5 +76,5 @@ Singleton {
         onPressed: root.active?.stop()
     }
 
-    // IpcHandler for "mpris" is registered in ii/services/MprisController.qml to avoid duplicate
+    // IpcHandler for "mpris" is registered in services/MprisController.qml
 }

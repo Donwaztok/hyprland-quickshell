@@ -7,7 +7,6 @@ JsonObject {
     property bool useFahrenheitPerformance: [Locale.ImperialUSSystem, Locale.ImperialSystem].includes(Qt.locale().measurementSystem)
     property bool useTwelveHourClock: Qt.locale().timeFormat(Locale.ShortFormat).toLowerCase().includes("a")
     property string gpuType: ""
-    property int visualiserBars: 45
     property real audioIncrement: 0.1
     property real brightnessIncrement: 0.1
     property real maxVolume: 1.0

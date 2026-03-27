@@ -3,7 +3,6 @@
 # =============================================================================
 
 # --------------------------------------------------- // Audio
-cava                              # audio spectrum visualizer
 libdbusmenu-gtk3                  # dbus menu for gtk3
 pavucontrol-qt                    # PulseAudio volume control (Qt)
 pipewire-pulse                    # PipeWire PulseAudio compatibility
@@ -13,7 +12,6 @@ wireplumber                       # session manager for PipeWire
 # --------------------------------------------------- // Backlight / display
 brightnessctl                     # screen backlight control
 ddcutil                           # DDC/CI monitor control
-geoclue                           # geolocation service
 
 # --------------------------------------------------- // Basic
 bc                                # arbitrary precision calculator
@@ -50,7 +48,6 @@ wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
 
 # --------------------------------------------------- // KDE / system
 bluedevil                         # KDE Bluetooth
-dolphin                           # KDE file manager
 gnome-keyring                     # password and key storage
 networkmanager                    # network management
 plasma-nm                         # NetworkManager applet for Plasma
@@ -93,8 +90,6 @@ hyprpicker                        # Hyprland color picker
 imagemagick                       # image manipulation
 libqalculate                      # calculator library
 quickshell-git                    # Hyprland widget/bar
-songrec                           # music recognition (Shazam-like)
-translate-shell                   # translate in terminal
 wlogout                           # Wayland logout screen
 
 # --------------------------------------------------- // Gaming

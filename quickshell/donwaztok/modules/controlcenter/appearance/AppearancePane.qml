@@ -48,10 +48,6 @@ Item {
     property bool desktopClockInvertColors: Config.background.desktopClock.invertColors ?? false
     property bool backgroundEnabled: Config.background.enabled ?? true
     property bool wallpaperEnabled: Config.background.wallpaperEnabled ?? true
-    property bool visualiserEnabled: Config.background.visualiser.enabled ?? false
-    property bool visualiserAutoHide: Config.background.visualiser.autoHide ?? true
-    property real visualiserRounding: Config.background.visualiser.rounding ?? 1
-    property real visualiserSpacing: Config.background.visualiser.spacing ?? 1
 
     anchors.fill: parent
 
@@ -84,11 +80,6 @@ Item {
         Config.background.desktopClock.invertColors = root.desktopClockInvertColors;
 
         Config.background.wallpaperEnabled = root.wallpaperEnabled;
-
-        Config.background.visualiser.enabled = root.visualiserEnabled;
-        Config.background.visualiser.autoHide = root.visualiserAutoHide;
-        Config.background.visualiser.rounding = root.visualiserRounding;
-        Config.background.visualiser.spacing = root.visualiserSpacing;
 
         Config.border.rounding = root.borderRounding;
         Config.border.thickness = root.borderThickness;

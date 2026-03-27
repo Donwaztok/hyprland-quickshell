@@ -49,7 +49,7 @@ Contagem aproximada por diretório de topo: **quickshell/** (maior parte do repo
 │   ├── themes/
 │   └── source/           # SDDM tarball, .desktop
 ├── quickshell/donwaztok/ # Shell Quickshell ($qsConfig = donwaztok)
-│   ├── shell.qml         # Entrada; QML2_IMPORT_PATH deve apontar para esta pasta
+│   ├── shell.qml         # Entrada; QML2_IMPORT_PATH em hypr/hyprland/env.conf → quickshell/donwaztok
 │   ├── GlobalStates.qml, ReloadPopup.qml, welcome.qml, settings.qml, killDialog.qml
 │   ├── panelFamilies/    # DonwaztokFamily, DonwaztokLockPanel, pontes
 │   ├── config/           # qs.config (Config, Appearance, DonwaztokConfigStore, …)
@@ -73,7 +73,7 @@ Contagem aproximada por diretório de topo: **quickshell/** (maior parte do repo
 | **Info / notificações** | `mako/`, `btop/`, `fastfetch/` | Notificações, monitorização, fetch. |
 | **Fontes** | `fontconfig/` | Subpixel / famílias. |
 | **Apps específicos** | `*-flags.conf`, `starship.toml`, `.zshrc` | Chromium/VS Code/Thorium, prompt, shell. |
-| **KDE/Qt “desktop”** | `kdeglobals`, `konsolerc`, `dolphinrc`, `darklyrc` | Ainda úteis se usares **Dolphin** (Super+E tenta dolphin primeiro), **Konsole** ou `QT_QPA_PLATFORMTHEME=kde` em `hypr/hyprland/env.conf`. São mais “preferências de apps” do que do Quickshell — podes deixá-las **só na máquina** (`git rm --cached …` + ignorar no `.gitignore`) se quiseres um repo só com Hyprland+shell. |
+| **KDE/Qt “desktop”** | `kdeglobals`, `konsolerc`, `dolphinrc`, `darklyrc` | Opcionais com **Konsole**/KDE e `QT_QPA_PLATFORMTHEME=kde`; `dolphinrc` só relevante se instalares Dolphin à parte. Super+E usa **Nautilus** primeiro (ver `keybinds.conf`). |
 
 **Kvantum** foi removido do repositório (tema Qt via Kvantum já não usado).
 
@@ -150,12 +150,12 @@ flowchart TD
 
 - **Hyprland blur** (`hyprland/general.conf`): `passes = 3` e `size = 10` são exigentes em GPU; testar `passes = 2` ou blur desativado em hardware fraco.
 - **Clipboard / `wl-paste`:** dois watchers (texto e imagem) disparam IPC ao Quickshell em cada cópia — avaliar debounce ou consolidar lógica se houver picos de CPU.
-- **`exec-once`:** vários serviços arrancam de seguida (EasyEffects, geoclue, hypridle); em arranque lento, considerar lazy start para componentes não críticos.
-- **Quickshell:** animações e MPRIS/cava atualizam UI continuamente — rever intervalos e `Timer` nos serviços que fazem polling.
+- **`exec-once`:** serviços no arranque incluem Quickshell, hypridle, watchers de clipboard; em arranque lento, considerar lazy start para componentes não críticos.
+- **Quickshell:** animações e MPRIS atualizam UI continuamente — rever intervalos e `Timer` nos serviços que fazem polling.
 
 ### Estrutura e manutenção
 
-- **Caminho absoluto em `shell.qml`:** `QML2_IMPORT_PATH=/home/don/.config/quickshell/donwaztok` impede clonar para outro utilizador sem editar o ficheiro. Preferir documentar variável de ambiente no `env.conf` ou caminho relativo ao `~` gerado por script.
+- **`QML2_IMPORT_PATH`:** definido em `hypr/hyprland/env.conf` como `$HOME/.config/quickshell/donwaztok`. Para correr `qs` fora da sessão Hyprland, exporta a mesma variável no teu shell.
 - **Dupla camada Hyprland `hyprland/` + `custom/`:** é boa para updates upstream, mas convém uma convenção clara (o que nunca editar em `hyprland/` vs o que só vive em `custom/`) para reduzir conflitos em merges.
 - **Paleta Quickshell vs GTK/Hypr:** ao mudar `Colours.qml`, alinha manualmente `hypr/hyprland/colors.conf`, `fuzzel/fuzzel_theme.ini` e GTK se quiseres aspeto consistente.
 - **`.gitignore` com lista branca:** ficheiros novos fora dos padrões `!` não entram no git por defeito — útil para dotfiles, mas fácil esquecer de adicionar exceções para nova documentação ou scripts.

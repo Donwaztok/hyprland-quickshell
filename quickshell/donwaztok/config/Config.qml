@@ -135,13 +135,6 @@ Singleton {
                     opacity: background.desktopClock.shadow.opacity,
                     blur: background.desktopClock.shadow.blur
                 }
-            },
-            visualiser: {
-                enabled: background.visualiser.enabled,
-                autoHide: background.visualiser.autoHide,
-                blur: background.visualiser.blur,
-                rounding: background.visualiser.rounding,
-                spacing: background.visualiser.spacing
             }
         };
     }
@@ -348,7 +341,6 @@ Singleton {
             useFahrenheitPerformance: services.useFahrenheitPerformance,
             useTwelveHourClock: services.useTwelveHourClock,
             gpuType: services.gpuType,
-            visualiserBars: services.visualiserBars,
             audioIncrement: services.audioIncrement,
             brightnessIncrement: services.brightnessIncrement,
             maxVolume: services.maxVolume,

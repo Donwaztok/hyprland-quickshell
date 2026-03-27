@@ -214,10 +214,6 @@ Singleton {
                 }
             }
 
-            property JsonObject launcher: JsonObject {
-                property list<string> pinnedApps: [ "org.kde.dolphin", "kitty", "cmake-gui"]
-            }
-
             property JsonObject light: JsonObject {
                 property JsonObject antiFlashbang: JsonObject {
                     property bool enable: false
@@ -278,11 +274,6 @@ Singleton {
                 property int historyLength: 60
             }
 
-            property JsonObject musicRecognition: JsonObject {
-                property int timeout: 16
-                property int interval: 4
-            }
-
             property JsonObject search: JsonObject {
                 property int nonAppResultDelay: 30 // This prevents lagging when typing
                 property string engineBaseUrl: "https://www.google.com/search?q="
@@ -301,15 +292,6 @@ Singleton {
                 property JsonObject imageSearch: JsonObject {
                     property string imageSearchEngineBaseUrl: "https://lens.google.com/uploadbyurl?url="
                     property bool useCircleSelection: false
-                }
-            }
-
-            property JsonObject booru: JsonObject {
-                property bool allowNsfw: false
-                property string defaultProvider: "yandere"
-                property int limit: 20
-                property JsonObject zerochan: JsonObject {
-                    property string username: "[unset]"
                 }
             }
 

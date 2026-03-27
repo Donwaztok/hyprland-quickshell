@@ -89,13 +89,6 @@
             }
         },
         "enabled": true,
-        "visualiser": {
-            "autoHide": true,
-            "blur": false,
-            "enabled": false,
-            "rounding": 1,
-            "spacing": 1
-        },
         "wallpaperEnabled": true
     },
     "bar": {
@@ -222,7 +215,6 @@
             "mediaCoverArtSize": 150,
             "mediaProgressSweep": 180,
             "mediaProgressThickness": 8,
-            "mediaVisualiserSize": 80,
             "mediaWidth": 200,
             "resourceProgessThickness": 10,
             "resourceSize": 200,
@@ -524,7 +516,6 @@
         "useFahrenheit": false,
         "useFahrenheitPerformance": false,
         "useTwelveHourClock": false,
-        "visualiserBars": 45,
         "wallpaperSetCommand": "",
         "weatherLocation": "-22.1756875,-47.3835841"
     },
@@ -644,14 +635,6 @@
             "low": 20,
             "suspend": 3
         },
-        "booru": {
-            "allowNsfw": false,
-            "defaultProvider": "yandere",
-            "limit": 20,
-            "zerochan": {
-                "username": "[unset]"
-            }
-        },
         "cheatsheet": {
             "fontSize": {
                 "comment": 12,
@@ -680,13 +663,6 @@
                 "touchpadScrollFactor": 450
             }
         },
-        "launcher": {
-            "pinnedApps": [
-                "org.kde.dolphin",
-                "kitty",
-                "cmake-gui"
-            ]
-        },
         "light": {
             "antiFlashbang": {
                 "enable": false
@@ -702,10 +678,6 @@
         },
         "media": {
             "filterDuplicatePlayers": true
-        },
-        "musicRecognition": {
-            "interval": 4,
-            "timeout": 16
         },
         "networking": {
             "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"

@@ -2,7 +2,7 @@
 //@ pragma Env QS_NO_RELOAD_POPUP=1
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Basic
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
-//@ pragma Env QML2_IMPORT_PATH=/home/don/.config/quickshell/donwaztok
+// QML2_IMPORT_PATH: set in hypr/hyprland/env.conf (must match this shell root)
 
 // Remove two slashes below and adjust the value to change the UI scale
 ////@ pragma Env QT_SCALE_FACTOR=1

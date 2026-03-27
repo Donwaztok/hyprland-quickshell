@@ -24,7 +24,6 @@ Singleton {
     readonly property bool sourceMuted: !!source?.audio?.muted
     readonly property real sourceVolume: source?.audio?.volume ?? 0
 
-    readonly property alias cava: cava
     readonly property alias beatTracker: beatTracker
 
     function setVolume(newVolume: real): void {
@@ -149,12 +148,6 @@ Singleton {
 
     PwObjectTracker {
         objects: [...root.sinks, ...root.sources, ...root.streams]
-    }
-
-    CavaProvider {
-        id: cava
-
-        bars: Config.services.visualiserBars
     }
 
     BeatTracker {
