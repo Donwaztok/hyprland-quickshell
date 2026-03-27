@@ -312,7 +312,6 @@ Singleton {
             toasts: {
                 configLoaded: utilities.toasts.configLoaded,
                 chargingChanged: utilities.toasts.chargingChanged,
-                gameModeChanged: utilities.toasts.gameModeChanged,
                 dndChanged: utilities.toasts.dndChanged,
                 audioOutputChanged: utilities.toasts.audioOutputChanged,
                 audioInputChanged: utilities.toasts.audioInputChanged,

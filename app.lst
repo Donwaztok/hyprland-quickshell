@@ -92,9 +92,6 @@ libqalculate                      # calculator library
 quickshell-git                    # Hyprland widget/bar
 wlogout                           # Wayland logout screen
 
-# --------------------------------------------------- // Gaming
-gamemode                          # game optimizations daemon
-
 # --------------------------------------------------- // Applications
 cursor-bin                        # Cursor IDE
 eog                               # Eye of GNOME (image viewer)

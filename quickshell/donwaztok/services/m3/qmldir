@@ -11,7 +11,6 @@ HyprExtras 1.0 HyprExtras.qml
 singleton Audio 1.0 Audio.qml
 singleton Brightness 1.0 Brightness.qml
 singleton Colours 1.0 Colours.qml
-singleton GameMode 1.0 GameMode.qml
 singleton Hypr 1.0 Hypr.qml
 singleton IdleInhibitor 1.0 IdleInhibitor.qml
 singleton Network 1.0 Network.qml

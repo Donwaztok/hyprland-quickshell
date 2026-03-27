@@ -831,10 +831,6 @@
             },
             {
                 "enabled": true,
-                "id": "gameMode"
-            },
-            {
-                "enabled": true,
                 "id": "dnd"
             },
             {
@@ -857,7 +853,6 @@
             "chargingChanged": true,
             "configLoaded": true,
             "dndChanged": true,
-            "gameModeChanged": true,
             "kbLayoutChanged": true,
             "kbLimit": true,
             "nowPlaying": false,
