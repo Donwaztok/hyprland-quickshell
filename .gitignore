@@ -43,7 +43,6 @@
 !.gitignore
 !app.lst
 !README.md
-!MELHORIAS_DESEMPENHO.md
 !install.sh
 !.zshrc
 
