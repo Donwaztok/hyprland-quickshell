@@ -7,7 +7,7 @@ import qs.config as DwCfg
 import qs.services.m3
 
 /**
- * Hyprland globals quickshell:wallpaperSelectorToggle / wallpaperSelectorRandom and IPC
+ * Hyprland globals donwaztok:wallpaperSelectorToggle / wallpaperSelectorRandom and IPC
  * wallpaperSelector drive the Donwaztok launcher / random wallpaper flow.
  */
 Scope {
@@ -36,12 +36,14 @@ Scope {
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "wallpaperSelectorToggle"
         description: "Toggle Donwaztok launcher (wallpaper mode)"
         onPressed: toggleLauncherWallpaper()
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "wallpaperSelectorRandom"
         description: "Select random wallpaper"
         onPressed: pickRandomWallpaper()

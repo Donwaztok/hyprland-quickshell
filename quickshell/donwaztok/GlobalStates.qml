@@ -19,6 +19,7 @@ Singleton {
     property bool workspaceShowNumbers: false
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "workspaceNumber"
         description: "Hold to show workspace numbers, release to show icons"
 

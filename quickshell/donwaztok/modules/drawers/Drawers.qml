@@ -29,6 +29,11 @@ Variants {
         StyledWindow {
             id: win
 
+            // HyprlandFocusGrab can fire onCleared once right after the layer mask/input region
+            // updates (launcher height animates, subtract regions resize). Ignoring that clear
+            // matches popouts/Wrapper.qml (suppressDetachedGrabClear).
+            property bool suppressGrabClear: false
+
             readonly property bool hasFullscreen: Hypr.monitorFor(screen)?.activeWorkspace?.toplevels.values.some(t => t.lastIpcObject.fullscreen === 2) ?? false
             readonly property int dragMaskPadding: {
                 if (focusGrab.active || panels.popouts.isDetached)
@@ -97,12 +102,54 @@ Variants {
                 }
             }
 
+            Timer {
+                id: grabClearSuppressTimer
+
+                interval: 280
+                repeat: false
+                onTriggered: win.suppressGrabClear = false
+            }
+
+            Connections {
+                target: visibilities
+
+                function onLauncherChanged(): void {
+                    if (visibilities.launcher && Config.launcher.enabled) {
+                        win.suppressGrabClear = true;
+                        grabClearSuppressTimer.restart();
+                    }
+                }
+
+                function onSessionChanged(): void {
+                    if (visibilities.session && Config.session.enabled) {
+                        win.suppressGrabClear = true;
+                        grabClearSuppressTimer.restart();
+                    }
+                }
+
+                function onSidebarChanged(): void {
+                    if (visibilities.sidebar && Config.sidebar.enabled) {
+                        win.suppressGrabClear = true;
+                        grabClearSuppressTimer.restart();
+                    }
+                }
+
+                function onDashboardChanged(): void {
+                    if (visibilities.dashboard && Config.dashboard.enabled && !Config.dashboard.showOnHover) {
+                        win.suppressGrabClear = true;
+                        grabClearSuppressTimer.restart();
+                    }
+                }
+            }
+
             HyprlandFocusGrab {
                 id: focusGrab
 
                 active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || (!Config.dashboard.showOnHover && visibilities.dashboard && Config.dashboard.enabled) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.current?.depth > 1)
                 windows: [win]
                 onCleared: {
+                    if (win.suppressGrabClear)
+                        return;
                     visibilities.launcher = false;
                     visibilities.session = false;
                     visibilities.sidebar = false;

@@ -77,16 +77,19 @@ Scope {
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "regionScreenshot"
         description: "Takes a screenshot of the selected region"
         onPressed: root.screenshot()
     }
     GlobalShortcut {
+        appid: "donwaztok"
         name: "regionSearch"
         description: "Searches the selected region"
         onPressed: root.search()
     }
     GlobalShortcut {
+        appid: "donwaztok"
         name: "regionOcr"
         description: "Recognizes text in the selected region"
         onPressed: root.ocr()

@@ -26,20 +26,23 @@ Scope {
         lock: lock
     }
 
-    // Default appid is "quickshell" so hyprctl matches: global quickshell:lock (hypridle, keybinds).
+    // Hyprland: global donwaztok:lock | donwaztok:unlock | donwaztok:lockFocus (hypridle, keybinds, LauncherConfig).
     GlobalShortcut {
+        appid: "donwaztok"
         name: "lock"
         description: "Lock the current session"
         onPressed: lock.locked = true
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "unlock"
         description: "Unlock the current session"
         onPressed: lock.unlock()
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "lockFocus"
         description: "Re-focus the lock screen password field (e.g. after resume)"
         onPressed: {

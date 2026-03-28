@@ -133,6 +133,7 @@ Scope {
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "cheatsheetToggle"
         description: "Toggles cheatsheet on press"
 
@@ -142,6 +143,7 @@ Scope {
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "cheatsheetOpen"
         description: "Opens cheatsheet on press"
 
@@ -151,6 +153,7 @@ Scope {
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "cheatsheetClose"
         description: "Closes cheatsheet on press"
 

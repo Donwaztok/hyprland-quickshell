@@ -77,7 +77,7 @@ JsonObject {
             name: "Lock",
             icon: "lock",
             description: "Lock the current session",
-            command: ["bash", "-c", "hyprctl dispatch global quickshell:lock 2>/dev/null || loginctl lock-session"],
+            command: ["bash", "-c", "hyprctl dispatch global donwaztok:lock 2>/dev/null || loginctl lock-session"],
             enabled: true,
             dangerous: false
         },

@@ -68,6 +68,17 @@ Scope {
         onPressed: root.launcherInterrupted = true
     }
 
+    CustomShortcut {
+        name: "launcherOpenClipboard"
+        description: "Open launcher with clipboard history"
+        onReleased: {
+            if (root.hasFullscreen)
+                return;
+            Config.launcher.pendingOpenPrefix = Config.launcher.clipboardPrefix;
+            const visibilities = Visibilities.getForActive();
+            visibilities.launcher = true;
+        }
+    }
 
     CustomShortcut {
         name: "sidebar"

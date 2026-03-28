@@ -214,6 +214,7 @@ Scope {
         }
     }
     GlobalShortcut {
+        appid: "donwaztok"
         name: "osdVolumeTrigger"
         description: "Triggers volume OSD on press"
 
@@ -222,6 +223,7 @@ Scope {
         }
     }
     GlobalShortcut {
+        appid: "donwaztok"
         name: "osdVolumeHide"
         description: "Hides volume OSD on press"
 

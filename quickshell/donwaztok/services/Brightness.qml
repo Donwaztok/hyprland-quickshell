@@ -248,12 +248,14 @@ Singleton {
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "brightnessIncrease"
         description: "Increase brightness"
         onPressed: root.increaseBrightness()
     }
 
     GlobalShortcut {
+        appid: "donwaztok"
         name: "brightnessDecrease"
         description: "Decrease brightness"
         onPressed: root.decreaseBrightness()
