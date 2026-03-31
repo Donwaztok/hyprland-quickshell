@@ -3,7 +3,6 @@ Anim 1.0 Anim.qml
 CAnim 1.0 CAnim.qml
 ConnectionHeader 1.0 ConnectionHeader.qml
 ConnectionInfoSection 1.0 ConnectionInfoSection.qml
-Logo 1.0 Logo.qml
 MaterialIcon 1.0 MaterialIcon.qml
 PropertyRow 1.0 PropertyRow.qml
 SectionContainer 1.0 SectionContainer.qml

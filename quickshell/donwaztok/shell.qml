@@ -24,7 +24,6 @@ ShellRoot {
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
         Qt.callLater(() => MaterialThemeLoader.applyDonwaztokPaletteToSharedUi())
-        FirstRunExperience.load()
         ConflictKiller.load()
         Cliphist.refresh()
         Wallpapers.load()

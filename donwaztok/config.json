@@ -153,7 +153,8 @@
             "hiddenIcons": [
                 "nm-applet"
             ],
-            "iconSubs": [],
+            "iconSubs": [
+            ],
             "recolour": false
         },
         "workspaces": {
@@ -164,7 +165,8 @@
             "dashWidthFactor": 2,
             "dotSize": 8,
             "indicatorSize": 8,
-            "numberMap": [],
+            "numberMap": [
+            ],
             "pillHeight": 8,
             "showAppIcons": true,
             "showNumberDelay": 300,
@@ -260,7 +262,8 @@
                 }
             ]
         },
-        "excludedScreens": [],
+        "excludedScreens": [
+        ],
         "idle": {
             "inhibitWhenAudio": true,
             "lockBeforeSleep": true,
@@ -445,8 +448,10 @@
         "dragThreshold": 50,
         "enableDangerousActions": false,
         "enabled": true,
-        "favouriteApps": [],
-        "hiddenApps": [],
+        "favouriteApps": [
+        ],
+        "hiddenApps": [
+        ],
         "maxShown": 7,
         "maxWallpapers": 9,
         "pendingOpenPrefix": "",

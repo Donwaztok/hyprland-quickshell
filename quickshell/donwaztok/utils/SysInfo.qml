@@ -12,8 +12,7 @@ Singleton {
     property string osPrettyName
     property string osId
     property list<string> osIdLike
-    property string osLogo: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`)
-    property bool isDefaultLogo: true
+    property string osLogo: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/icons/linux-symbolic.svg`)
 
     property string uptime
     readonly property string user: Quickshell.env("USER")
@@ -25,7 +24,8 @@ Singleton {
 
         path: "/etc/os-release"
         onLoaded: {
-            const lines = text().split("\n");
+            const raw = text();
+            const lines = raw.split("\n");
 
             const fd = key => lines.find(l => l.startsWith(`${key}=`))?.split("=")[1].replace(/"/g, "") ?? "";
 
@@ -34,14 +34,66 @@ Singleton {
             root.osId = fd("ID");
             root.osIdLike = fd("ID_LIKE").split(" ");
 
-            const logo = Quickshell.iconPath(fd("LOGO"), true);
-            if (logo) {
-                root.osLogo = logo;
-                root.isDefaultLogo = false;
-            } else {
-                root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`);
-                root.isDefaultLogo = true;
+            function bundledIconFile(iconBaseName) {
+                return Qt.resolvedUrl(`${Quickshell.shellDir}/assets/icons/${iconBaseName}.svg`);
             }
+
+            function distroBundledIconName(distroId, rawOsRelease) {
+                let name = "linux-symbolic";
+                switch (distroId) {
+                case "artix":
+                case "arch":
+                    name = "arch-symbolic";
+                    break;
+                case "endeavouros":
+                    name = "endeavouros-symbolic";
+                    break;
+                case "cachyos":
+                    name = "cachyos-symbolic";
+                    break;
+                case "nixos":
+                    name = "nixos-symbolic";
+                    break;
+                case "fedora":
+                    name = "fedora-symbolic";
+                    break;
+                case "linuxmint":
+                case "ubuntu":
+                case "zorin":
+                case "popos":
+                    name = "ubuntu-symbolic";
+                    break;
+                case "debian":
+                case "raspbian":
+                case "kali":
+                    name = "debian-symbolic";
+                    break;
+                case "funtoo":
+                case "gentoo":
+                    name = "gentoo-symbolic";
+                    break;
+                }
+                if (rawOsRelease.toLowerCase().includes("nyarch"))
+                    name = "nyarch-symbolic";
+                return name;
+            }
+
+            const logoField = fd("LOGO").trim();
+            let chosen = "";
+            if (logoField.length > 0)
+                chosen = Quickshell.iconPath(logoField, true) || "";
+            if (!chosen) {
+                const bundledName = distroBundledIconName(fd("ID"), raw);
+                chosen = Quickshell.iconPath(bundledName, true) || "";
+                if (!chosen)
+                    chosen = bundledIconFile(bundledName);
+            }
+            if (!chosen) {
+                chosen = Quickshell.iconPath("linux-symbolic", true) || "";
+                if (!chosen)
+                    chosen = bundledIconFile("linux-symbolic");
+            }
+            root.osLogo = chosen;
         }
     }
 

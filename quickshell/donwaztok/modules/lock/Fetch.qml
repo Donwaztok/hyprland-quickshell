@@ -51,7 +51,7 @@ ColumnLayout {
             Layout.fillHeight: true
             active: !iconLoader.active
 
-            sourceComponent: SysInfo.isDefaultLogo ? shellDefaultLogo : distroIcon
+            sourceComponent: distroIcon
         }
     }
 
@@ -66,7 +66,7 @@ ColumnLayout {
             Layout.fillHeight: true
             active: root.width > 320
 
-            sourceComponent: SysInfo.isDefaultLogo ? shellDefaultLogo : distroIcon
+            sourceComponent: distroIcon
         }
 
         ColumnLayout {
@@ -139,14 +139,6 @@ ColumnLayout {
                     radius: Appearance.rounding.small
                 }
             }
-        }
-    }
-
-    Component {
-        id: shellDefaultLogo
-
-        Logo {
-            width: height
         }
     }
 
