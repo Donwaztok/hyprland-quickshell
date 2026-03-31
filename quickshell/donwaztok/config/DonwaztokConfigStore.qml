@@ -141,12 +141,12 @@ Singleton {
             }
 
             property JsonObject apps: JsonObject {
-                property string bluetooth: "kcmshell6 kcm_bluetooth"
+                property string bluetooth: "gnome-control-center bluetooth"
                 property string changePassword: "kitty -1 --hold=yes zsh -ic 'passwd'"
-                property string network: "kcmshell6 kcm_networkmanagement"
-                property string manageUser: "kcmshell6 kcm_users"
-                property string networkEthernet: "kcmshell6 kcm_networkmanagement"
-                property string taskManager: "plasma-systemmonitor --page-name Processes"
+                property string network: "gnome-control-center wifi"
+                property string manageUser: "gnome-control-center user-accounts"
+                property string networkEthernet: "gnome-control-center network"
+                property string taskManager: "gnome-system-monitor"
                 property string terminal: "kitty -1" // This is only for shell actions
                 property string update: "kitty -1 --hold=yes zsh -ic 'pkexec pacman -Syu'"
                 property string volumeMixer: `~/.config/hypr/hyprland/scripts/launch_first_available.sh "pavucontrol-qt" "pavucontrol"`

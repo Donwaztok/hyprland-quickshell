@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.config
+import qs.services.m3
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick

@@ -160,7 +160,11 @@ Singleton {
             return false;
         }
 
-        return state === "100 (connected)" || state === "connected" || state.startsWith("connected");
+        const s = state.trim();
+        // Tabular nmcli uses LANG=C → "connected"; verbose / some locales use "100 (connected)" or "100 (conectado)".
+        return s === "100 (connected)" || s.startsWith("100 ")
+            || s === "connected" || s.startsWith("connected")
+            || s.includes("conectado"); // pt_BR etc. when locale leaks into STATE
     }
 
     function executeCommand(args: list<string>, callback: var): void {
@@ -1165,7 +1169,8 @@ Singleton {
             }
         }
 
-        executeCommand(["device", "show", interfaceName], result => {
+        // Default `device show` omits CAPABILITIES.SPEED; -f ALL includes link speed and AP[] Wi‑Fi rows.
+        executeCommand(["-f", "ALL", "device", "show", interfaceName], result => {
             if (!result.success || !result.output) {
                 root.wirelessDeviceDetails = null;
                 if (callback)
@@ -1173,7 +1178,7 @@ Singleton {
                 return;
             }
 
-            const details = parseDeviceDetails(result.output, false);
+            const details = parseDeviceDetails(result.output, false, root.active?.bssid ?? "");
             root.wirelessDeviceDetails = details;
             if (callback)
                 callback(details);
@@ -1194,7 +1199,7 @@ Singleton {
             }
         }
 
-        executeCommand(["device", "show", interfaceName], result => {
+        executeCommand(["-f", "ALL", "device", "show", interfaceName], result => {
             if (!result.success || !result.output) {
                 root.ethernetDeviceDetails = null;
                 if (callback)
@@ -1202,21 +1207,31 @@ Singleton {
                 return;
             }
 
-            const details = parseDeviceDetails(result.output, true);
+            const details = parseDeviceDetails(result.output, true, "");
             root.ethernetDeviceDetails = details;
             if (callback)
                 callback(details);
         });
     }
 
-    function parseDeviceDetails(output: string, isEthernet: bool): var {
+    function normBssidHex(s: string): string {
+        if (!s || s.length === 0)
+            return "";
+        return String(s).replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
+    }
+
+    function parseDeviceDetails(output: string, isEthernet: bool, activeWifiBssid: string): var {
         const details = {
             ipAddress: "",
             gateway: "",
             dns: [],
             subnet: "",
             macAddress: "",
-            speed: ""
+            speed: "",
+            linkSpeed: "",
+            connectionName: "",
+            wifiChannel: "",
+            wifiApRate: ""
         };
 
         if (!output || output.length === 0) {
@@ -1224,6 +1239,7 @@ Singleton {
         }
 
         const lines = output.trim().split("\n");
+        const apByIdx = {};
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
@@ -1248,17 +1264,65 @@ Singleton {
                     if (value !== "--" && value.length > 0) {
                         details.dns.push(value);
                     }
+                } else if (key === "GENERAL.CONNECTION" && value !== "--" && value.length > 0) {
+                    details.connectionName = value;
+                } else if (key === "CAPABILITIES.SPEED" && value !== "--" && value.length > 0) {
+                    details.linkSpeed = value;
                 } else if (isEthernet && key === "WIRED-PROPERTIES.MAC") {
                     details.macAddress = value;
                 } else if (isEthernet && key === "WIRED-PROPERTIES.SPEED") {
                     details.speed = value;
                 } else if (!isEthernet && key === "GENERAL.HWADDR") {
                     details.macAddress = value;
+                } else if (!isEthernet) {
+                    const apKey = key.match(/^AP\[(\d+)\]\.(BSSID|SSID|CHAN|RATE)$/);
+                    if (apKey) {
+                        const idx = apKey[1];
+                        const field = apKey[2].toLowerCase();
+                        if (!apByIdx[idx])
+                            apByIdx[idx] = {};
+                        apByIdx[idx][field] = value;
+                    }
+                }
+            }
+        }
+
+        if (isEthernet) {
+            if (!details.linkSpeed && details.speed)
+                details.linkSpeed = details.speed;
+        } else {
+            const want = normBssidHex(activeWifiBssid);
+            if (want.length > 0) {
+                for (const idx of Object.keys(apByIdx)) {
+                    const ap = apByIdx[idx];
+                    if (ap.bssid && normBssidHex(ap.bssid) === want) {
+                        if (ap.chan)
+                            details.wifiChannel = ap.chan;
+                        if (ap.rate)
+                            details.wifiApRate = ap.rate;
+                        break;
+                    }
                 }
             }
         }
 
         return details;
+    }
+
+    function refreshActiveDeviceDetails(callback: var): void {
+        if (root.activeEthernet && root.activeEthernet.interface)
+            getEthernetDeviceDetails(root.activeEthernet.interface, () => {});
+        else
+            root.ethernetDeviceDetails = null;
+
+        const activeW = root.wirelessInterfaces.find(iface => isConnectedState(iface.state));
+        if (root.active && activeW && activeW.device)
+            getWirelessDeviceDetails(activeW.device, () => {});
+        else if (!root.active || !activeW)
+            root.wirelessDeviceDetails = null;
+
+        if (callback)
+            Qt.callLater(callback);
     }
 
     Process {

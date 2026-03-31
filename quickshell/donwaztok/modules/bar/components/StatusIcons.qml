@@ -7,7 +7,9 @@ import qs.utils
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Services.UPower
+import Quickshell.Widgets
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 Item {
@@ -19,6 +21,13 @@ Item {
     readonly property int spaceS: Math.max(1, Math.round(Appearance.spacing.smaller * Config.barThicknessScale))
     property color colour: Colours.palette.m3secondary
     readonly property alias items: iconColumn
+    readonly property int networkBarIconSize: Math.max(16, Math.round(Appearance.font.size.small * 2 * Config.barThicknessScale))
+    readonly property string barNetworkLinkSpeed: {
+        Nmcli.activeEthernet;
+        Nmcli.active;
+        const d = Nmcli.activeEthernet ? Nmcli.ethernetDeviceDetails : Nmcli.wirelessDeviceDetails;
+        return d && d.linkSpeed ? d.linkSpeed : "";
+    }
 
     clip: !barVertical
     implicitWidth: barVertical ? root.effectiveInnerWidth : iconColumn.implicitWidth
@@ -152,29 +161,43 @@ Item {
             }
         }
 
-        // Network icon
+        // Unified network indicator (Material, same glyphs as the popout list).
         WrappedLoader {
             name: "network"
-            active: Config.bar.status.showNetwork && (!Nmcli.activeEthernet || Config.bar.status.showWifi)
+            active: Config.bar.status.showNetwork
 
-            sourceComponent: MaterialIcon {
-                pointSizeScale: Config.barThicknessScale
-                animate: true
-                text: Nmcli.active ? Icons.getNetworkIcon(Nmcli.active.strength ?? 0) : "wifi_off"
-                color: root.colour
-            }
-        }
+            sourceComponent: Item {
+                width: root.networkBarIconSize
+                height: width
 
-        // Ethernet icon
-        WrappedLoader {
-            name: "ethernet"
-            active: Config.bar.status.showNetwork && Nmcli.activeEthernet
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    pointSizeScale: Config.barThicknessScale
+                    animate: true
+                    text: {
+                        if (Nmcli.activeEthernet)
+                            return "computer";
+                        if (!Nmcli.wifiEnabled)
+                            return "signal_wifi_off";
+                        if (Nmcli.active)
+                            return Icons.getNetworkIcon(Nmcli.active.strength ?? 0, Nmcli.active.isSecure);
+                        return "wifi_off";
+                    }
+                    color: root.colour
+                }
 
-            sourceComponent: MaterialIcon {
-                pointSizeScale: Config.barThicknessScale
-                animate: true
-                text: "cable"
-                color: root.colour
+                HoverHandler {
+                    id: barNetHover
+
+                    onHoveredChanged: {
+                        if (hovered && (Nmcli.activeEthernet || Nmcli.active))
+                            Nmcli.refreshActiveDeviceDetails(null);
+                    }
+                }
+
+                ToolTip.visible: barNetHover.hovered && root.barNetworkLinkSpeed.length > 0
+                ToolTip.delay: 400
+                ToolTip.text: qsTr("Velocidade") + "\n" + root.barNetworkLinkSpeed
             }
         }
 

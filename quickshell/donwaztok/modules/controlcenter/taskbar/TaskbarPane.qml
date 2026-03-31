@@ -29,7 +29,6 @@ Item {
     property bool showMicrophone: Config.bar.status.showMicrophone ?? true
     property bool showKbLayout: Config.bar.status.showKbLayout ?? false
     property bool showNetwork: Config.bar.status.showNetwork ?? true
-    property bool showWifi: Config.bar.status.showWifi ?? true
     property bool showBluetooth: Config.bar.status.showBluetooth ?? true
     property bool showBattery: Config.bar.status.showBattery ?? true
     property bool showLockStatus: Config.bar.status.showLockStatus ?? true
@@ -69,7 +68,6 @@ Item {
         Config.bar.status.showMicrophone = root.showMicrophone;
         Config.bar.status.showKbLayout = root.showKbLayout;
         Config.bar.status.showNetwork = root.showNetwork;
-        Config.bar.status.showWifi = root.showWifi;
         Config.bar.status.showBluetooth = root.showBluetooth;
         Config.bar.status.showBattery = root.showBattery;
         Config.bar.status.showLockStatus = root.showLockStatus;
@@ -286,14 +284,6 @@ Item {
                                 propertyName: "showNetwork",
                                 onToggled: function (checked) {
                                     root.showNetwork = checked;
-                                    root.saveConfig();
-                                }
-                            },
-                            {
-                                label: qsTr("Wifi"),
-                                propertyName: "showWifi",
-                                onToggled: function (checked) {
-                                    root.showWifi = checked;
                                     root.saveConfig();
                                 }
                             },

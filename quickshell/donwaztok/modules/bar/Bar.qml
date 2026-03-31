@@ -67,10 +67,16 @@ Item {
         if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
             const items = item.items;
             const mapped = mapToItem(items, isVertical ? width / 2 : coord, isVertical ? coord : height / 2);
-            const icon = items.childAt(isVertical ? items.width / 2 : mapped.x, isVertical ? mapped.y : items.height / 2);
-            if (icon) {
-                popouts.currentName = icon.name;
-                popouts.currentCenter = Qt.binding(() => isVertical ? icon.mapToItem(root, 0, icon.implicitHeight / 2).y : icon.mapToItem(root, icon.implicitWidth / 2, 0).x);
+            const hit = items.childAt(isVertical ? items.width / 2 : mapped.x, isVertical ? mapped.y : items.height / 2);
+            let named = hit;
+            while (named && (typeof named.name !== "string" || named.name.length === 0)) {
+                named = named.parent;
+                if (!named || named === items)
+                    break;
+            }
+            if (named && typeof named.name === "string" && named.name.length > 0) {
+                popouts.currentName = named.name;
+                popouts.currentCenter = Qt.binding(() => isVertical ? hit.mapToItem(root, 0, hit.implicitHeight / 2).y : hit.mapToItem(root, hit.implicitWidth / 2, 0).x);
                 popouts.hasCurrent = true;
             }
         } else if (id === "tray" && Config.bar.popouts.tray) {

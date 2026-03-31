@@ -100,7 +100,7 @@ DeviceList {
                         id: icon
 
                         anchors.centerIn: parent
-                        text: "cable"
+                        text: "computer"
                         font.pointSize: Appearance.font.size.large
                         fill: modelData.connected ? 1 : 0
                         color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface

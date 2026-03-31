@@ -18,7 +18,7 @@ ColumnLayout {
     spacing: Appearance.spacing.normal
 
     SettingsHeader {
-        icon: "cable"
+        icon: "computer"
         title: qsTr("Ethernet settings")
     }
 

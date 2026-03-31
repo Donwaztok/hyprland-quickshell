@@ -31,15 +31,6 @@ Item {
             name: "network"
             sourceComponent: Network {
                 wrapper: root.wrapper
-                view: "wireless"
-            }
-        }
-
-        Popout {
-            name: "ethernet"
-            sourceComponent: Network {
-                wrapper: root.wrapper
-                view: "ethernet"
             }
         }
 

@@ -29,8 +29,6 @@ xdg-user-dirs                     # user dirs (Desktop, Documents, etc.)
 # --------------------------------------------------- // Fonts & themes
 adw-gtk-theme-git                 # libadwaita theme for GTK3
 bibata-cursor-theme               # cursor theme
-breeze                            # KDE default theme
-breeze-plus                       # Breeze theme variants
 fontconfig                        # font configuration
 gtk4                              # GTK4 toolkit
 libadwaita                        # GNOME design library (GTK4)
@@ -45,15 +43,19 @@ ttf-twemoji                       # Twitter/Unicode emoji font
 # --------------------------------------------------- // Hyprland
 hyprland                          # Wayland compositor
 wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
+udiskie                           # removable media + tray (udisks2); was in old hyprland.conf
+xorg-setxkbmap                    # setxkbmap — XWayland / intl sync (old dotfiles + current exec-once)
+libayatana-appindicator           # GTK StatusNotifier tray (udiskie, solaar, nm-applet, blueman on Wayland)
+network-manager-applet            # nm-applet --indicator (bar tray; donwaztok status network/wifi off)
+blueman                           # blueman-applet (bar tray; donwaztok status bluetooth off)
 
-# --------------------------------------------------- // KDE / system
-bluedevil                         # KDE Bluetooth
+# --------------------------------------------------- // GNOME / system
 gnome-keyring                     # password and key storage
+gnome-control-center              # Settings (donwaztok utilities, replaces KDE kcm_*)
+gnome-system-monitor              # task manager (donwaztok apps.taskManager)
 networkmanager                    # network management
-plasma-nm                         # NetworkManager applet for Plasma
-polkit-kde-agent                  # Polkit authentication agent
-sddm                              # display manager (login)
-systemsettings                    # KDE system settings
+polkit-gnome                      # Polkit authentication agent (hypr exec-once)
+sddm                              # display manager (login; independent of KDE apps)
 
 # --------------------------------------------------- // XDG portals
 xdg-desktop-portal                # desktop integration portal

@@ -15,35 +15,189 @@ ColumnLayout {
     required property Item wrapper
 
     property string connectingToSsid: ""
-    property string view: "wireless" // "wireless" or "ethernet"
     property var passwordNetwork: null
     property bool showPasswordDialog: false
+
+    readonly property bool summaryIsWifi: !Nmcli.activeEthernet && Nmcli.active
+    readonly property var activeDetails: Nmcli.activeEthernet ? Nmcli.ethernetDeviceDetails : Nmcli.wirelessDeviceDetails
+    readonly property bool showActiveSummary: Nmcli.activeEthernet || Nmcli.active
 
     spacing: Appearance.spacing.small
     width: Config.bar.sizes.networkWidth
 
+    Connections {
+        target: root.wrapper
+
+        function onCurrentNameChanged(): void {
+            if (root.wrapper.currentName === "network")
+                Nmcli.refreshActiveDeviceDetails(null);
+        }
+    }
+
+    Timer {
+        interval: 5000
+        repeat: true
+        running: root.wrapper && root.wrapper.currentName === "network"
+        onTriggered: Nmcli.refreshActiveDeviceDetails(null)
+    }
+
+    Component.onCompleted: {
+        if (root.wrapper && root.wrapper.currentName === "network")
+            Nmcli.refreshActiveDeviceDetails(null);
+    }
+
+    ColumnLayout {
+        id: activeSummaryBlock
+
+        visible: root.showActiveSummary
+        Layout.fillWidth: true
+        Layout.rightMargin: Appearance.padding.small
+        Layout.bottomMargin: visible ? Appearance.spacing.normal : 0
+        spacing: 4
+
+        StyledText {
+            text: qsTr("Connected")
+            font.weight: 600
+            font.pointSize: Appearance.font.size.small
+            color: Colours.palette.m3onSurface
+        }
+
+        StyledText {
+            visible: {
+                const d = root.activeDetails;
+                return d && d.connectionName && d.connectionName.length > 0;
+            }
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            text: {
+                const d = root.activeDetails;
+                return d && d.connectionName ? qsTr("Profile: %1").arg(d.connectionName) : "";
+            }
+            color: Colours.palette.m3onSurfaceVariant
+            font.pointSize: Appearance.font.size.small
+        }
+
+        RowLayout {
+            visible: {
+                const d = root.activeDetails;
+                return d && d.linkSpeed && d.linkSpeed.length > 0;
+            }
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
+
+            StyledText {
+                text: qsTr("Velocidade")
+                color: Colours.palette.m3onSurfaceVariant
+                font.pointSize: Appearance.font.size.small
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+            }
+
+            StyledText {
+                text: {
+                    const d = root.activeDetails;
+                    return d && d.linkSpeed ? d.linkSpeed : "";
+                }
+                color: Colours.palette.m3onSurface
+                font.pointSize: Appearance.font.size.small
+                horizontalAlignment: Text.AlignRight
+            }
+        }
+
+        StyledText {
+            visible: root.summaryIsWifi && root.activeDetails && root.activeDetails.wifiChannel
+            Layout.fillWidth: true
+            text: {
+                const d = root.activeDetails;
+                return d && d.wifiChannel ? qsTr("Channel: %1").arg(d.wifiChannel) : "";
+            }
+            color: Colours.palette.m3onSurfaceVariant
+            font.pointSize: Appearance.font.size.small
+        }
+
+        StyledText {
+            visible: root.summaryIsWifi && root.activeDetails && root.activeDetails.wifiApRate
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            text: {
+                const d = root.activeDetails;
+                return d && d.wifiApRate ? qsTr("Rate to access point: %1").arg(d.wifiApRate) : "";
+            }
+            color: Colours.palette.m3onSurfaceVariant
+            font.pointSize: Appearance.font.size.small
+        }
+
+        StyledText {
+            visible: {
+                const d = root.activeDetails;
+                return d && d.ipAddress && d.ipAddress.length > 0;
+            }
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            text: {
+                const d = root.activeDetails;
+                if (!d || !d.ipAddress)
+                    return "";
+                return d.subnet ? qsTr("IP: %1 (%2)").arg(d.ipAddress).arg(d.subnet) : qsTr("IP: %1").arg(d.ipAddress);
+            }
+            color: Colours.palette.m3onSurfaceVariant
+            font.pointSize: Appearance.font.size.small
+        }
+
+        StyledText {
+            visible: {
+                const d = root.activeDetails;
+                return d && d.gateway && d.gateway.length > 0;
+            }
+            Layout.fillWidth: true
+            text: {
+                const d = root.activeDetails;
+                return d && d.gateway ? qsTr("Gateway: %1").arg(d.gateway) : "";
+            }
+            color: Colours.palette.m3onSurfaceVariant
+            font.pointSize: Appearance.font.size.small
+        }
+
+        StyledText {
+            visible: {
+                const d = root.activeDetails;
+                return d && d.dns && d.dns.length > 0;
+            }
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            text: {
+                const d = root.activeDetails;
+                return d && d.dns && d.dns.length > 0 ? qsTr("DNS: %1").arg(d.dns.slice(0, 4).join(", ")) : "";
+            }
+            color: Colours.palette.m3onSurfaceVariant
+            font.pointSize: Appearance.font.size.small
+        }
+    }
+
+    Rectangle {
+        visible: root.showActiveSummary
+        Layout.fillWidth: true
+        Layout.preferredHeight: visible ? 1 : 0
+        Layout.bottomMargin: visible ? Appearance.spacing.small : 0
+        color: Colours.palette.m3outlineVariant
+    }
+
     // Wireless section
     StyledText {
-        visible: root.view === "wireless"
-        Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.padding.normal : 0
+        Layout.topMargin: Appearance.padding.normal
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("Wireless")
         font.weight: 500
     }
 
     Toggle {
-        visible: root.view === "wireless"
-        Layout.preferredHeight: visible ? implicitHeight : 0
         label: qsTr("Enabled")
         checked: Nmcli.wifiEnabled
         toggle.onToggled: Nmcli.enableWifi(checked)
     }
 
     StyledText {
-        visible: root.view === "wireless"
-        Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.spacing.small : 0
+        Layout.topMargin: Appearance.spacing.small
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("%1 networks available").arg(Nmcli.networks.length)
         color: Colours.palette.m3onSurfaceVariant
@@ -51,7 +205,6 @@ ColumnLayout {
     }
 
     Repeater {
-        visible: root.view === "wireless"
         model: ScriptModel {
             values: [...Nmcli.networks].sort((a, b) => {
                 if (a.active !== b.active)
@@ -67,8 +220,6 @@ ColumnLayout {
             readonly property bool isConnecting: root.connectingToSsid === modelData.ssid
             readonly property bool loading: networkItem.isConnecting
 
-            visible: root.view === "wireless"
-            Layout.preferredHeight: visible ? implicitHeight : 0
             Layout.fillWidth: true
             Layout.rightMargin: Appearance.padding.small
             spacing: Appearance.spacing.small
@@ -163,9 +314,7 @@ ColumnLayout {
     }
 
     StyledRect {
-        visible: root.view === "wireless"
-        Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.spacing.small : 0
+        Layout.topMargin: Appearance.spacing.small
         Layout.fillWidth: true
         implicitHeight: rescanBtn.implicitHeight + Appearance.padding.small * 2
 
@@ -217,20 +366,23 @@ ColumnLayout {
         }
     }
 
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        Layout.topMargin: Appearance.spacing.normal
+        color: Colours.palette.m3outlineVariant
+    }
+
     // Ethernet section
     StyledText {
-        visible: root.view === "ethernet"
-        Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.padding.normal : 0
+        Layout.topMargin: Appearance.spacing.small
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("Ethernet")
         font.weight: 500
     }
 
     StyledText {
-        visible: root.view === "ethernet"
-        Layout.preferredHeight: visible ? implicitHeight : 0
-        Layout.topMargin: visible ? Appearance.spacing.small : 0
+        Layout.topMargin: Appearance.spacing.small
         Layout.rightMargin: Appearance.padding.small
         text: qsTr("%1 devices available").arg(Nmcli.ethernetDevices.length)
         color: Colours.palette.m3onSurfaceVariant
@@ -238,7 +390,6 @@ ColumnLayout {
     }
 
     Repeater {
-        visible: root.view === "ethernet"
         model: ScriptModel {
             values: [...Nmcli.ethernetDevices].sort((a, b) => {
                 if (a.connected !== b.connected)
@@ -253,8 +404,6 @@ ColumnLayout {
             required property var modelData
             readonly property bool loading: false
 
-            visible: root.view === "ethernet"
-            Layout.preferredHeight: visible ? implicitHeight : 0
             Layout.fillWidth: true
             Layout.rightMargin: Appearance.padding.small
             spacing: Appearance.spacing.small
@@ -276,7 +425,7 @@ ColumnLayout {
             }
 
             MaterialIcon {
-                text: "cable"
+                text: "computer"
                 color: ethernetItem.modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
             }
 
