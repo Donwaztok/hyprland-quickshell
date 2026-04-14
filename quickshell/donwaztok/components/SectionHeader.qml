@@ -1,5 +1,5 @@
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
@@ -10,18 +10,24 @@ ColumnLayout {
     required property string title
     property string description: ""
 
-    spacing: 0
+    spacing: Appearance.spacing.smaller
 
     StyledText {
-        Layout.topMargin: Appearance.spacing.large
+        Layout.fillWidth: true
         text: root.title
         font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        font.weight: Font.DemiBold
+        color: Colours.palette.m3onSurface
     }
 
     StyledText {
         visible: root.description !== ""
         text: root.description
-        color: Colours.palette.m3outline
+        color: Colours.light ? Colours.palette.m3onSurfaceVariant : Qt.lighter(Colours.palette.m3onSurfaceVariant, 1.22)
+        font.pointSize: Appearance.font.size.small
+        font.weight: Font.Medium
+        wrapMode: Text.WordWrap
+        Layout.fillWidth: true
+        Layout.topMargin: visible ? Appearance.spacing.smaller : 0
     }
 }

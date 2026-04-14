@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
@@ -64,7 +64,7 @@ Item {
             anchors.fill: parent
             radius: Appearance.rounding.large * root.scale
             opacity: Config.background.desktopClock.background.opacity
-            color: Colours.palette.m3surface
+            color: Colours.shellSurface
 
             layer.enabled: root.blurEnabled
         }

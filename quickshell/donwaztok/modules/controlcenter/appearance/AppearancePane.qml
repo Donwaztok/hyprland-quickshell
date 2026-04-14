@@ -3,13 +3,12 @@ pragma ComponentBehavior: Bound
 import ".."
 import "../components"
 import "./sections"
-import qs.modules.launcher.services
 import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.containers
 import qs.components.images
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -87,148 +86,113 @@ Item {
         Config.save();
     }
 
-    Component {
-        id: appearanceRightContentComponent
-
-        Item {
-            id: rightAppearanceFlickable
-
-            ColumnLayout {
-                id: contentLayout
-
-                anchors.fill: parent
-                spacing: 0
-
-                StyledText {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.bottomMargin: Appearance.spacing.normal
-                    text: qsTr("Wallpaper")
-                    font.pointSize: Appearance.font.size.extraLarge
-                    font.weight: 600
-                }
-
-                Loader {
-                    id: wallpaperLoader
-
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.bottomMargin: -Appearance.padding.large * 2
-
-                    active: {
-                        const isActive = root.session.activeIndex === 3;
-                        const isAdjacent = Math.abs(root.session.activeIndex - 3) === 1;
-                        const splitLayout = root.children[0];
-                        const loader = splitLayout && splitLayout.rightLoader ? splitLayout.rightLoader : null;
-                        const shouldActivate = loader && loader.item !== null && (isActive || isAdjacent);
-                        return shouldActivate;
-                    }
-
-                    onStatusChanged: {
-                        if (status === Loader.Error) {
-                            console.error("[AppearancePane] Wallpaper loader error!");
-                        }
-                    }
-
-                    sourceComponent: WallpaperGrid {
-                        session: root.session
-                    }
-                }
-            }
-        }
-    }
-
-    SplitPaneLayout {
+    StyledFlickable {
+        id: contentFlickable
+        readonly property var rootPane: root
         anchors.fill: parent
+        flickableDirection: Flickable.VerticalFlick
+        contentHeight: contentLayout.height
 
-        leftContent: Component {
+        StyledScrollBar.vertical: StyledScrollBar {
+            flickable: contentFlickable
+        }
 
-            StyledFlickable {
-                id: sidebarFlickable
-                readonly property var rootPane: root
-                flickableDirection: Flickable.VerticalFlick
-                contentHeight: sidebarLayout.height
+        ColumnLayout {
+            id: contentLayout
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: Appearance.spacing.normal
 
-                StyledScrollBar.vertical: StyledScrollBar {
-                    flickable: sidebarFlickable
-                }
+            readonly property var rootPane: contentFlickable.rootPane
+
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: constrainedColumn.implicitHeight
+
+                readonly property real maxContentWidth: 860
 
                 ColumnLayout {
-                    id: sidebarLayout
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    spacing: Appearance.spacing.small
+                    id: constrainedColumn
+                    width: Math.min(parent.width, parent.maxContentWidth)
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: Appearance.spacing.normal
 
-                    readonly property var rootPane: sidebarFlickable.rootPane
-
-                    readonly property bool allSectionsExpanded: themeModeSection.expanded && animationsSection.expanded && fontsSection.expanded && scalesSection.expanded && transparencySection.expanded && borderSection.expanded && backgroundSection.expanded
-
-                    RowLayout {
-                        spacing: Appearance.spacing.smaller
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Appearance.spacing.smaller / 2
 
                         StyledText {
                             text: qsTr("Appearance")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 500
+                            font.pointSize: Appearance.font.size.extraLarge
+                            font.weight: Font.DemiBold
+                            color: Colours.palette.m3onSurface
                         }
 
-                        Item {
+                        StyledText {
                             Layout.fillWidth: true
+                            text: qsTr("Theme, type, wallpaper, and desktop clock.")
+                            wrapMode: Text.WordWrap
+                            font.pointSize: Appearance.font.size.small
+                            font.weight: Font.Medium
+                            color: Colours.light ? Colours.palette.m3onSurfaceVariant : Qt.lighter(Colours.palette.m3onSurfaceVariant, 1.12)
                         }
+                    }
 
-                        IconButton {
-                            icon: sidebarLayout.allSectionsExpanded ? "unfold_less" : "unfold_more"
-                            type: IconButton.Text
-                            label.animate: true
-                            onClicked: {
-                                const shouldExpand = !sidebarLayout.allSectionsExpanded;
-                                themeModeSection.expanded = shouldExpand;
-                                animationsSection.expanded = shouldExpand;
-                                fontsSection.expanded = shouldExpand;
-                                scalesSection.expanded = shouldExpand;
-                                transparencySection.expanded = shouldExpand;
-                                borderSection.expanded = shouldExpand;
-                                backgroundSection.expanded = shouldExpand;
-                            }
-                        }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: Appearance.spacing.smaller
+                        implicitHeight: 1
+                        color: ControlCenterChrome.paneSectionRule
                     }
 
                     ThemeModeSection {
                         id: themeModeSection
                     }
 
+                    PreferencesGroup {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: false
+                        title: qsTr("Wallpaper")
+                        description: qsTr("Select an image; the compositor will be updated if supported.")
+
+                        WallpaperGrid {
+                            session: root.session
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Math.max(cellHeight, Math.min(contentHeight, 420))
+                        }
+                    }
+
                     AnimationsSection {
                         id: animationsSection
-                        rootPane: sidebarFlickable.rootPane
+                        rootPane: contentFlickable.rootPane
                     }
 
                     FontsSection {
                         id: fontsSection
-                        rootPane: sidebarFlickable.rootPane
+                        rootPane: contentFlickable.rootPane
                     }
 
                     ScalesSection {
                         id: scalesSection
-                        rootPane: sidebarFlickable.rootPane
+                        rootPane: contentFlickable.rootPane
                     }
 
                     TransparencySection {
                         id: transparencySection
-                        rootPane: sidebarFlickable.rootPane
+                        rootPane: contentFlickable.rootPane
                     }
 
                     BorderSection {
                         id: borderSection
-                        rootPane: sidebarFlickable.rootPane
+                        rootPane: contentFlickable.rootPane
                     }
 
                     BackgroundSection {
                         id: backgroundSection
-                        rootPane: sidebarFlickable.rootPane
+                        rootPane: contentFlickable.rootPane
                     }
                 }
             }
         }
-
-        rightContent: appearanceRightContentComponent
     }
 }

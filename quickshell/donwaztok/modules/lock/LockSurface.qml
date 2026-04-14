@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import Quickshell.Wayland
 import QtQuick
@@ -211,7 +211,7 @@ WlSessionLockSurface {
             id: lockBg
 
             anchors.fill: parent
-            color: Colours.palette.m3surface
+            color: Colours.shellSurface
             radius: parent.radius
             opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
 

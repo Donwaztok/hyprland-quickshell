@@ -1,6 +1,7 @@
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
+import qs.modules.controlcenter
 import Quickshell
 import QtQuick
 
@@ -11,7 +12,7 @@ StyledRect {
     required property Session session
 
     implicitHeight: text.implicitHeight + Appearance.padding.normal
-    color: Colours.tPalette.m3surfaceContainer
+    color: Colours.tPalette.m3surfaceContainerLow
 
     StyledText {
         id: text
@@ -19,10 +20,11 @@ StyledRect {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
 
-        text: qsTr("Donwaztok Settings - %1").arg(root.session.active)
-        font.capitalization: Font.Capitalize
+        readonly property var paneInfo: PaneRegistry.getByLabel(root.session.active)
+
+        text: qsTr("Donwaztok Settings — %1").arg(paneInfo ? paneInfo.title : root.session.active)
         font.pointSize: Appearance.font.size.larger
-        font.weight: 500
+        font.weight: Font.DemiBold
     }
 
     Item {

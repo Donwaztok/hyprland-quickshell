@@ -6,7 +6,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -61,7 +61,7 @@ Item {
         implicitHeight: content.implicitHeight + Appearance.padding.large * 2
 
         radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surface
+        color: Colours.shellSurface
         opacity: root.session.network.showPasswordDialog && !root.isClosing ? 1 : 0
         scale: root.session.network.showPasswordDialog && !root.isClosing ? 1 : 0.7
 

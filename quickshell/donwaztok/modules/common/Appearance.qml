@@ -1,13 +1,11 @@
 import QtQuick
 import Quickshell
-import qs.services.m3
-import qs.modules.common.functions
+import qs.services.shell
 pragma Singleton
 pragma ComponentBehavior: Bound
 
 Singleton {
     id: root
-    property QtObject m3colors
     property QtObject animation
     property QtObject animationCurves
     property QtObject colors
@@ -16,192 +14,90 @@ Singleton {
     property QtObject sizes
     property string syntaxHighlightingTheme
 
-    // Transparency. The quadratic functions were derived from analysis of hand-picked transparency values.
-    ColorQuantizer {
-        id: wallColorQuant
-        property string wallpaperPath: Wallpapers.current || ""
-        property bool wallpaperIsVideo: wallpaperPath.endsWith(".mp4") || wallpaperPath.endsWith(".webm") || wallpaperPath.endsWith(".mkv") || wallpaperPath.endsWith(".avi") || wallpaperPath.endsWith(".mov")
-        // Video wallpapers: skip sampling (no ii thumbnail path); fall back to default vibrancy below.
-        source: (wallpaperPath.length > 0 && !wallpaperIsVideo) ? Qt.resolvedUrl(wallpaperPath) : Qt.resolvedUrl("")
-        depth: 0 // 2^0 = 1 color
-        rescaleSize: 10
-    }
-    property real wallpaperVibrancy: {
-        const c = wallColorQuant.colors[0];
-        if (!c)
-            return 0.35;
-        return (c.hslSaturation + c.hslLightness) / 2;
-    }
-    property real autoBackgroundTransparency: { // y = 0.5768x^2 - 0.759x + 0.2896
-        let x = wallpaperVibrancy
-        let y = 0.5768 * (x * x) - 0.759 * (x) + 0.2896
-        return Math.max(0, Math.min(0.22, y)) - 0.12 * (m3colors.darkmode ? 0 : 1)
-    }
-    property real autoContentTransparency: 0.9
-    property real backgroundTransparency: Config?.options.appearance.transparency.enable ? Config?.options.appearance.transparency.automatic ? autoBackgroundTransparency : Config?.options.appearance.transparency.backgroundTransparency : 0
-    property real contentTransparency: Config?.options.appearance.transparency.automatic ? autoContentTransparency : Config?.options.appearance.transparency.contentTransparency
+    /** Applied Material palette — same object as `Colours.current` (see Colours.qml). */
+    readonly property QtObject m3colors: Colours.current
 
-    m3colors: QtObject {
-        property bool darkmode: true
-        property bool transparent: false
-        property color m3background: "#131313"
-        property color m3onBackground: "#e2e2e2"
-        property color m3surface: "#1c1b1c"
-        property color m3surfaceDim: "#0f0e0e"
-        property color m3surfaceBright: "#2b2a2a"
-        property color m3surfaceContainerLowest: "#0e0d0d"
-        property color m3surfaceContainerLow: "#1c1b1b"
-        property color m3surfaceContainer: "#201f20"
-        property color m3surfaceContainerHigh: "#2b2a2a"
-        property color m3surfaceContainerHighest: "#363435"
-        property color m3onSurface: "#e2e2e2"
-        property color m3surfaceVariant: "#49454f"
-        property color m3onSurfaceVariant: "#cac5ca"
-        property color m3inverseSurface: "#e6e1e1"
-        property color m3inverseOnSurface: "#313030"
-        property color m3outline: "#948f94"
-        property color m3outlineVariant: "#49464a"
-        property color m3shadow: "#000000"
-        property color m3scrim: "#000000"
-        property color m3surfaceTint: "#ffd369"
-        property color m3primary: "#ffd369"
-        property color m3onPrimary: "#1e1b12"
-        property color m3primaryContainer: "#524415"
-        property color m3onPrimaryContainer: "#f2e6b3"
-        property color m3inversePrimary: "#ffd369"
-        property color m3secondary: "#cac5c8"
-        property color m3onSecondary: "#323032"
-        property color m3secondaryContainer: "#4d4b4d"
-        property color m3onSecondaryContainer: "#ece6e9"
-        property color m3tertiary: "#d1c3c6"
-        property color m3onTertiary: "#372e30"
-        property color m3tertiaryContainer: "#31292b"
-        property color m3onTertiaryContainer: "#c1b4b7"
-        property color m3error: "#ffb4ab"
-        property color m3onError: "#690005"
-        property color m3errorContainer: "#93000a"
-        property color m3onErrorContainer: "#ffdad6"
-        property color m3primaryFixed: "#ffe8a8"
-        property color m3primaryFixedDim: "#e6c258"
-        property color m3onPrimaryFixed: "#1d1607"
-        property color m3onPrimaryFixedVariant: "#6b5c2e"
-        property color m3secondaryFixed: "#e6e1e4"
-        property color m3secondaryFixedDim: "#cac5c8"
-        property color m3onSecondaryFixed: "#1d1b1d"
-        property color m3onSecondaryFixedVariant: "#484648"
-        property color m3tertiaryFixed: "#eddfe1"
-        property color m3tertiaryFixedDim: "#d1c3c6"
-        property color m3onTertiaryFixed: "#211a1c"
-        property color m3onTertiaryFixedVariant: "#4e4447"
-        property color m3success: "#B5CCBA"
-        property color m3onSuccess: "#213528"
-        property color m3successContainer: "#374B3E"
-        property color m3onSuccessContainer: "#D1E9D6"
-        property color term0: "#EDE4E4"
-        property color term1: "#B52755"
-        property color term2: "#A97363"
-        property color term3: "#FFD369"
-        property color term4: "#A67F7C"
-        property color term5: "#B2416B"
-        property color term6: "#8D76AD"
-        property color term7: "#272022"
-        property color term8: "#0E0D0D"
-        property color term9: "#B52755"
-        property color term10: "#A97363"
-        property color term11: "#FFD369"
-        property color term12: "#A67F7C"
-        property color term13: "#B2416B"
-        property color term14: "#8D76AD"
-        property color term15: "#221A1A"
-    }
-
+    /**
+     * Semantic names for legacy components: each maps to a single M3 role from `m3colors`.
+     * No mixing, transparency, or overlay math — change the palette in Colours only.
+     */
     colors: QtObject {
-        property color colSubtext: m3colors.m3outline
-        // Layer 0
-        property color colLayer0Base: ColorUtils.mix(m3colors.m3background, m3colors.m3primary, Config.options.appearance.extraBackgroundTint ? 0.99 : 1)
-        property color colLayer0: ColorUtils.transparentize(colLayer0Base, root.backgroundTransparency)
+        property color colSubtext: m3colors.m3onSurfaceVariant
+        property color colLayer0Base: m3colors.m3background
+        property color colLayer0: m3colors.m3background
         property color colOnLayer0: m3colors.m3onBackground
-        property color colLayer0Hover: ColorUtils.transparentize(ColorUtils.mix(colLayer0, colOnLayer0, 0.9, root.contentTransparency))
-        property color colLayer0Active: ColorUtils.transparentize(ColorUtils.mix(colLayer0, colOnLayer0, 0.8, root.contentTransparency))
-        property color colLayer0Border: ColorUtils.mix(root.m3colors.m3outlineVariant, colLayer0, 0.4)
-        // Layer 1
+        property color colLayer0Hover: m3colors.m3surfaceContainerLow
+        property color colLayer0Active: m3colors.m3surfaceContainer
+        property color colLayer0Border: m3colors.m3outlineVariant
         property color colLayer1Base: m3colors.m3surfaceContainerLow
-        property color colLayer1: ColorUtils.solveOverlayColor(colLayer0Base, colLayer1Base, 1 - root.contentTransparency);
-        property color colOnLayer1: m3colors.m3onSurfaceVariant;
-        property color colOnLayer1Inactive: ColorUtils.mix(colOnLayer1, colLayer1, 0.45);
-        property color colLayer1Hover: ColorUtils.transparentize(ColorUtils.mix(colLayer1, colOnLayer1, 0.92), root.contentTransparency)
-        property color colLayer1Active: ColorUtils.transparentize(ColorUtils.mix(colLayer1, colOnLayer1, 0.85), root.contentTransparency);
-        // Layer 2
+        property color colLayer1: m3colors.m3surfaceContainerLow
+        property color colOnLayer1: m3colors.m3onSurfaceVariant
+        property color colOnLayer1Inactive: m3colors.m3outline
+        property color colLayer1Hover: m3colors.m3surfaceContainer
+        property color colLayer1Active: m3colors.m3surfaceContainerHigh
         property color colLayer2Base: m3colors.m3surfaceContainer
-        property color colLayer2: ColorUtils.solveOverlayColor(colLayer1Base, colLayer2Base, 1 - root.contentTransparency)
-        property color colLayer2Hover: ColorUtils.solveOverlayColor(colLayer1Base, ColorUtils.mix(colLayer2Base, colOnLayer2, 0.90), 1 - root.contentTransparency)
-        property color colLayer2Active: ColorUtils.solveOverlayColor(colLayer1Base, ColorUtils.mix(colLayer2Base, colOnLayer2, 0.80), 1 - root.contentTransparency);
-        property color colLayer2Disabled: ColorUtils.solveOverlayColor(colLayer1Base, ColorUtils.mix(colLayer2Base, m3colors.m3background, 0.8), 1 - root.contentTransparency);
-        property color colOnLayer2: m3colors.m3onSurface;
-        property color colOnLayer2Disabled: ColorUtils.mix(colOnLayer2, m3colors.m3background, 0.4);
-        // Layer 3
+        property color colLayer2: m3colors.m3surfaceContainer
+        property color colLayer2Hover: m3colors.m3surfaceContainerHigh
+        property color colLayer2Active: m3colors.m3surfaceContainerHighest
+        property color colLayer2Disabled: m3colors.m3surfaceContainerLow
+        property color colOnLayer2: m3colors.m3onSurface
+        property color colOnLayer2Disabled: m3colors.m3outlineVariant
         property color colLayer3Base: m3colors.m3surfaceContainerHigh
-        property color colLayer3: ColorUtils.solveOverlayColor(colLayer2Base, colLayer3Base, 1 - root.contentTransparency)
-        property color colLayer3Hover: ColorUtils.solveOverlayColor(colLayer2Base, ColorUtils.mix(colLayer3Base, colOnLayer3, 0.90), 1 - root.contentTransparency)
-        property color colLayer3Active: ColorUtils.solveOverlayColor(colLayer2Base, ColorUtils.mix(colLayer3Base, colOnLayer3, 0.80), 1 - root.contentTransparency);
-        property color colOnLayer3: m3colors.m3onSurface;
-        // Layer 4
+        property color colLayer3: m3colors.m3surfaceContainerHigh
+        property color colLayer3Hover: m3colors.m3surfaceContainerHighest
+        property color colLayer3Active: m3colors.m3surfaceContainerHighest
+        property color colOnLayer3: m3colors.m3onSurface
         property color colLayer4Base: m3colors.m3surfaceContainerHighest
-        property color colLayer4: ColorUtils.solveOverlayColor(colLayer3Base, colLayer4Base, 1 - root.contentTransparency)
-        property color colLayer4Hover: ColorUtils.solveOverlayColor(colLayer3Base, ColorUtils.mix(colLayer4Base, colOnLayer4, 0.90), 1 - root.contentTransparency)
-        property color colLayer4Active: ColorUtils.solveOverlayColor(colLayer3Base, ColorUtils.mix(colLayer4Base, colOnLayer4, 0.80), 1 - root.contentTransparency);
-        property color colOnLayer4: m3colors.m3onSurface;
-        // Primary
+        property color colLayer4: m3colors.m3surfaceContainerHighest
+        property color colLayer4Hover: m3colors.m3surfaceContainerHighest
+        property color colLayer4Active: m3colors.m3surfaceContainerHighest
+        property color colOnLayer4: m3colors.m3onSurface
         property color colPrimary: m3colors.m3primary
         property color colOnPrimary: m3colors.m3onPrimary
-        property color colPrimaryHover: ColorUtils.mix(colors.colPrimary, colLayer1Hover, 0.87)
-        property color colPrimaryActive: ColorUtils.mix(colors.colPrimary, colLayer1Active, 0.7)
+        property color colPrimaryHover: m3colors.m3primary
+        property color colPrimaryActive: m3colors.m3primaryContainer
         property color colPrimaryContainer: m3colors.m3primaryContainer
-        property color colPrimaryContainerHover: ColorUtils.mix(colors.colPrimaryContainer, colors.colOnPrimaryContainer, 0.9)
-        property color colPrimaryContainerActive: ColorUtils.mix(colors.colPrimaryContainer, colors.colOnPrimaryContainer, 0.8)
+        property color colPrimaryContainerHover: m3colors.m3primaryContainer
+        property color colPrimaryContainerActive: m3colors.m3primaryContainer
         property color colOnPrimaryContainer: m3colors.m3onPrimaryContainer
-        // Secondary
         property color colSecondary: m3colors.m3secondary
-        property color colSecondaryHover: ColorUtils.mix(m3colors.m3secondary, colLayer1Hover, 0.85)
-        property color colSecondaryActive: ColorUtils.mix(m3colors.m3secondary, colLayer1Active, 0.4)
+        property color colSecondaryHover: m3colors.m3secondaryContainer
+        property color colSecondaryActive: m3colors.m3secondaryContainer
         property color colOnSecondary: m3colors.m3onSecondary
         property color colSecondaryContainer: m3colors.m3secondaryContainer
-        property color colSecondaryContainerHover: ColorUtils.mix(m3colors.m3secondaryContainer, m3colors.m3onSecondaryContainer, 0.90)
-        property color colSecondaryContainerActive: ColorUtils.mix(m3colors.m3secondaryContainer, m3colors.m3onSecondaryContainer, 0.54)
+        property color colSecondaryContainerHover: m3colors.m3secondaryContainer
+        property color colSecondaryContainerActive: m3colors.m3onSecondaryContainer
         property color colOnSecondaryContainer: m3colors.m3onSecondaryContainer
-        // Tertiary
         property color colTertiary: m3colors.m3tertiary
-        property color colTertiaryHover: ColorUtils.mix(m3colors.m3tertiary, colLayer1Hover, 0.85)
-        property color colTertiaryActive: ColorUtils.mix(m3colors.m3tertiary, colLayer1Active, 0.4)
+        property color colTertiaryHover: m3colors.m3tertiaryContainer
+        property color colTertiaryActive: m3colors.m3tertiaryContainer
         property color colTertiaryContainer: m3colors.m3tertiaryContainer
-        property color colTertiaryContainerHover: ColorUtils.mix(m3colors.m3tertiaryContainer, m3colors.m3onTertiaryContainer, 0.90)
-        property color colTertiaryContainerActive: ColorUtils.mix(m3colors.m3tertiaryContainer, colLayer1Active, 0.54)
+        property color colTertiaryContainerHover: m3colors.m3tertiaryContainer
+        property color colTertiaryContainerActive: m3colors.m3onTertiaryContainer
         property color colOnTertiary: m3colors.m3onTertiary
         property color colOnTertiaryContainer: m3colors.m3onTertiaryContainer
-        // Surface
-        property color colBackgroundSurfaceContainer: ColorUtils.transparentize(m3colors.m3surfaceContainer, root.backgroundTransparency)
-        property color colSurfaceContainerLow: ColorUtils.solveOverlayColor(m3colors.m3background, m3colors.m3surfaceContainerLow, 1 - root.contentTransparency)
-        property color colSurfaceContainer: ColorUtils.solveOverlayColor(m3colors.m3surfaceContainerLow, m3colors.m3surfaceContainer, 1 - root.contentTransparency)
-        property color colSurfaceContainerHigh: ColorUtils.solveOverlayColor(m3colors.m3surfaceContainer, m3colors.m3surfaceContainerHigh, 1 - root.contentTransparency)
-        property color colSurfaceContainerHighest: ColorUtils.solveOverlayColor(m3colors.m3surfaceContainerHigh, m3colors.m3surfaceContainerHighest, 1 - root.contentTransparency)
-        property color colSurfaceContainerHighestHover: ColorUtils.mix(m3colors.m3surfaceContainerHighest, m3colors.m3onSurface, 0.95)
-        property color colSurfaceContainerHighestActive: ColorUtils.mix(m3colors.m3surfaceContainerHighest, m3colors.m3onSurface, 0.85)
+        property color colBackgroundSurfaceContainer: m3colors.m3surfaceContainer
+        property color colSurfaceContainerLow: m3colors.m3surfaceContainerLow
+        property color colSurfaceContainer: m3colors.m3surfaceContainer
+        property color colSurfaceContainerHigh: m3colors.m3surfaceContainerHigh
+        property color colSurfaceContainerHighest: m3colors.m3surfaceContainerHighest
+        property color colSurfaceContainerHighestHover: m3colors.m3surfaceContainerHighest
+        property color colSurfaceContainerHighestActive: m3colors.m3surfaceContainerHighest
         property color colOnSurface: m3colors.m3onSurface
         property color colOnSurfaceVariant: m3colors.m3onSurfaceVariant
-        // Misc
         property color colTooltip: m3colors.m3inverseSurface
         property color colOnTooltip: m3colors.m3inverseOnSurface
-        property color colScrim: ColorUtils.transparentize(m3colors.m3scrim, 0.5)
-        property color colShadow: ColorUtils.transparentize(m3colors.m3shadow, 0.7)
+        property color colScrim: m3colors.m3scrim
+        property color colShadow: m3colors.m3shadow
         property color colOutline: m3colors.m3outline
         property color colOutlineVariant: m3colors.m3outlineVariant
         property color colError: m3colors.m3error
-        property color colErrorHover: ColorUtils.mix(m3colors.m3error, colLayer1Hover, 0.85)
-        property color colErrorActive: ColorUtils.mix(m3colors.m3error, colLayer1Active, 0.7)
+        property color colErrorHover: m3colors.m3errorContainer
+        property color colErrorActive: m3colors.m3error
         property color colOnError: m3colors.m3onError
         property color colErrorContainer: m3colors.m3errorContainer
-        property color colErrorContainerHover: ColorUtils.mix(m3colors.m3errorContainer, m3colors.m3onErrorContainer, 0.90)
-        property color colErrorContainerActive: ColorUtils.mix(m3colors.m3errorContainer, m3colors.m3onErrorContainer, 0.70)
+        property color colErrorContainerHover: m3colors.m3errorContainer
+        property color colErrorContainerActive: m3colors.m3onErrorContainer
         property color colOnErrorContainer: m3colors.m3onErrorContainer
     }
 

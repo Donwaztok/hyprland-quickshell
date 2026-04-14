@@ -1,6 +1,6 @@
 pragma Singleton
 
-import qs.services.m3
+import qs.services.shell
 import QtQuick
 
 /**

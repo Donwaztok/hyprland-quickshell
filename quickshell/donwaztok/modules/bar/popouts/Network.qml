@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.controls
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -319,10 +319,10 @@ ColumnLayout {
         implicitHeight: rescanBtn.implicitHeight + Appearance.padding.small * 2
 
         radius: Appearance.rounding.full
-        color: Colours.palette.m3primaryContainer
+        color: Colours.palette.m3primary
 
         StateLayer {
-            color: Colours.palette.m3onPrimaryContainer
+            color: Colours.palette.m3onPrimary
             disabled: Nmcli.scanning || !Nmcli.wifiEnabled
 
             function onClicked(): void {
@@ -343,13 +343,13 @@ ColumnLayout {
                 Layout.topMargin: Math.round(fontInfo.pointSize * 0.0575)
                 animate: true
                 text: "wifi_find"
-                color: Colours.palette.m3onPrimaryContainer
+                color: Colours.palette.m3onPrimary
             }
 
             StyledText {
                 Layout.topMargin: -Math.round(scanIcon.fontInfo.pointSize * 0.0575)
                 text: qsTr("Rescan networks")
-                color: Colours.palette.m3onPrimaryContainer
+                color: Colours.palette.m3onPrimary
             }
 
             Behavior on opacity {

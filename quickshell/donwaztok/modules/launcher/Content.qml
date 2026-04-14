@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.modules.launcher.services
 import qs.components
 import qs.components.controls
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.services
 import Quickshell
@@ -65,6 +65,8 @@ Item {
 
         color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
         radius: Appearance.rounding.full
+        border.width: 1
+        border.color: search.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, Colours.light ? 0.34 : 0.48)
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -72,6 +74,10 @@ Item {
         anchors.margins: root.padding
 
         implicitHeight: Math.max(searchIcon.implicitHeight, search.implicitHeight, clearIcon.implicitHeight)
+
+        Behavior on border.color {
+            CAnim {}
+        }
 
         MaterialIcon {
             id: searchIcon
@@ -87,13 +93,12 @@ Item {
         StyledTextField {
             id: search
 
+            showChrome: false
+            anchors.verticalCenter: parent.verticalCenter
             anchors.left: searchIcon.right
             anchors.right: clearIcon.left
             anchors.leftMargin: Appearance.spacing.small
             anchors.rightMargin: Appearance.spacing.small
-
-            topPadding: Appearance.padding.larger
-            bottomPadding: Appearance.padding.larger
 
             placeholderText: qsTr("Type \"%1\" for commands").arg(Config.launcher.actionPrefix)
 

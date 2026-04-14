@@ -5,7 +5,7 @@ import "../components"
 import qs.components
 import qs.components.controls
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
@@ -38,7 +38,7 @@ DeviceList {
             ToggleButton {
                 toggled: !root.session.ethernet.active
                 icon: "settings"
-                accent: "Primary"
+                accent: "Secondary"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -64,8 +64,10 @@ DeviceList {
             width: ListView.view ? ListView.view.width : undefined
             implicitHeight: rowLayout.implicitHeight + Appearance.padding.normal * 2
 
-            color: Qt.alpha(Colours.tPalette.m3surfaceContainer, ethernetItem.isActive ? Colours.tPalette.m3surfaceContainer.a : 0)
+            color: ethernetItem.isActive ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer
             radius: Appearance.rounding.normal
+            border.width: 1
+            border.color: Qt.alpha(Colours.palette.m3outlineVariant, ethernetItem.isActive ? 0.55 : 0.34)
 
             StateLayer {
                 id: stateLayer
@@ -88,12 +90,12 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.normal
-                    color: modelData.connected ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                    color: modelData.connected ? Colours.palette.m3primary : Colours.tPalette.m3surfaceContainerHigh
 
                     StyledRect {
                         anchors.fill: parent
                         radius: parent.radius
-                        color: Qt.alpha(modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
+                        color: Qt.alpha(modelData.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
                     }
 
                     MaterialIcon {
@@ -103,7 +105,7 @@ DeviceList {
                         text: "computer"
                         font.pointSize: Appearance.font.size.large
                         fill: modelData.connected ? 1 : 0
-                        color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: modelData.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
 
                         Behavior on fill {
                             Anim {}
@@ -129,7 +131,7 @@ DeviceList {
                         StyledText {
                             Layout.fillWidth: true
                             text: modelData.connected ? qsTr("Connected") : qsTr("Disconnected")
-                            color: modelData.connected ? Colours.palette.m3primary : Colours.palette.m3outline
+                            color: modelData.connected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                             font.pointSize: Appearance.font.size.small
                             font.weight: modelData.connected ? 500 : 400
                             elide: Text.ElideRight
@@ -144,10 +146,10 @@ DeviceList {
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: Appearance.rounding.full
-                    color: Qt.alpha(Colours.palette.m3primaryContainer, modelData.connected ? 1 : 0)
+                    color: Qt.alpha(Colours.palette.m3primary, modelData.connected ? 1 : 0)
 
                     StateLayer {
-                        color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: modelData.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
 
                         function onClicked(): void {
                             if (modelData.connected && modelData.connection) {
@@ -164,7 +166,7 @@ DeviceList {
                         anchors.centerIn: parent
                         animate: true
                         text: modelData.connected ? "link_off" : "link"
-                        color: modelData.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: modelData.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                     }
                 }
             }

@@ -1,4 +1,4 @@
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.modules.notifications as Notifications
 import qs.modules.launcher as Launcher

@@ -1,5 +1,5 @@
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Shapes
@@ -19,7 +19,7 @@ ShapePath {
     readonly property real utilsRoundingX: utilsWidthDiff < rounding * 2 ? utilsWidthDiff / 2 : rounding
 
     strokeWidth: -1
-    fillColor: Colours.palette.m3surface
+    fillColor: Colours.shellSurface
 
     PathLine {
         relativeX: -root.wrapper.width - root.notifsRoundingX

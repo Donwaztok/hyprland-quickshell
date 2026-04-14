@@ -1,139 +1,73 @@
 import ".."
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Templates
-import QtQuick.Shapes
 
 Switch {
     id: root
 
     property int cLayer: 1
 
+    /** Avoid extra insets from the template shifting the indicator inside the control. */
+    padding: 0
+    topPadding: 0
+    bottomPadding: 0
+    leftPadding: 0
+    rightPadding: 0
+
     implicitWidth: implicitIndicatorWidth
     implicitHeight: implicitIndicatorHeight
 
-    indicator: StyledRect {
-        radius: Appearance.rounding.full
-        color: root.checked ? Colours.palette.m3primary : Colours.layer(Colours.palette.m3surfaceContainerHighest, root.cLayer)
+    indicator: Item {
+        id: trackRoot
 
-        implicitWidth: implicitHeight * 1.7
-        implicitHeight: Appearance.font.size.normal + Appearance.padding.smaller * 2
+        /** Integer geometry avoids half-pixel vertical drift (thumb looked “low” in the track). */
+        readonly property int inset: Math.max(1, Math.round(Appearance.padding.small / 2))
+        readonly property int trackH: {
+            const raw = Math.round(Appearance.font.size.normal + Appearance.padding.smaller * 2);
+            return Math.max(18, raw | 0);
+        }
+
+        implicitHeight: trackH
+        implicitWidth: Math.round(trackH * 1.7)
+
+        readonly property color onTrack: Colours.palette.m3primary
+        readonly property color offTrack: Colours.light
+            ? Colours.palette.m3outlineVariant
+            : Colours.palette.m3surfaceContainerHighest
 
         StyledRect {
-            readonly property real nonAnimWidth: root.pressed ? implicitHeight * 1.3 : implicitHeight
+            id: trackBg
 
+            anchors.fill: parent
             radius: Appearance.rounding.full
-            color: root.checked ? Colours.palette.m3onPrimary : Colours.layer(Colours.palette.m3outline, root.cLayer + 1)
-
-            x: root.checked ? parent.implicitWidth - nonAnimWidth - Appearance.padding.small / 2 : Appearance.padding.small / 2
-            implicitWidth: nonAnimWidth
-            implicitHeight: parent.implicitHeight - Appearance.padding.small
-            anchors.verticalCenter: parent.verticalCenter
+            color: root.checked ? trackRoot.onTrack : trackRoot.offTrack
+            border.width: 0
 
             StyledRect {
-                anchors.fill: parent
-                radius: parent.radius
+                id: thumb
 
-                color: root.checked ? Colours.palette.m3primary : Colours.palette.m3onSurface
-                opacity: root.pressed ? 0.1 : root.hovered ? 0.08 : 0
+                readonly property int hPx: Math.max(1, Math.floor(trackBg.height > 0 ? trackBg.height : trackRoot.trackH))
+                readonly property int knobSize: Math.max(1, hPx - 2 * trackRoot.inset)
+                readonly property real knobW: root.pressed ? knobSize * 1.3 : knobSize
 
-                Behavior on opacity {
+                radius: Appearance.rounding.full
+                color: Colours.palette.m3onPrimary
+                border.width: 0
+
+                width: knobW
+                height: knobSize
+                x: root.checked ? trackBg.width - knobW - trackRoot.inset : trackRoot.inset
+                y: Math.round((hPx - knobSize) / 2)
+
+                Behavior on x {
                     Anim {}
                 }
-            }
 
-            Shape {
-                id: icon
-
-                property point start1: {
-                    if (root.pressed)
-                        return Qt.point(width * 0.2, height / 2);
-                    if (root.checked)
-                        return Qt.point(width * 0.15, height / 2);
-                    return Qt.point(width * 0.15, height * 0.15);
+                Behavior on width {
+                    Anim {}
                 }
-                property point end1: {
-                    if (root.pressed) {
-                        if (root.checked)
-                            return Qt.point(width * 0.4, height / 2);
-                        return Qt.point(width * 0.8, height / 2);
-                    }
-                    if (root.checked)
-                        return Qt.point(width * 0.4, height * 0.7);
-                    return Qt.point(width * 0.85, height * 0.85);
-                }
-                property point start2: {
-                    if (root.pressed) {
-                        if (root.checked)
-                            return Qt.point(width * 0.4, height / 2);
-                        return Qt.point(width * 0.2, height / 2);
-                    }
-                    if (root.checked)
-                        return Qt.point(width * 0.4, height * 0.7);
-                    return Qt.point(width * 0.15, height * 0.85);
-                }
-                property point end2: {
-                    if (root.pressed)
-                        return Qt.point(width * 0.8, height / 2);
-                    if (root.checked)
-                        return Qt.point(width * 0.85, height * 0.2);
-                    return Qt.point(width * 0.85, height * 0.15);
-                }
-
-                anchors.centerIn: parent
-                width: height
-                height: parent.implicitHeight - Appearance.padding.small * 2
-                preferredRendererType: Shape.CurveRenderer
-                asynchronous: true
-
-                ShapePath {
-                    strokeWidth: Appearance.font.size.larger * 0.15
-                    strokeColor: root.checked ? Colours.palette.m3primary : Colours.palette.m3surfaceContainerHighest
-                    fillColor: "transparent"
-                    capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
-
-                    startX: icon.start1.x
-                    startY: icon.start1.y
-
-                    PathLine {
-                        x: icon.end1.x
-                        y: icon.end1.y
-                    }
-                    PathMove {
-                        x: icon.start2.x
-                        y: icon.start2.y
-                    }
-                    PathLine {
-                        x: icon.end2.x
-                        y: icon.end2.y
-                    }
-
-                    Behavior on strokeColor {
-                        CAnim {}
-                    }
-                }
-
-                Behavior on start1 {
-                    PropAnim {}
-                }
-                Behavior on end1 {
-                    PropAnim {}
-                }
-                Behavior on start2 {
-                    PropAnim {}
-                }
-                Behavior on end2 {
-                    PropAnim {}
-                }
-            }
-
-            Behavior on x {
-                Anim {}
-            }
-
-            Behavior on implicitWidth {
-                Anim {}
             }
         }
     }
@@ -142,11 +76,5 @@ Switch {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         enabled: false
-    }
-
-    component PropAnim: PropertyAnimation {
-        duration: Appearance.anim.durations.normal
-        easing.type: Easing.BezierSpline
-        easing.bezierCurve: Appearance.anim.curves.standard
     }
 }

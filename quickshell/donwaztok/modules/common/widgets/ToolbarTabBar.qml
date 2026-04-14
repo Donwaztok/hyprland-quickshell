@@ -1,4 +1,4 @@
-import qs.services.m3
+import qs.services.shell
 import qs.modules.common
 import qs.modules.common.models
 import qs.services

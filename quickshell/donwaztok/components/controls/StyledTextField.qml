@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import ".."
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Controls
@@ -9,14 +9,35 @@ import QtQuick.Controls
 TextField {
     id: root
 
+    /** When false, background and border are omitted so a parent row can draw one outline around icons + field. */
+    property bool showChrome: true
+
     color: Colours.palette.m3onSurface
     placeholderTextColor: Colours.palette.m3outline
     font.family: Appearance.font.family.sans
     font.pointSize: Appearance.font.size.smaller
-    renderType: echoMode === TextField.Password ? TextField.QtRendering : TextField.NativeRendering
+    /** NativeRendering misplaces placeholder vs cursor/border on many setups (search in SelectMenuPopup). */
+    renderType: TextField.QtRendering
+    verticalAlignment: Text.AlignVCenter
     cursorVisible: !readOnly
 
-    background: null
+    // Single `padding` keeps placeholder, text, and cursor aligned; mixing larger top/bottom
+    // with defaults elsewhere misplaces placeholder vs border on several Qt builds.
+    padding: Appearance.padding.smaller
+
+    background: StyledRect {
+        radius: root.showChrome ? Appearance.rounding.small : 0
+        color: !root.showChrome ? "transparent" : (root.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2))
+        border.width: root.showChrome ? 1 : 0
+        border.color: root.showChrome ? (root.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, Colours.light ? 0.34 : 0.48)) : "transparent"
+
+        Behavior on color {
+            CAnim {}
+        }
+        Behavior on border.color {
+            CAnim {}
+        }
+    }
 
     cursorDelegate: StyledRect {
         id: cursor

@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import qs.config
-import qs.services.m3
+import qs.services.shell
 import qs.utils
 import Quickshell
 

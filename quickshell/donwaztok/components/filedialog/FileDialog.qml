@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -50,7 +50,7 @@ LazyLoader {
 
         implicitWidth: 1000
         implicitHeight: 600
-        color: Colours.tPalette.m3surface
+        color: Colours.shellSurface
         title: loader.title
 
         onVisibleChanged: {

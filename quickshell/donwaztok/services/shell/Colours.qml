@@ -25,6 +25,28 @@ Singleton {
     readonly property Transparency transparency: Transparency {}
     readonly property alias wallLuminance: analyser.luminance
 
+    /**
+     * One background for all shell chrome (Control Center, bar popouts, sidebar, session, etc.).
+     * Same role as Material `m3surface` — no separate tint.
+     */
+    readonly property color shellSurface: palette.m3surface
+
+    /** Last chosen primary seed (rrggbb), for accent swatch selection in UI. */
+    property string accentSeedHex: "ffd369"
+
+    /** Launcher / variant list: each name maps to a fixed accent seed (tonalspot base colours unchanged). */
+    readonly property var materialVariantAccentSeeds: ({
+        vibrant: "ec5b2a",
+        tonalspot: "",
+        expressive: "6d8769",
+        fidelity: "5d9b17",
+        content: "0aa36f",
+        fruitsalad: "2f9f9f",
+        rainbow: "1888ea",
+        neutral: "7868d8",
+        monochrome: "9e9e9e"
+    })
+
     function getLuminance(c: color): real {
         if (c.r == 0 && c.g == 0 && c.b == 0)
             return 0;
@@ -79,6 +101,9 @@ Singleton {
             root.scheme = scheme.name;
             flavour = scheme.flavour;
             currentLight = scheme.mode === "light";
+            const pk = scheme.colours && scheme.colours.primary_paletteKeyColor;
+            if (pk)
+                root.accentSeedHex = normalizeSeedHex(String(pk));
         } else {
             previewLight = scheme.mode === "light";
         }
@@ -94,6 +119,7 @@ Singleton {
     function setMode(mode: string): void {
         const scheme = (mode === "light") ? builtinSchemes.defaultLight : builtinSchemes.defaultDark;
         load(JSON.stringify(scheme), false);
+        writePrimaryAccent(root.accentSeedHex, scheme.flavour);
         Config.appearance.themeMode = mode;
         Config.save();
     }
@@ -111,10 +137,77 @@ Singleton {
         Config.save();
     }
 
+    function normalizeSeedHex(s: string): string {
+        let h = String(s || "").replace(/^#/, "").trim().toLowerCase();
+        if (h.length === 3 && /^[0-9a-f]{3}$/.test(h))
+            h = h.split("").map(ch => ch + ch).join("");
+        return h.length === 6 && /^[0-9a-f]+$/.test(h) ? h : "";
+    }
+
+    function colourToRgbHex(col: color): string {
+        const q = Qt.color(col);
+        const r = Math.round(q.r * 255).toString(16).padStart(2, "0");
+        const g = Math.round(q.g * 255).toString(16).padStart(2, "0");
+        const b = Math.round(q.b * 255).toString(16).padStart(2, "0");
+        return (r + g + b).toLowerCase();
+    }
+
+    /**
+     * Keeps the built-in tonalspot surfaces/secondaries; only primary roles follow the seed.
+     * @param flavourOpt passed to scheme.flavour (launcher / CLI); accent row uses tonalspot.
+     */
+    function writePrimaryAccent(seedHex: string, flavourOpt: string): void {
+        const h = normalizeSeedHex(seedHex);
+        if (!h)
+            return;
+        const light = root.currentLight;
+        const flavourUse = flavourOpt || "tonalspot";
+        const builtin = light ? builtinSchemes.defaultLight : builtinSchemes.defaultDark;
+        const colours = {};
+        for (const key in builtin.colours) {
+            if (builtin.colours.hasOwnProperty(key))
+                colours[key] = builtin.colours[key];
+        }
+        const c = Qt.color("#" + h);
+        colours.primary_paletteKeyColor = h;
+        colours.surfaceTint = h;
+        /** Same vivid seed in light and dark — `m3primary` matches swatches / “original” accent. */
+        colours.primary = h;
+        colours.inversePrimary = h;
+        colours.onPrimary = c.hslLightness > 0.58 ? "1e1b12" : "ffffff";
+        const pCont = Qt.darker(c, 2.35);
+        colours.primaryContainer = colourToRgbHex(pCont);
+        colours.onPrimaryContainer = colourToRgbHex(Qt.lighter(pCont, 4.2));
+        colours.primaryFixed = colourToRgbHex(Qt.lighter(c, 1.08));
+        colours.primaryFixedDim = colourToRgbHex(Qt.darker(c, 1.12));
+        colours.onPrimaryFixed = c.hslLightness > 0.54 ? "1d1607" : "ffffff";
+        colours.onPrimaryFixedVariant = colourToRgbHex(Qt.darker(c, 1.75));
+
+        root.accentSeedHex = h;
+        writeScheme({
+            name: root.scheme,
+            flavour: flavourUse,
+            mode: light ? "light" : "dark",
+            colours: colours
+        });
+    }
+
+    /** Variant names from launcher / CC: only shift primary accent to a preset seed for that style. */
+    function writeMaterialVariant(variant: string): void {
+        let seed = root.materialVariantAccentSeeds[variant];
+        if (seed === undefined)
+            seed = root.currentLight ? "c9a227" : "ffd369";
+        if (seed === "")
+            seed = root.currentLight ? "c9a227" : "ffd369";
+        writePrimaryAccent(seed, variant);
+    }
+
     Component.onCompleted: {
         const mode = Config.appearance.themeMode || "dark";
         const scheme = (mode === "light") ? builtinSchemes.defaultLight : builtinSchemes.defaultDark;
         load(JSON.stringify(scheme), false);
+        /** One pass so light/dark both use the vivid seed as `primary` (matches swatches; builtin JSON may differ). */
+        writePrimaryAccent(root.accentSeedHex, root.flavour);
     }
 
     readonly property var builtinSchemes: ({
@@ -185,37 +278,55 @@ Singleton {
             mode: "light",
             colours: {
                 primary_paletteKeyColor: "c9a227",
-                secondary_paletteKeyColor: "6f4a52",
-                tertiary_paletteKeyColor: "80543a",
-                neutral_paletteKeyColor: "72666a",
-                neutral_variant_paletteKeyColor: "7a6c70",
-                background: "fff8f0",
-                onBackground: "1d1b16",
-                surface: "fff8f0",
-                surfaceDim: "e8e0d8",
-                surfaceBright: "fff8f0",
+                secondary_paletteKeyColor: "74777f",
+                tertiary_paletteKeyColor: "6e7278",
+                neutral_paletteKeyColor: "74777f",
+                neutral_variant_paletteKeyColor: "767780",
+                background: "f7f7f9",
+                onBackground: "1b1b1f",
+                surface: "f7f7f9",
+                surfaceDim: "e4e4e9",
+                surfaceBright: "f7f7f9",
                 surfaceContainerLowest: "ffffff",
-                surfaceContainerLow: "f5efe6",
-                surfaceContainer: "efe8de",
-                surfaceContainerHigh: "e9e2d8",
-                surfaceContainerHighest: "e3dcd2",
-                onSurface: "1d1b16",
-                surfaceVariant: "e0d8cc",
-                onSurfaceVariant: "4f4739",
-                outline: "817667",
-                outlineVariant: "d2c8b8",
-                primary: "6e5d00",
-                onPrimary: "ffffff",
-                primaryContainer: "eee2a8",
-                onPrimaryContainer: "211c00",
-                secondary: "6f4a52",
+                surfaceContainerLow: "f0f0f4",
+                surfaceContainer: "eaeaf0",
+                surfaceContainerHigh: "e4e4ea",
+                surfaceContainerHighest: "dedee5",
+                onSurface: "1b1b1f",
+                surfaceVariant: "e0e1e9",
+                onSurfaceVariant: "45464f",
+                inverseSurface: "303034",
+                inverseOnSurface: "f4f4f6",
+                outline: "777780",
+                outlineVariant: "c4c6d0",
+                shadow: "000000",
+                scrim: "000000",
+                surfaceTint: "c9a227",
+                primary: "c9a227",
+                onPrimary: "1e1b12",
+                primaryContainer: "f1e6a8",
+                onPrimaryContainer: "1f1b00",
+                inversePrimary: "c9a227",
+                secondary: "5c5f66",
                 onSecondary: "ffffff",
-                secondaryContainer: "ffd9e3",
-                onSecondaryContainer: "351f26",
-                tertiary: "9c5f2a",
+                secondaryContainer: "e2e2e9",
+                onSecondaryContainer: "1a1c21",
+                tertiary: "5f6368",
                 onTertiary: "ffffff",
-                tertiaryContainer: "ffdcc3",
-                onTertiaryContainer: "351c00",
+                tertiaryContainer: "e1e3e9",
+                onTertiaryContainer: "1a1d26",
+                primaryFixed: "f0e4a0",
+                primaryFixedDim: "d4c47a",
+                onPrimaryFixed: "1d1900",
+                onPrimaryFixedVariant: "4d4200",
+                secondaryFixed: "e2e2e9",
+                secondaryFixedDim: "c6c6d0",
+                onSecondaryFixed: "1a1c21",
+                onSecondaryFixedVariant: "44474e",
+                tertiaryFixed: "e1e3e9",
+                tertiaryFixedDim: "c5c8d0",
+                onTertiaryFixed: "1a1d26",
+                onTertiaryFixedVariant: "43474e",
                 error: "ba1a1a",
                 onError: "ffffff",
                 errorContainer: "ffdad6",
@@ -237,7 +348,8 @@ Singleton {
     }
 
     component M3TPalette: QtObject {
-        readonly property color m3primary_paletteKeyColor: root.layer(root.palette.m3primary_paletteKeyColor)
+        /** Primary / accent: never pass through wallpaper layer() — keeps same vivid hue as Colours.palette (esp. light mode). */
+        readonly property color m3primary_paletteKeyColor: root.palette.m3primary_paletteKeyColor
         readonly property color m3secondary_paletteKeyColor: root.layer(root.palette.m3secondary_paletteKeyColor)
         readonly property color m3tertiary_paletteKeyColor: root.layer(root.palette.m3tertiary_paletteKeyColor)
         readonly property color m3neutral_paletteKeyColor: root.layer(root.palette.m3neutral_paletteKeyColor)
@@ -261,12 +373,12 @@ Singleton {
         readonly property color m3outlineVariant: root.layer(root.palette.m3outlineVariant)
         readonly property color m3shadow: root.layer(root.palette.m3shadow)
         readonly property color m3scrim: root.layer(root.palette.m3scrim)
-        readonly property color m3surfaceTint: root.layer(root.palette.m3surfaceTint)
-        readonly property color m3primary: root.layer(root.palette.m3primary)
-        readonly property color m3onPrimary: root.layer(root.palette.m3onPrimary)
-        readonly property color m3primaryContainer: root.layer(root.palette.m3primaryContainer)
-        readonly property color m3onPrimaryContainer: root.layer(root.palette.m3onPrimaryContainer)
-        readonly property color m3inversePrimary: root.layer(root.palette.m3inversePrimary)
+        readonly property color m3surfaceTint: root.palette.m3surfaceTint
+        readonly property color m3primary: root.palette.m3primary
+        readonly property color m3onPrimary: root.palette.m3onPrimary
+        readonly property color m3primaryContainer: root.palette.m3primaryContainer
+        readonly property color m3onPrimaryContainer: root.palette.m3onPrimaryContainer
+        readonly property color m3inversePrimary: root.palette.m3inversePrimary
         readonly property color m3secondary: root.layer(root.palette.m3secondary)
         readonly property color m3onSecondary: root.layer(root.palette.m3onSecondary)
         readonly property color m3secondaryContainer: root.layer(root.palette.m3secondaryContainer)
@@ -283,10 +395,10 @@ Singleton {
         readonly property color m3onSuccess: root.layer(root.palette.m3onSuccess)
         readonly property color m3successContainer: root.layer(root.palette.m3successContainer)
         readonly property color m3onSuccessContainer: root.layer(root.palette.m3onSuccessContainer)
-        readonly property color m3primaryFixed: root.layer(root.palette.m3primaryFixed)
-        readonly property color m3primaryFixedDim: root.layer(root.palette.m3primaryFixedDim)
-        readonly property color m3onPrimaryFixed: root.layer(root.palette.m3onPrimaryFixed)
-        readonly property color m3onPrimaryFixedVariant: root.layer(root.palette.m3onPrimaryFixedVariant)
+        readonly property color m3primaryFixed: root.palette.m3primaryFixed
+        readonly property color m3primaryFixedDim: root.palette.m3primaryFixedDim
+        readonly property color m3onPrimaryFixed: root.palette.m3onPrimaryFixed
+        readonly property color m3onPrimaryFixedVariant: root.palette.m3onPrimaryFixedVariant
         readonly property color m3secondaryFixed: root.layer(root.palette.m3secondaryFixed)
         readonly property color m3secondaryFixedDim: root.layer(root.palette.m3secondaryFixedDim)
         readonly property color m3onSecondaryFixed: root.layer(root.palette.m3onSecondaryFixed)
@@ -298,6 +410,10 @@ Singleton {
     }
 
     component M3Palette: QtObject {
+        /** Shared with Appearance.m3colors (same object as `Colours.current`). */
+        readonly property bool darkmode: !root.light
+        property bool transparent: false
+
         property color m3primary_paletteKeyColor: "#ffd369"
         property color m3secondary_paletteKeyColor: "#cac5c8"
         property color m3tertiary_paletteKeyColor: "#d1c3c6"

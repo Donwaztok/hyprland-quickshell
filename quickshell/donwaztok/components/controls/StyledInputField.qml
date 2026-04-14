@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import ".."
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 
@@ -22,65 +22,47 @@ Item {
     signal textEdited(string text)
     signal editingFinished
 
-    implicitHeight: inputField.implicitHeight + Appearance.padding.small * 2
+    implicitHeight: inputField.implicitHeight
+    opacity: root.enabled ? 1 : 0.5
 
-    StyledRect {
-        id: container
+    StyledTextField {
+        id: inputField
 
         anchors.fill: parent
-        color: inputHover.containsMouse || inputField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
-        radius: Appearance.rounding.small
-        border.width: 1
-        border.color: inputField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
-        opacity: root.enabled ? 1 : 0.5
+        horizontalAlignment: root.horizontalAlignment
+        validator: root.validator
+        readOnly: root.readOnly
+        enabled: root.enabled
 
-        Behavior on color {
-            CAnim {}
+        onActiveFocusChanged: {
+            if (!inputField.activeFocus)
+                inputField.text = root.text;
         }
-        Behavior on border.color {
-            CAnim {}
-        }
+        Component.onCompleted: inputField.text = root.text
 
-        MouseArea {
-            id: inputHover
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.IBeamCursor
-            acceptedButtons: Qt.NoButton
-            enabled: root.enabled
-        }
-
-        StyledTextField {
-            id: inputField
-            anchors.centerIn: parent
-            width: parent.width - Appearance.padding.normal
-            horizontalAlignment: root.horizontalAlignment
-            validator: root.validator
-            readOnly: root.readOnly
-            enabled: root.enabled
-
-            onActiveFocusChanged: {
-                if (!inputField.activeFocus)
+        Connections {
+            target: root
+            function onTextChanged() {
+                if (!inputField.activeFocus && inputField.text !== root.text)
                     inputField.text = root.text;
             }
-            Component.onCompleted: inputField.text = root.text
-
-            Connections {
-                target: root
-                function onTextChanged() {
-                    if (!inputField.activeFocus && inputField.text !== root.text)
-                        inputField.text = root.text;
-                }
-            }
-
-            onTextChanged: {
-                root.text = text;
-                root.textEdited(text);
-            }
-
-            onEditingFinished: {
-                root.editingFinished();
-            }
         }
+
+        onTextChanged: {
+            root.text = text;
+            root.textEdited(text);
+        }
+
+        onEditingFinished: {
+            root.editingFinished();
+        }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.IBeamCursor
+        acceptedButtons: Qt.NoButton
+        enabled: root.enabled
     }
 }

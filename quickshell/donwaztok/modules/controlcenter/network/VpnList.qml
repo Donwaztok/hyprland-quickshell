@@ -4,7 +4,7 @@ import ".."
 import qs.components
 import qs.components.controls
 import qs.components.effects
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import Quickshell
 import QtQuick
@@ -55,8 +55,8 @@ ColumnLayout {
     TextButton {
         Layout.fillWidth: true
         text: qsTr("+ Add VPN Provider")
-        inactiveColour: Colours.palette.m3primaryContainer
-        inactiveOnColour: Colours.palette.m3onPrimaryContainer
+        inactiveColour: Colours.palette.m3primary
+        inactiveOnColour: Colours.palette.m3onPrimary
 
         onClicked: {
             vpnDialog.showProviderSelection();
@@ -98,8 +98,10 @@ ColumnLayout {
 
                 width: ListView.view ? ListView.view.width : undefined
 
-                color: Qt.alpha(Colours.tPalette.m3surfaceContainer, (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Colours.tPalette.m3surfaceContainer.a : 0)
+                color: (root.session && root.session.vpn && root.session.vpn.active === modelData) ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer
                 radius: Appearance.rounding.normal
+                border.width: 1
+                border.color: Qt.alpha(Colours.palette.m3outlineVariant, (root.session && root.session.vpn && root.session.vpn.active === modelData) ? 0.55 : 0.34)
 
                 StateLayer {
                     function onClicked(): void {
@@ -124,7 +126,7 @@ ColumnLayout {
                         implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                         radius: Appearance.rounding.normal
-                        color: modelData.enabled && VPN.connected ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                        color: modelData.enabled && VPN.connected ? Colours.palette.m3primary : Colours.tPalette.m3surfaceContainerHigh
 
                         MaterialIcon {
                             id: icon
@@ -133,7 +135,7 @@ ColumnLayout {
                             text: modelData.enabled && VPN.connected ? "vpn_key" : "vpn_key_off"
                             font.pointSize: Appearance.font.size.large
                             fill: modelData.enabled && VPN.connected ? 1 : 0
-                            color: modelData.enabled && VPN.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                            color: modelData.enabled && VPN.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                         }
                     }
 
@@ -165,7 +167,7 @@ ColumnLayout {
                                         return qsTr("Enabled");
                                     return qsTr("Disabled");
                                 }
-                                color: modelData.enabled ? (VPN.connected ? Colours.palette.m3primary : Colours.palette.m3onSurface) : Colours.palette.m3outline
+                                color: modelData.enabled ? (VPN.connected || VPN.connecting ? Colours.palette.m3primary : Colours.palette.m3onSurface) : Colours.palette.m3onSurfaceVariant
                                 font.pointSize: Appearance.font.size.small
                                 font.weight: modelData.enabled && VPN.connected ? 500 : 400
                                 elide: Text.ElideRight
@@ -178,7 +180,7 @@ ColumnLayout {
                         implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
                         radius: Appearance.rounding.full
-                        color: Qt.alpha(Colours.palette.m3primaryContainer, VPN.connected && modelData.enabled ? 1 : 0)
+                        color: Qt.alpha(Colours.palette.m3primary, VPN.connected && modelData.enabled ? 1 : 0)
 
                         StateLayer {
                             enabled: !VPN.connecting
@@ -223,7 +225,7 @@ ColumnLayout {
 
                             anchors.centerIn: parent
                             text: VPN.connected && modelData.enabled ? "link_off" : "link"
-                            color: VPN.connected && modelData.enabled ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                            color: VPN.connected && modelData.enabled ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                         }
                     }
 
@@ -569,29 +571,14 @@ ColumnLayout {
                         color: Colours.palette.m3onSurfaceVariant
                     }
 
-                    StyledRect {
+                    StyledTextField {
+                        id: displayNameField
+
                         Layout.fillWidth: true
                         implicitHeight: 40
-                        color: displayNameField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
-                        radius: Appearance.rounding.small
-                        border.width: 1
-                        border.color: displayNameField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
-
-                        Behavior on color {
-                            CAnim {}
-                        }
-                        Behavior on border.color {
-                            CAnim {}
-                        }
-
-                        StyledTextField {
-                            id: displayNameField
-                            anchors.centerIn: parent
-                            width: parent.width - Appearance.padding.normal
-                            horizontalAlignment: TextInput.AlignLeft
-                            text: vpnDialog.displayName
-                            onTextChanged: vpnDialog.displayName = text
-                        }
+                        horizontalAlignment: TextInput.AlignLeft
+                        text: vpnDialog.displayName
+                        onTextChanged: vpnDialog.displayName = text
                     }
                 }
 
@@ -605,29 +592,14 @@ ColumnLayout {
                         color: Colours.palette.m3onSurfaceVariant
                     }
 
-                    StyledRect {
+                    StyledTextField {
+                        id: interfaceNameField
+
                         Layout.fillWidth: true
                         implicitHeight: 40
-                        color: interfaceNameField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
-                        radius: Appearance.rounding.small
-                        border.width: 1
-                        border.color: interfaceNameField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
-
-                        Behavior on color {
-                            CAnim {}
-                        }
-                        Behavior on border.color {
-                            CAnim {}
-                        }
-
-                        StyledTextField {
-                            id: interfaceNameField
-                            anchors.centerIn: parent
-                            width: parent.width - Appearance.padding.normal
-                            horizontalAlignment: TextInput.AlignLeft
-                            text: vpnDialog.interfaceName
-                            onTextChanged: vpnDialog.interfaceName = text
-                        }
+                        horizontalAlignment: TextInput.AlignLeft
+                        text: vpnDialog.interfaceName
+                        onTextChanged: vpnDialog.interfaceName = text
                     }
                 }
 
@@ -648,8 +620,8 @@ ColumnLayout {
                         Layout.fillWidth: true
                         text: qsTr("Save")
                         enabled: vpnDialog.interfaceName.length > 0
-                        inactiveColour: Colours.palette.m3primaryContainer
-                        inactiveOnColour: Colours.palette.m3onPrimaryContainer
+                        inactiveColour: Colours.palette.m3primary
+                        inactiveOnColour: Colours.palette.m3onPrimary
 
                         onClicked: {
                             const providers = [];

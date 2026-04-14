@@ -7,7 +7,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -167,7 +167,7 @@ Item {
                     ToggleButton {
                         toggled: !root.session.launcher.active
                         icon: "settings"
-                        accent: "Primary"
+                        accent: "Secondary"
                         iconSize: Appearance.font.size.normal
                         horizontalPadding: Appearance.padding.normal
                         verticalPadding: Appearance.padding.smaller
@@ -204,8 +204,14 @@ Item {
 
                     color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
                     radius: Appearance.rounding.full
+                    border.width: 1
+                    border.color: searchField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, Colours.light ? 0.34 : 0.48)
 
                     implicitHeight: Math.max(searchIcon.implicitHeight, searchField.implicitHeight, clearIcon.implicitHeight)
+
+                    Behavior on border.color {
+                        CAnim {}
+                    }
 
                     MaterialIcon {
                         id: searchIcon
@@ -221,13 +227,12 @@ Item {
                     StyledTextField {
                         id: searchField
 
+                        showChrome: false
+                        anchors.verticalCenter: parent.verticalCenter
                         anchors.left: searchIcon.right
                         anchors.right: clearIcon.left
                         anchors.leftMargin: Appearance.spacing.small
                         anchors.rightMargin: Appearance.spacing.small
-
-                        topPadding: Appearance.padding.normal
-                        bottomPadding: Appearance.padding.normal
 
                         placeholderText: qsTr("Search applications...")
 

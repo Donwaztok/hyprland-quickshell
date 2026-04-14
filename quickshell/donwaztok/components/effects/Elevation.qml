@@ -1,5 +1,5 @@
 import ".."
-import qs.services.m3
+import qs.services.shell
 import QtQuick
 import QtQuick.Effects
 

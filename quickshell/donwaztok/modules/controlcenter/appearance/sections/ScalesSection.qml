@@ -4,8 +4,7 @@ import ".."
 import "../../components"
 import qs.components
 import qs.components.controls
-import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
@@ -17,9 +16,12 @@ CollapsibleSection {
 
     title: qsTr("Scales")
     showBackground: true
+    gnomeListRow: true
+    collapsible: false
 
-    SectionContainer {
-        contentSpacing: Appearance.spacing.normal
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: Appearance.spacing.normal
 
         SliderInput {
             Layout.fillWidth: true
@@ -40,10 +42,12 @@ CollapsibleSection {
                 rootPane.saveConfig();
             }
         }
-    }
 
-    SectionContainer {
-        contentSpacing: Appearance.spacing.normal
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 1
+            color: Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.45 : 0.32)
+        }
 
         SliderInput {
             Layout.fillWidth: true
@@ -64,10 +68,12 @@ CollapsibleSection {
                 rootPane.saveConfig();
             }
         }
-    }
 
-    SectionContainer {
-        contentSpacing: Appearance.spacing.normal
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 1
+            color: Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.45 : 0.32)
+        }
 
         SliderInput {
             Layout.fillWidth: true

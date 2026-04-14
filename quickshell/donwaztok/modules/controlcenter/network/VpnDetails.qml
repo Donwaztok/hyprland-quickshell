@@ -6,7 +6,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import QtQuick
@@ -93,8 +93,8 @@ DeviceDetails {
                             Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
                             visible: root.providerEnabled
                             enabled: !VPN.connecting
-                            inactiveColour: Colours.palette.m3primaryContainer
-                            inactiveOnColour: Colours.palette.m3onPrimaryContainer
+                            inactiveColour: Colours.palette.m3primary
+                            inactiveOnColour: Colours.palette.m3onPrimary
                             text: VPN.connected ? qsTr("Disconnect") : qsTr("Connect")
 
                             onClicked: {
@@ -285,29 +285,14 @@ DeviceDetails {
                     color: Colours.palette.m3onSurfaceVariant
                 }
 
-                StyledRect {
+                StyledTextField {
+                    id: displayNameField
+
                     Layout.fillWidth: true
                     implicitHeight: 40
-                    color: displayNameField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
-                    radius: Appearance.rounding.small
-                    border.width: 1
-                    border.color: displayNameField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
-
-                    Behavior on color {
-                        CAnim {}
-                    }
-                    Behavior on border.color {
-                        CAnim {}
-                    }
-
-                    StyledTextField {
-                        id: displayNameField
-                        anchors.centerIn: parent
-                        width: parent.width - Appearance.padding.normal
-                        horizontalAlignment: TextInput.AlignLeft
-                        text: editVpnDialog.displayName
-                        onTextChanged: editVpnDialog.displayName = text
-                    }
+                    horizontalAlignment: TextInput.AlignLeft
+                    text: editVpnDialog.displayName
+                    onTextChanged: editVpnDialog.displayName = text
                 }
             }
 
@@ -321,29 +306,14 @@ DeviceDetails {
                     color: Colours.palette.m3onSurfaceVariant
                 }
 
-                StyledRect {
+                StyledTextField {
+                    id: interfaceNameField
+
                     Layout.fillWidth: true
                     implicitHeight: 40
-                    color: interfaceNameField.activeFocus ? Colours.layer(Colours.palette.m3surfaceContainer, 3) : Colours.layer(Colours.palette.m3surfaceContainer, 2)
-                    radius: Appearance.rounding.small
-                    border.width: 1
-                    border.color: interfaceNameField.activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outline, 0.3)
-
-                    Behavior on color {
-                        CAnim {}
-                    }
-                    Behavior on border.color {
-                        CAnim {}
-                    }
-
-                    StyledTextField {
-                        id: interfaceNameField
-                        anchors.centerIn: parent
-                        width: parent.width - Appearance.padding.normal
-                        horizontalAlignment: TextInput.AlignLeft
-                        text: editVpnDialog.interfaceName
-                        onTextChanged: editVpnDialog.interfaceName = text
-                    }
+                    horizontalAlignment: TextInput.AlignLeft
+                    text: editVpnDialog.interfaceName
+                    onTextChanged: editVpnDialog.interfaceName = text
                 }
             }
 
@@ -364,8 +334,8 @@ DeviceDetails {
                     Layout.fillWidth: true
                     text: qsTr("Save")
                     enabled: editVpnDialog.interfaceName.length > 0
-                    inactiveColour: Colours.palette.m3primaryContainer
-                    inactiveOnColour: Colours.palette.m3onPrimaryContainer
+                    inactiveColour: Colours.palette.m3primary
+                    inactiveOnColour: Colours.palette.m3onPrimary
 
                     onClicked: {
                         const providers = [];

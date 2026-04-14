@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.controls
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -167,8 +167,8 @@ ColumnLayout {
     IconTextButton {
         Layout.fillWidth: true
         Layout.topMargin: Appearance.spacing.normal
-        inactiveColour: Colours.palette.m3primaryContainer
-        inactiveOnColour: Colours.palette.m3onPrimaryContainer
+        inactiveColour: Colours.palette.m3primary
+        inactiveOnColour: Colours.palette.m3onPrimary
         verticalPadding: Appearance.padding.small
         text: qsTr("Open settings")
         icon: "settings"

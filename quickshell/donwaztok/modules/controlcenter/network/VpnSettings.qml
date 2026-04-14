@@ -6,7 +6,7 @@ import qs.components
 import qs.components.controls
 import qs.components.containers
 import qs.components.effects
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import Quickshell
 import QtQuick
@@ -157,8 +157,8 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.topMargin: Appearance.spacing.normal
             text: qsTr("+ Add Provider")
-            inactiveColour: Colours.palette.m3primaryContainer
-            inactiveOnColour: Colours.palette.m3onPrimaryContainer
+            inactiveColour: Colours.palette.m3primary
+            inactiveOnColour: Colours.palette.m3onPrimary
 
             onClicked: {
                 addProviderDialog.open();

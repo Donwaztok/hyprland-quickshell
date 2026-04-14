@@ -6,7 +6,7 @@ import qs.components
 import qs.components.controls
 import qs.components.containers
 import qs.components.effects
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Controls
@@ -20,12 +20,19 @@ ColumnLayout {
     spacing: Appearance.spacing.normal
 
     SettingsHeader {
+        layoutBottomMargin: 0
         icon: "router"
         title: qsTr("Network Settings")
     }
 
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.bottomMargin: Appearance.spacing.normal
+        implicitHeight: 1
+        color: ControlCenterChrome.paneSectionRule
+    }
+
     SectionHeader {
-        Layout.topMargin: Appearance.spacing.large
         title: qsTr("Ethernet")
         description: qsTr("Ethernet device information")
     }
@@ -46,7 +53,6 @@ ColumnLayout {
     }
 
     SectionHeader {
-        Layout.topMargin: Appearance.spacing.large
         title: qsTr("Wireless")
         description: qsTr("WiFi network settings")
     }
@@ -62,7 +68,6 @@ ColumnLayout {
     }
 
     SectionHeader {
-        Layout.topMargin: Appearance.spacing.large
         title: qsTr("VPN")
         description: qsTr("VPN provider settings")
         visible: Config.utilities.vpn.enabled || Config.utilities.vpn.provider.length > 0
@@ -90,9 +95,9 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.topMargin: Appearance.spacing.normal
             Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
-            text: qsTr("⚙ Manage VPN Providers")
-            inactiveColour: Colours.palette.m3secondaryContainer
-            inactiveOnColour: Colours.palette.m3onSecondaryContainer
+            text: qsTr("Manage VPN providers")
+            inactiveColour: Colours.palette.m3primary
+            inactiveOnColour: Colours.palette.m3onPrimary
 
             onClicked: {
                 vpnSettingsDialog.open();
@@ -101,7 +106,6 @@ ColumnLayout {
     }
 
     SectionHeader {
-        Layout.topMargin: Appearance.spacing.large
         title: qsTr("Current connection")
         description: qsTr("Active network connection information")
     }
@@ -148,7 +152,7 @@ ColumnLayout {
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
         background: StyledRect {
-            color: Colours.palette.m3surface
+            color: Colours.shellSurface
             radius: Appearance.rounding.large
         }
 

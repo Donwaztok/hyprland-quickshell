@@ -2,7 +2,7 @@ import ".."
 import "../components"
 import qs.components
 import qs.components.controls
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
@@ -38,48 +38,39 @@ SectionContainer {
         }
     }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Appearance.spacing.normal
-
-        SwitchRow {
-            Layout.fillWidth: true
-            label: qsTr("Show Dashboard tab")
-            checked: root.rootItem.showDashboard
-            onToggled: checked => {
-                root.rootItem.showDashboard = checked;
-                root.rootItem.saveConfig();
-            }
+    SwitchRow {
+        label: qsTr("Show Dashboard tab")
+        checked: root.rootItem.showDashboard
+        onToggled: checked => {
+            root.rootItem.showDashboard = checked;
+            root.rootItem.saveConfig();
         }
+    }
 
-        SwitchRow {
-            Layout.fillWidth: true
-            label: qsTr("Show Media tab")
-            checked: root.rootItem.showMedia
-            onToggled: checked => {
-                root.rootItem.showMedia = checked;
-                root.rootItem.saveConfig();
-            }
+    SwitchRow {
+        label: qsTr("Show Media tab")
+        checked: root.rootItem.showMedia
+        onToggled: checked => {
+            root.rootItem.showMedia = checked;
+            root.rootItem.saveConfig();
         }
+    }
 
-        SwitchRow {
-            Layout.fillWidth: true
-            label: qsTr("Show Performance tab")
-            checked: root.rootItem.showPerformance
-            onToggled: checked => {
-                root.rootItem.showPerformance = checked;
-                root.rootItem.saveConfig();
-            }
+    SwitchRow {
+        label: qsTr("Show Performance tab")
+        checked: root.rootItem.showPerformance
+        onToggled: checked => {
+            root.rootItem.showPerformance = checked;
+            root.rootItem.saveConfig();
         }
+    }
 
-        SwitchRow {
-            Layout.fillWidth: true
-            label: qsTr("Show Weather tab")
-            checked: root.rootItem.showWeather
-            onToggled: checked => {
-                root.rootItem.showWeather = checked;
-                root.rootItem.saveConfig();
-            }
+    SwitchRow {
+        label: qsTr("Show Weather tab")
+        checked: root.rootItem.showWeather
+        onToggled: checked => {
+            root.rootItem.showWeather = checked;
+            root.rootItem.saveConfig();
         }
     }
 
@@ -98,7 +89,7 @@ SectionContainer {
         text: qsTr("City name, or latitude and longitude separated by a comma. Leave empty for automatic location (IP).")
         wrapMode: Text.WordWrap
         font.pointSize: Appearance.font.size.small
-        color: Colours.palette.m3outline
+        color: Colours.palette.m3onSurfaceVariant
     }
 
     StyledTextField {

@@ -1,8 +1,8 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.components.effects
 import qs.config
+import qs.services.shell
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
@@ -15,8 +15,8 @@ RowLayout {
     property Component leftContent: null
     property Component rightContent: null
 
-    property real leftWidthRatio: 0.4
-    property int leftMinimumWidth: 420
+    property real leftWidthRatio: 0.36
+    property int leftMinimumWidth: 400
     property var leftLoaderProperties: ({})
     property var rightLoaderProperties: ({})
 
@@ -34,20 +34,20 @@ RowLayout {
             id: leftClippingRect
 
             anchors.fill: parent
-            anchors.margins: Appearance.padding.normal
-            anchors.leftMargin: 0
-            anchors.rightMargin: Appearance.padding.normal / 2
+            anchors.topMargin: ControlCenterChrome.splitPaneLeftOuterMargin
+            anchors.bottomMargin: ControlCenterChrome.splitPaneLeftOuterMargin
+            anchors.leftMargin: Appearance.padding.smaller
+            anchors.rightMargin: Appearance.padding.smaller
 
-            radius: leftBorder.innerRadius
-            color: "transparent"
+            radius: Appearance.rounding.small
+            color: ControlCenterChrome.splitPaneListSurface
+            border.width: 0
 
             Loader {
                 id: leftLoader
 
                 anchors.fill: parent
-                anchors.margins: Appearance.padding.large + Appearance.padding.normal
-                anchors.leftMargin: Appearance.padding.large
-                anchors.rightMargin: Appearance.padding.large + Appearance.padding.normal / 2
+                anchors.margins: ControlCenterChrome.splitPaneLeftContentPadding
 
                 sourceComponent: root.leftContent
 
@@ -58,13 +58,12 @@ RowLayout {
                 }
             }
         }
+    }
 
-        InnerBorder {
-            id: leftBorder
-
-            leftThickness: 0
-            rightThickness: Appearance.padding.normal / 2
-        }
+    Rectangle {
+        Layout.fillHeight: true
+        Layout.preferredWidth: 1
+        color: ControlCenterChrome.splitPaneDivider
     }
 
     Item {
@@ -77,18 +76,20 @@ RowLayout {
             id: rightClippingRect
 
             anchors.fill: parent
-            anchors.margins: Appearance.padding.normal
-            anchors.leftMargin: 0
-            anchors.rightMargin: Appearance.padding.normal / 2
+            anchors.topMargin: ControlCenterChrome.splitPaneOuterMargin
+            anchors.bottomMargin: ControlCenterChrome.splitPaneOuterMargin
+            anchors.leftMargin: Appearance.padding.smaller
+            anchors.rightMargin: ControlCenterChrome.splitPaneOuterMargin
 
-            radius: rightBorder.innerRadius
-            color: "transparent"
+            radius: Appearance.rounding.small
+            color: ControlCenterChrome.splitPaneDetailSurface
+            border.width: 0
 
             Loader {
                 id: rightLoader
 
                 anchors.fill: parent
-                anchors.margins: Appearance.padding.large * 2
+                anchors.margins: ControlCenterChrome.splitPaneContentPadding
 
                 sourceComponent: root.rightContent
 
@@ -98,12 +99,6 @@ RowLayout {
                     }
                 }
             }
-        }
-
-        InnerBorder {
-            id: rightBorder
-
-            leftThickness: Appearance.padding.normal / 2
         }
     }
 }

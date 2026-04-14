@@ -1,6 +1,6 @@
 import qs.components
 import qs.components.effects
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
@@ -9,14 +9,23 @@ StyledRect {
     id: root
 
     default property alias content: contentColumn.data
-    property real contentSpacing: Appearance.spacing.larger
+    property real contentSpacing: Appearance.spacing.normal
     property bool alignTop: false
 
     Layout.fillWidth: true
     implicitHeight: contentColumn.implicitHeight + Appearance.padding.large * 2
 
     radius: Appearance.rounding.normal
-    color: Colours.transparency.enabled ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : Colours.palette.m3surfaceContainerHigh
+    color: ControlCenterChrome.settingsGroupCard
+    border.width: 1
+    border.color: ControlCenterChrome.settingsGroupCardBorder
+
+    Elevation {
+        z: -1
+        anchors.fill: parent
+        radius: parent.radius
+        level: Colours.light ? 1 : 2
+    }
 
     ColumnLayout {
         id: contentColumn

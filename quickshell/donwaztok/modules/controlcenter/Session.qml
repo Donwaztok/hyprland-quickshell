@@ -9,7 +9,6 @@ QtObject {
     property bool floating: false
     property string active: "network"
     property int activeIndex: 0
-    property bool navExpanded: false
 
     readonly property BluetoothState bt: BluetoothState {}
     readonly property NetworkState network: NetworkState {}

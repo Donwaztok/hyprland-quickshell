@@ -5,7 +5,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.images
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 
@@ -135,19 +135,19 @@ GridView {
                 gradient: Gradient {
                     GradientStop {
                         position: 0.0
-                        color: Qt.rgba(Colours.palette.m3surface.r, Colours.palette.m3surface.g, Colours.palette.m3surface.b, 0)
+                        color: Qt.rgba(Colours.shellSurface.r, Colours.shellSurface.g, Colours.shellSurface.b, 0)
                     }
                     GradientStop {
                         position: 0.3
-                        color: Qt.rgba(Colours.palette.m3surface.r, Colours.palette.m3surface.g, Colours.palette.m3surface.b, 0.7)
+                        color: Qt.rgba(Colours.shellSurface.r, Colours.shellSurface.g, Colours.shellSurface.b, 0.7)
                     }
                     GradientStop {
                         position: 0.6
-                        color: Qt.rgba(Colours.palette.m3surface.r, Colours.palette.m3surface.g, Colours.palette.m3surface.b, 0.9)
+                        color: Qt.rgba(Colours.shellSurface.r, Colours.shellSurface.g, Colours.shellSurface.b, 0.9)
                     }
                     GradientStop {
                         position: 1.0
-                        color: Qt.rgba(Colours.palette.m3surface.r, Colours.palette.m3surface.g, Colours.palette.m3surface.b, 0.95)
+                        color: Qt.rgba(Colours.shellSurface.r, Colours.shellSurface.g, Colours.shellSurface.b, 0.95)
                     }
                 }
 

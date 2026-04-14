@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import ".."
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
@@ -81,6 +81,8 @@ RowLayout {
             implicitWidth: 100
             radius: Appearance.rounding.small
             color: Colours.tPalette.m3surfaceContainerHigh
+            border.width: 1
+            border.color: Qt.alpha(Colours.palette.m3outline, Colours.light ? 0.34 : 0.48)
         }
     }
 

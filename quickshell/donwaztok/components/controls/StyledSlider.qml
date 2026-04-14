@@ -1,52 +1,55 @@
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Templates
 
+// GtkScale / Adwaita-style: thin track + circular handle (not a tall vertical bar).
 Slider {
     id: root
 
+    implicitHeight: 32
+
     background: Item {
+        implicitHeight: 32
+
+        readonly property real trackH: 4
+
         StyledRect {
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
+            id: trackGroove
+
+            anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
-            anchors.topMargin: root.implicitHeight / 3
-            anchors.bottomMargin: root.implicitHeight / 3
-
-            implicitWidth: root.handle.x - root.implicitHeight / 6
-
-            color: Colours.palette.m3primary
-            radius: Appearance.rounding.full
-            topRightRadius: root.implicitHeight / 15
-            bottomRightRadius: root.implicitHeight / 15
+            anchors.right: parent.right
+            height: trackH
+            radius: trackH / 2
+            color: Colours.tPalette.m3surfaceContainerHighest
         }
 
         StyledRect {
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            anchors.right: parent.right
-            anchors.topMargin: root.implicitHeight / 3
-            anchors.bottomMargin: root.implicitHeight / 3
-
-            implicitWidth: parent.width - root.handle.x - root.handle.implicitWidth - root.implicitHeight / 6
-
-            color: Colours.palette.m3surfaceContainerHighest
-            radius: Appearance.rounding.full
-            topLeftRadius: root.implicitHeight / 15
-            bottomLeftRadius: root.implicitHeight / 15
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            height: trackH
+            width: Math.max(0, root.visualPosition * parent.width)
+            radius: trackH / 2
+            color: Colours.palette.m3primary
         }
     }
 
-    handle: StyledRect {
-        x: root.visualPosition * root.availableWidth - implicitWidth / 2
+    handle: Item {
+        width: 20
+        height: 20
 
-        implicitWidth: root.implicitHeight / 4.5
-        implicitHeight: root.implicitHeight
+        x: root.visualPosition * (root.availableWidth - width)
+        y: (root.implicitHeight - height) / 2
 
-        color: Colours.palette.m3primary
-        radius: Appearance.rounding.full
+        StyledRect {
+            anchors.fill: parent
+            radius: width / 2
+            color: Colours.palette.m3primary
+            border.width: 2
+            border.color: Colours.palette.m3surface
+        }
 
         MouseArea {
             anchors.fill: parent

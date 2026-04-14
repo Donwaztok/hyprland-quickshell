@@ -4,11 +4,12 @@ import "bluetooth"
 import "network"
 import "audio"
 import "appearance"
+import "hyprland"
 import "taskbar"
 import "launcher"
 import "dashboard"
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.modules.controlcenter
 import Quickshell.Widgets
@@ -22,7 +23,7 @@ ClippingRectangle {
 
     readonly property bool initialOpeningComplete: layout.initialOpeningComplete
 
-    color: "transparent"
+    color: ControlCenterChrome.settingsContentBackdrop
     clip: true
     focus: false
     activeFocusOnTab: false
@@ -44,23 +45,22 @@ ClippingRectangle {
         }
     }
 
-    ColumnLayout {
+    StackLayout {
         id: layout
 
-        spacing: 0
-        y: -root.session.activeIndex * root.height
-        clip: true
-
-        property bool animationComplete: true
-        property bool initialOpeningComplete: false
-
-        Timer {
-            id: animationDelayTimer
-            interval: Appearance.anim.durations.normal
-            onTriggered: {
-                layout.animationComplete = true;
-            }
+        anchors.fill: parent
+        anchors.leftMargin: ControlCenterChrome.paneStackMargin
+        anchors.rightMargin: ControlCenterChrome.paneStackMargin
+        anchors.bottomMargin: ControlCenterChrome.paneStackMargin
+        anchors.topMargin: ControlCenterChrome.paneStackMargin
+        currentIndex: {
+            const i = root.session.activeIndex;
+            if (i >= 0 && i < PaneRegistry.count)
+                return i;
+            return 0;
         }
+
+        property bool initialOpeningComplete: false
 
         Timer {
             id: initialOpeningTimer
@@ -76,20 +76,12 @@ ClippingRectangle {
 
             Pane {
                 required property int index
+
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
                 paneIndex: index
                 componentPath: PaneRegistry.getByIndex(index).component
-            }
-        }
-
-        Behavior on y {
-            Anim {}
-        }
-
-        Connections {
-            target: root.session
-            function onActiveIndexChanged(): void {
-                layout.animationComplete = false;
-                animationDelayTimer.restart();
             }
         }
     }
@@ -100,75 +92,37 @@ ClippingRectangle {
         required property int paneIndex
         required property string componentPath
 
-        implicitWidth: root.width
-        implicitHeight: root.height
-
         property bool hasBeenLoaded: false
 
-        function updateActive(): void {
-            const diff = Math.abs(root.session.activeIndex - pane.paneIndex);
-            const isActivePane = diff === 0;
-            let shouldBeActive = false;
-
-            if (!layout.initialOpeningComplete) {
-                shouldBeActive = isActivePane;
-            } else {
-                if (diff <= 1) {
-                    shouldBeActive = true;
-                } else if (pane.hasBeenLoaded) {
-                    shouldBeActive = true;
-                } else {
-                    shouldBeActive = layout.animationComplete;
-                }
-            }
-
-            loader.active = shouldBeActive;
-        }
+        clip: true
 
         Loader {
             id: loader
 
             anchors.fill: parent
-            clip: false
-            active: false
+            clip: true
+            active: root.session.activeIndex === pane.paneIndex
 
-            Component.onCompleted: {
-                Qt.callLater(pane.updateActive);
+            function loadIfNeeded() {
+                if (!active || item)
+                    return;
+                loader.setSource(pane.componentPath, {
+                    "session": root.session
+                });
             }
 
-            onActiveChanged: {
-                if (active && !pane.hasBeenLoaded) {
-                    pane.hasBeenLoaded = true;
-                }
+            Component.onCompleted: loadIfNeeded()
 
-                if (active && !item) {
-                    loader.setSource(pane.componentPath, {
-                        "session": root.session
-                    });
-                }
+            onActiveChanged: {
+                if (active && !pane.hasBeenLoaded)
+                    pane.hasBeenLoaded = true;
+
+                loadIfNeeded();
             }
 
             onItemChanged: {
-                if (item) {
+                if (item)
                     pane.hasBeenLoaded = true;
-                }
-            }
-        }
-
-        Connections {
-            target: root.session
-            function onActiveIndexChanged(): void {
-                pane.updateActive();
-            }
-        }
-
-        Connections {
-            target: layout
-            function onInitialOpeningCompleteChanged(): void {
-                pane.updateActive();
-            }
-            function onAnimationCompleteChanged(): void {
-                pane.updateActive();
             }
         }
     }

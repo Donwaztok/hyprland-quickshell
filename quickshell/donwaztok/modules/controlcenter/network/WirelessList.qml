@@ -7,7 +7,7 @@ import qs.components
 import qs.components.controls
 import qs.components.containers
 import qs.components.effects
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -57,7 +57,7 @@ DeviceList {
             ToggleButton {
                 toggled: Nmcli.wifiEnabled
                 icon: "wifi"
-                accent: "Tertiary"
+                accent: "Secondary"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -83,7 +83,7 @@ DeviceList {
             ToggleButton {
                 toggled: !root.session.network.active
                 icon: "settings"
-                accent: "Primary"
+                accent: "Secondary"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -105,8 +105,10 @@ DeviceList {
 
             width: ListView.view ? ListView.view.width : undefined
 
-            color: Qt.alpha(Colours.tPalette.m3surfaceContainer, root.activeItem === modelData ? Colours.tPalette.m3surfaceContainer.a : 0)
+            color: root.activeItem === modelData ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer
             radius: Appearance.rounding.normal
+            border.width: 1
+            border.color: Qt.alpha(Colours.palette.m3outlineVariant, root.activeItem === modelData ? 0.55 : 0.34)
 
             StateLayer {
                 function onClicked(): void {
@@ -132,7 +134,7 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.normal
-                    color: modelData.active ? Colours.palette.m3primaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                    color: modelData.active ? Colours.palette.m3primary : Colours.tPalette.m3surfaceContainerHigh
 
                     MaterialIcon {
                         id: icon
@@ -141,7 +143,7 @@ DeviceList {
                         text: Icons.getNetworkIcon(modelData.strength, modelData.isSecure)
                         font.pointSize: Appearance.font.size.large
                         fill: modelData.active ? 1 : 0
-                        color: modelData.active ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: modelData.active ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                     }
                 }
 
@@ -174,7 +176,7 @@ DeviceList {
                                     return qsTr("Secured");
                                 return qsTr("Open");
                             }
-                            color: modelData.active ? Colours.palette.m3primary : Colours.palette.m3outline
+                            color: modelData.active ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                             font.pointSize: Appearance.font.size.small
                             font.weight: modelData.active ? 500 : 400
                             elide: Text.ElideRight
@@ -187,7 +189,7 @@ DeviceList {
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: Appearance.rounding.full
-                    color: Qt.alpha(Colours.palette.m3primaryContainer, modelData.active ? 1 : 0)
+                    color: Qt.alpha(Colours.palette.m3primary, modelData.active ? 1 : 0)
 
                     StateLayer {
                         function onClicked(): void {
@@ -204,7 +206,7 @@ DeviceList {
 
                         anchors.centerIn: parent
                         text: modelData.active ? "link_off" : "link"
-                        color: modelData.active ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: modelData.active ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                     }
                 }
             }

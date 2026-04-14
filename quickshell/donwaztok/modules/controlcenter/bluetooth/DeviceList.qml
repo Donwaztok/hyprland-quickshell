@@ -5,7 +5,7 @@ import "../components"
 import qs.components
 import qs.components.controls
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -47,7 +47,7 @@ DeviceList {
             ToggleButton {
                 toggled: Bluetooth.defaultAdapter?.enabled ?? false
                 icon: "power"
-                accent: "Tertiary"
+                accent: "Secondary"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -111,7 +111,7 @@ DeviceList {
             ToggleButton {
                 toggled: !root.session.bt.active
                 icon: "settings"
-                accent: "Primary"
+                accent: "Secondary"
                 iconSize: Appearance.font.size.normal
                 horizontalPadding: Appearance.padding.normal
                 verticalPadding: Appearance.padding.smaller
@@ -164,12 +164,12 @@ DeviceList {
                     implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
 
                     radius: Appearance.rounding.normal
-                    color: device.connected ? Colours.palette.m3primaryContainer : (device.modelData && device.modelData.bonded) ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
+                    color: device.connected ? Colours.palette.m3primary : (device.modelData && device.modelData.bonded) ? Colours.palette.m3secondaryContainer : Colours.tPalette.m3surfaceContainerHigh
 
                     StyledRect {
                         anchors.fill: parent
                         radius: parent.radius
-                        color: Qt.alpha(device.connected ? Colours.palette.m3onPrimaryContainer : (device.modelData && device.modelData.bonded) ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
+                        color: Qt.alpha(device.connected ? Colours.palette.m3onPrimary : (device.modelData && device.modelData.bonded) ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface, stateLayer.pressed ? 0.1 : stateLayer.containsMouse ? 0.08 : 0)
                     }
 
                     MaterialIcon {
@@ -177,7 +177,7 @@ DeviceList {
 
                         anchors.centerIn: parent
                         text: Icons.getBluetoothIcon(device.modelData ? device.modelData.icon : "")
-                        color: device.connected ? Colours.palette.m3onPrimaryContainer : (device.modelData && device.modelData.bonded) ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                        color: device.connected ? Colours.palette.m3onPrimary : (device.modelData && device.modelData.bonded) ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
                         font.pointSize: Appearance.font.size.large
                         fill: device.connected ? 1 : 0
 
@@ -214,7 +214,7 @@ DeviceList {
                     implicitHeight: connectIcon.implicitHeight + Appearance.padding.smaller * 2
 
                     radius: Appearance.rounding.full
-                    color: Qt.alpha(Colours.palette.m3primaryContainer, device.connected ? 1 : 0)
+                    color: Qt.alpha(Colours.palette.m3primary, device.connected ? 1 : 0)
 
                     CircularIndicator {
                         anchors.fill: parent
@@ -222,7 +222,7 @@ DeviceList {
                     }
 
                     StateLayer {
-                        color: device.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: device.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
                         disabled: device.loading
 
                         function onClicked(): void {
@@ -247,7 +247,7 @@ DeviceList {
                         anchors.centerIn: parent
                         animate: true
                         text: device.connected ? "link_off" : "link"
-                        color: device.connected ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                        color: device.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
 
                         opacity: device.loading ? 0 : 1
 

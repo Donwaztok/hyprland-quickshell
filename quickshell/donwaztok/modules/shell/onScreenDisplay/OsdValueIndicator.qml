@@ -1,6 +1,6 @@
 import qs.modules.common
 import qs.modules.common.widgets
-import qs.services.m3
+import qs.services.shell
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
@@ -98,7 +98,7 @@ Item {
                     Layout.fillWidth: true
                     value: root.value
                     highlightColor: Colours.palette.m3primary
-                    trackColor: Colours.palette.m3primaryContainer
+                    trackColor: Qt.alpha(Colours.palette.m3primary, Colours.light ? 0.42 : 0.38)
                 }
             }
         }

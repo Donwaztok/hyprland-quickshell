@@ -6,7 +6,7 @@ import Quickshell.Services.UPower
 import qs.components
 import qs.components.controls
 import qs.config
-import qs.services.m3
+import qs.services.shell
 
 SectionContainer {
     id: root

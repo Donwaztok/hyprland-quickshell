@@ -5,7 +5,7 @@ import "../components"
 import qs.components
 import qs.components.controls
 import qs.components.effects
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import Quickshell.Bluetooth
 import QtQuick
@@ -16,388 +16,114 @@ ColumnLayout {
 
     required property Session session
 
-    spacing: Appearance.spacing.normal
+    spacing: Appearance.spacing.larger
 
     SettingsHeader {
         icon: "bluetooth"
         title: qsTr("Bluetooth Settings")
     }
 
-    StyledText {
-        Layout.topMargin: Appearance.spacing.large
-        text: qsTr("Adapter status")
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 500
-    }
+    PreferencesGroup {
+        title: qsTr("Adapter status")
+        description: qsTr("General adapter settings")
 
-    StyledText {
-        text: qsTr("General adapter settings")
-        color: Colours.palette.m3outline
-    }
-
-    StyledRect {
-        Layout.fillWidth: true
-        implicitHeight: adapterStatus.implicitHeight + Appearance.padding.large * 2
-
-        radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainer
-
-        ColumnLayout {
-            id: adapterStatus
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Appearance.padding.large
-
-            spacing: Appearance.spacing.larger
-
-            Toggle {
-                label: qsTr("Powered")
-                checked: Bluetooth.defaultAdapter?.enabled ?? false
-                toggle.onToggled: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
-                        adapter.enabled = checked;
-                }
+        Toggle {
+            label: qsTr("Powered")
+            checked: Bluetooth.defaultAdapter?.enabled ?? false
+            toggle.onToggled: {
+                const adapter = Bluetooth.defaultAdapter;
+                if (adapter)
+                    adapter.enabled = checked;
             }
+        }
 
-            Toggle {
-                label: qsTr("Discoverable")
-                checked: Bluetooth.defaultAdapter?.discoverable ?? false
-                toggle.onToggled: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
-                        adapter.discoverable = checked;
-                }
+        Toggle {
+            label: qsTr("Discoverable")
+            checked: Bluetooth.defaultAdapter?.discoverable ?? false
+            toggle.onToggled: {
+                const adapter = Bluetooth.defaultAdapter;
+                if (adapter)
+                    adapter.discoverable = checked;
             }
+        }
 
-            Toggle {
-                label: qsTr("Pairable")
-                checked: Bluetooth.defaultAdapter?.pairable ?? false
-                toggle.onToggled: {
-                    const adapter = Bluetooth.defaultAdapter;
-                    if (adapter)
-                        adapter.pairable = checked;
-                }
+        Toggle {
+            label: qsTr("Pairable")
+            checked: Bluetooth.defaultAdapter?.pairable ?? false
+            toggle.onToggled: {
+                const adapter = Bluetooth.defaultAdapter;
+                if (adapter)
+                    adapter.pairable = checked;
             }
         }
     }
 
-    StyledText {
-        Layout.topMargin: Appearance.spacing.large
-        text: qsTr("Adapter properties")
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 500
-    }
+    PreferencesGroup {
+        title: qsTr("Adapter properties")
+        description: qsTr("Per-adapter settings")
 
-    StyledText {
-        text: qsTr("Per-adapter settings")
-        color: Colours.palette.m3outline
-    }
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
 
-    StyledRect {
-        Layout.fillWidth: true
-        implicitHeight: adapterSettings.implicitHeight + Appearance.padding.large * 2
-
-        radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainer
-
-        ColumnLayout {
-            id: adapterSettings
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Appearance.padding.large
-
-            spacing: Appearance.spacing.larger
-
-            RowLayout {
+            StyledText {
                 Layout.fillWidth: true
-                spacing: Appearance.spacing.normal
-
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Current adapter")
-                }
-
-                Item {
-                    id: adapterPickerButton
-
-                    property bool expanded
-
-                    implicitWidth: adapterPicker.implicitWidth + Appearance.padding.normal * 2
-                    implicitHeight: adapterPicker.implicitHeight + Appearance.padding.smaller * 2
-
-                    StateLayer {
-                        radius: Appearance.rounding.small
-
-                        function onClicked(): void {
-                            adapterPickerButton.expanded = !adapterPickerButton.expanded;
-                        }
-                    }
-
-                    RowLayout {
-                        id: adapterPicker
-
-                        anchors.fill: parent
-                        anchors.margins: Appearance.padding.normal
-                        anchors.topMargin: Appearance.padding.smaller
-                        anchors.bottomMargin: Appearance.padding.smaller
-                        spacing: Appearance.spacing.normal
-
-                        StyledText {
-                            Layout.leftMargin: Appearance.padding.small
-                            text: Bluetooth.defaultAdapter?.name ?? qsTr("None")
-                        }
-
-                        MaterialIcon {
-                            text: "expand_more"
-                        }
-                    }
-
-                    Elevation {
-                        anchors.fill: adapterListBg
-                        radius: adapterListBg.radius
-                        opacity: adapterPickerButton.expanded ? 1 : 0
-                        scale: adapterPickerButton.expanded ? 1 : 0.7
-                        level: 2
-
-                        Behavior on opacity {
-                            Anim {}
-                        }
-
-                        Behavior on scale {
-                            Anim {
-                                duration: Appearance.anim.durations.expressiveFastSpatial
-                                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
-                            }
-                        }
-                    }
-
-                    StyledClippingRect {
-                        id: adapterListBg
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        implicitHeight: adapterPickerButton.expanded ? adapterList.implicitHeight : adapterPickerButton.implicitHeight
-
-                        color: Colours.palette.m3secondaryContainer
-                        radius: Appearance.rounding.small
-                        opacity: adapterPickerButton.expanded ? 1 : 0
-                        scale: adapterPickerButton.expanded ? 1 : 0.7
-
-                        ColumnLayout {
-                            id: adapterList
-
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            spacing: 0
-
-                            Repeater {
-                                model: Bluetooth.adapters
-
-                                Item {
-                                    id: adapter
-
-                                    required property BluetoothAdapter modelData
-
-                                    Layout.fillWidth: true
-                                    implicitHeight: adapterInner.implicitHeight + Appearance.padding.normal * 2
-
-                                    StateLayer {
-                                        disabled: !adapterPickerButton.expanded
-
-                                        function onClicked(): void {
-                                            adapterPickerButton.expanded = false;
-                                            root.session.bt.currentAdapter = adapter.modelData;
-                                        }
-                                    }
-
-                                    RowLayout {
-                                        id: adapterInner
-
-                                        anchors.left: parent.left
-                                        anchors.right: parent.right
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        anchors.margins: Appearance.padding.normal
-                                        spacing: Appearance.spacing.normal
-
-                                        StyledText {
-                                            Layout.fillWidth: true
-                                            Layout.leftMargin: Appearance.padding.small
-                                            text: adapter.modelData.name
-                                            color: Colours.palette.m3onSecondaryContainer
-                                        }
-
-                                        MaterialIcon {
-                                            text: "check"
-                                            color: Colours.palette.m3onSecondaryContainer
-                                            visible: adapter.modelData === root.session.bt.currentAdapter
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Behavior on opacity {
-                            Anim {}
-                        }
-
-                        Behavior on scale {
-                            Anim {
-                                duration: Appearance.anim.durations.expressiveFastSpatial
-                                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
-                            }
-                        }
-
-                        Behavior on implicitHeight {
-                            Anim {
-                                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
-                            }
-                        }
-                    }
-                }
+                text: qsTr("Current adapter")
+                font.weight: Font.Medium
             }
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Appearance.spacing.normal
+            Item {
+                id: adapterPickerButton
 
-                StyledText {
-                    Layout.fillWidth: true
-                    text: qsTr("Discoverable timeout")
-                }
+                property bool expanded: false
 
-                CustomSpinBox {
-                    min: 0
-                    value: root.session.bt.currentAdapter?.discoverableTimeout ?? 0
-                    onValueModified: value => {
-                        if (root.session.bt.currentAdapter) {
-                            root.session.bt.currentAdapter.discoverableTimeout = value;
-                        }
-                    }
-                }
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Appearance.spacing.small
-
-                Item {
-                    id: renameAdapter
-
-                    Layout.fillWidth: true
-                    Layout.rightMargin: Appearance.spacing.small
-
-                    implicitHeight: renameLabel.implicitHeight + adapterNameEdit.implicitHeight
-
-                    states: State {
-                        name: "editingAdapterName"
-                        when: root.session.bt.editingAdapterName
-
-                        AnchorChanges {
-                            target: adapterNameEdit
-                            anchors.top: renameAdapter.top
-                        }
-                        PropertyChanges {
-                            renameAdapter.implicitHeight: adapterNameEdit.implicitHeight
-                            renameLabel.opacity: 0
-                            adapterNameEdit.padding: Appearance.padding.normal
-                        }
-                    }
-
-                    transitions: Transition {
-                        AnchorAnimation {
-                            duration: Appearance.anim.durations.normal
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Appearance.anim.curves.standard
-                        }
-                        Anim {
-                            properties: "implicitHeight,opacity,padding"
-                        }
-                    }
-
-                    StyledText {
-                        id: renameLabel
-
-                        anchors.left: parent.left
-
-                        text: qsTr("Rename adapter (currently does not work)")
-                        color: Colours.palette.m3outline
-                        font.pointSize: Appearance.font.size.small
-                    }
-
-                    StyledTextField {
-                        id: adapterNameEdit
-
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: renameLabel.bottom
-                        anchors.leftMargin: root.session.bt.editingAdapterName ? 0 : -Appearance.padding.normal
-
-                        text: root.session.bt.currentAdapter?.name ?? ""
-                        readOnly: !root.session.bt.editingAdapterName
-                        onAccepted: {
-                            root.session.bt.editingAdapterName = false;
-                        }
-
-                        leftPadding: Appearance.padding.normal
-                        rightPadding: Appearance.padding.normal
-
-                        background: StyledRect {
-                            radius: Appearance.rounding.small
-                            border.width: 2
-                            border.color: Colours.palette.m3primary
-                            opacity: root.session.bt.editingAdapterName ? 1 : 0
-
-                            Behavior on border.color {
-                                CAnim {}
-                            }
-
-                            Behavior on opacity {
-                                Anim {}
-                            }
-                        }
-
-                        Behavior on anchors.leftMargin {
-                            Anim {}
-                        }
-                    }
-                }
+                implicitWidth: adapterPicker.implicitWidth + Appearance.padding.normal * 2
+                implicitHeight: adapterPicker.implicitHeight + Appearance.padding.smaller * 2
 
                 StyledRect {
-                    implicitWidth: implicitHeight
-                    implicitHeight: cancelEditIcon.implicitHeight + Appearance.padding.smaller * 2
-
+                    z: 0
+                    anchors.fill: parent
                     radius: Appearance.rounding.small
-                    color: Colours.palette.m3secondaryContainer
-                    opacity: root.session.bt.editingAdapterName ? 1 : 0
-                    scale: root.session.bt.editingAdapterName ? 1 : 0.5
+                    color: Colours.tPalette.m3surfaceContainer
+                    border.width: 1
+                    border.color: Qt.alpha(Colours.palette.m3outline, Colours.light ? 0.4 : 0.52)
+                }
 
-                    StateLayer {
-                        color: Colours.palette.m3onSecondaryContainer
-                        disabled: !root.session.bt.editingAdapterName
+                StateLayer {
+                    z: 2
+                    radius: Appearance.rounding.small
 
-                        function onClicked(): void {
-                            root.session.bt.editingAdapterName = false;
-                            adapterNameEdit.text = Qt.binding(() => root.session.bt.currentAdapter?.name ?? "");
-                        }
+                    function onClicked(): void {
+                        adapterPickerButton.expanded = !adapterPickerButton.expanded;
+                    }
+                }
+
+                RowLayout {
+                    id: adapterPicker
+
+                    z: 1
+                    anchors.fill: parent
+                    anchors.margins: Appearance.padding.normal
+                    anchors.topMargin: Appearance.padding.smaller
+                    anchors.bottomMargin: Appearance.padding.smaller
+                    spacing: Appearance.spacing.normal
+
+                    StyledText {
+                        Layout.leftMargin: Appearance.padding.small
+                        text: Bluetooth.defaultAdapter?.name ?? qsTr("None")
                     }
 
                     MaterialIcon {
-                        id: cancelEditIcon
-
-                        anchors.centerIn: parent
-                        animate: true
-                        text: "cancel"
-                        color: Colours.palette.m3onSecondaryContainer
+                        text: "expand_more"
                     }
+                }
+
+                Elevation {
+                    anchors.fill: adapterListBg
+                    radius: adapterListBg.radius
+                    opacity: adapterPickerButton.expanded ? 1 : 0
+                    scale: adapterPickerButton.expanded ? 1 : 0.7
+                    level: 2
 
                     Behavior on opacity {
                         Anim {}
@@ -411,100 +137,300 @@ ColumnLayout {
                     }
                 }
 
-                StyledRect {
-                    implicitWidth: implicitHeight
-                    implicitHeight: editIcon.implicitHeight + Appearance.padding.smaller * 2
+                StyledClippingRect {
+                    id: adapterListBg
 
-                    radius: root.session.bt.editingAdapterName ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
-                    color: Qt.alpha(Colours.palette.m3primary, root.session.bt.editingAdapterName ? 1 : 0)
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    implicitHeight: adapterPickerButton.expanded ? adapterList.implicitHeight : adapterPickerButton.implicitHeight
 
-                    StateLayer {
-                        color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    color: Colours.palette.m3secondaryContainer
+                    radius: Appearance.rounding.small
+                    opacity: adapterPickerButton.expanded ? 1 : 0
+                    scale: adapterPickerButton.expanded ? 1 : 0.7
 
-                        function onClicked(): void {
-                            root.session.bt.editingAdapterName = !root.session.bt.editingAdapterName;
-                            if (root.session.bt.editingAdapterName)
-                                adapterNameEdit.forceActiveFocus();
-                            else
-                                adapterNameEdit.accepted();
+                    ColumnLayout {
+                        id: adapterList
+
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        spacing: 0
+
+                        Repeater {
+                            model: Bluetooth.adapters
+
+                            Item {
+                                id: adapter
+
+                                required property BluetoothAdapter modelData
+
+                                Layout.fillWidth: true
+                                implicitHeight: adapterInner.implicitHeight + Appearance.padding.normal * 2
+
+                                StateLayer {
+                                    disabled: !adapterPickerButton.expanded
+
+                                    function onClicked(): void {
+                                        adapterPickerButton.expanded = false;
+                                        root.session.bt.currentAdapter = adapter.modelData;
+                                    }
+                                }
+
+                                RowLayout {
+                                    id: adapterInner
+
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.margins: Appearance.padding.normal
+                                    spacing: Appearance.spacing.normal
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        Layout.leftMargin: Appearance.padding.small
+                                        text: adapter.modelData.name
+                                        color: Colours.palette.m3onSecondaryContainer
+                                    }
+
+                                    MaterialIcon {
+                                        text: "check"
+                                        color: Colours.palette.m3onSecondaryContainer
+                                        visible: adapter.modelData === root.session.bt.currentAdapter
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    MaterialIcon {
-                        id: editIcon
-
-                        anchors.centerIn: parent
-                        animate: true
-                        text: root.session.bt.editingAdapterName ? "check_circle" : "edit"
-                        color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
-                    }
-
-                    Behavior on radius {
+                    Behavior on opacity {
                         Anim {}
                     }
+
+                    Behavior on scale {
+                        Anim {
+                            duration: Appearance.anim.durations.expressiveFastSpatial
+                            easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                        }
+                    }
+
+                    Behavior on implicitHeight {
+                        Anim {
+                            duration: Appearance.anim.durations.expressiveDefaultSpatial
+                            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                        }
+                    }
+                }
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
+
+            StyledText {
+                Layout.fillWidth: true
+                text: qsTr("Discoverable timeout")
+                font.weight: Font.Medium
+            }
+
+            CustomSpinBox {
+                min: 0
+                value: root.session.bt.currentAdapter?.discoverableTimeout ?? 0
+                onValueModified: value => {
+                    if (root.session.bt.currentAdapter) {
+                        root.session.bt.currentAdapter.discoverableTimeout = value;
+                    }
+                }
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Appearance.spacing.small
+
+            Item {
+                id: renameAdapter
+
+                Layout.fillWidth: true
+                Layout.rightMargin: Appearance.spacing.small
+
+                implicitHeight: renameLabel.implicitHeight + adapterNameEdit.implicitHeight
+
+                states: State {
+                    name: "editingAdapterName"
+                    when: root.session.bt.editingAdapterName
+
+                    AnchorChanges {
+                        target: adapterNameEdit
+                        anchors.top: renameAdapter.top
+                    }
+                    PropertyChanges {
+                        renameAdapter.implicitHeight: adapterNameEdit.implicitHeight
+                        renameLabel.opacity: 0
+                        adapterNameEdit.padding: Appearance.padding.normal
+                    }
+                }
+
+                transitions: Transition {
+                    AnchorAnimation {
+                        duration: Appearance.anim.durations.normal
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.anim.curves.standard
+                    }
+                    Anim {
+                        properties: "implicitHeight,opacity,padding"
+                    }
+                }
+
+                StyledText {
+                    id: renameLabel
+
+                    anchors.left: parent.left
+
+                    text: qsTr("Rename adapter (currently does not work)")
+                    color: Colours.light ? Colours.palette.m3onSurfaceVariant : Qt.lighter(Colours.palette.m3onSurfaceVariant, 1.2)
+                    font.pointSize: Appearance.font.size.small
+                    font.weight: Font.Medium
+                }
+
+                StyledTextField {
+                    id: adapterNameEdit
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: renameLabel.bottom
+                    anchors.leftMargin: root.session.bt.editingAdapterName ? 0 : -Appearance.padding.normal
+
+                    text: root.session.bt.currentAdapter?.name ?? ""
+                    readOnly: !root.session.bt.editingAdapterName
+                    onAccepted: {
+                        root.session.bt.editingAdapterName = false;
+                    }
+
+                    Behavior on anchors.leftMargin {
+                        Anim {}
+                    }
+                }
+            }
+
+            StyledRect {
+                implicitWidth: implicitHeight
+                implicitHeight: cancelEditIcon.implicitHeight + Appearance.padding.smaller * 2
+
+                radius: Appearance.rounding.small
+                color: Colours.palette.m3secondaryContainer
+                opacity: root.session.bt.editingAdapterName ? 1 : 0
+                scale: root.session.bt.editingAdapterName ? 1 : 0.5
+
+                StateLayer {
+                    color: Colours.palette.m3onSecondaryContainer
+                    disabled: !root.session.bt.editingAdapterName
+
+                    function onClicked(): void {
+                        root.session.bt.editingAdapterName = false;
+                        adapterNameEdit.text = Qt.binding(() => root.session.bt.currentAdapter?.name ?? "");
+                    }
+                }
+
+                MaterialIcon {
+                    id: cancelEditIcon
+
+                    anchors.centerIn: parent
+                    animate: true
+                    text: "cancel"
+                    color: Colours.palette.m3onSecondaryContainer
+                }
+
+                Behavior on opacity {
+                    Anim {}
+                }
+
+                Behavior on scale {
+                    Anim {
+                        duration: Appearance.anim.durations.expressiveFastSpatial
+                        easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                    }
+                }
+            }
+
+            StyledRect {
+                implicitWidth: implicitHeight
+                implicitHeight: editIcon.implicitHeight + Appearance.padding.smaller * 2
+
+                radius: root.session.bt.editingAdapterName ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
+                color: Qt.alpha(Colours.palette.m3primary, root.session.bt.editingAdapterName ? 1 : 0)
+
+                StateLayer {
+                    color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+
+                    function onClicked(): void {
+                        root.session.bt.editingAdapterName = !root.session.bt.editingAdapterName;
+                        if (root.session.bt.editingAdapterName)
+                            adapterNameEdit.forceActiveFocus();
+                        else
+                            adapterNameEdit.accepted();
+                    }
+                }
+
+                MaterialIcon {
+                    id: editIcon
+
+                    anchors.centerIn: parent
+                    animate: true
+                    text: root.session.bt.editingAdapterName ? "check_circle" : "edit"
+                    color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                }
+
+                Behavior on radius {
+                    Anim {}
                 }
             }
         }
     }
 
-    StyledText {
-        Layout.topMargin: Appearance.spacing.large
-        text: qsTr("Adapter information")
-        font.pointSize: Appearance.font.size.larger
-        font.weight: 500
-    }
-
-    StyledText {
-        text: qsTr("Information about the default adapter")
-        color: Colours.palette.m3outline
-    }
-
-    StyledRect {
-        Layout.fillWidth: true
-        implicitHeight: adapterInfo.implicitHeight + Appearance.padding.large * 2
-
-        radius: Appearance.rounding.normal
-        color: Colours.tPalette.m3surfaceContainer
+    PreferencesGroup {
+        title: qsTr("Adapter information")
+        description: qsTr("Information about the default adapter")
 
         ColumnLayout {
-            id: adapterInfo
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Appearance.padding.large
-
+            Layout.fillWidth: true
             spacing: Appearance.spacing.small / 2
 
             StyledText {
                 text: qsTr("Adapter state")
+                color: Colours.palette.m3onSurface
             }
 
             StyledText {
                 text: Bluetooth.defaultAdapter ? BluetoothAdapterState.toString(Bluetooth.defaultAdapter.state) : qsTr("Unknown")
-                color: Colours.palette.m3outline
+                color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.small
             }
 
             StyledText {
                 Layout.topMargin: Appearance.spacing.normal
                 text: qsTr("Dbus path")
+                color: Colours.palette.m3onSurface
             }
 
             StyledText {
                 text: Bluetooth.defaultAdapter?.dbusPath ?? ""
-                color: Colours.palette.m3outline
+                color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.small
             }
 
             StyledText {
                 Layout.topMargin: Appearance.spacing.normal
                 text: qsTr("Adapter id")
+                color: Colours.palette.m3onSurface
             }
 
             StyledText {
                 text: Bluetooth.defaultAdapter?.adapterId ?? ""
-                color: Colours.palette.m3outline
+                color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.small
             }
         }
@@ -516,11 +442,13 @@ ColumnLayout {
         property alias toggle: toggle
 
         Layout.fillWidth: true
-        spacing: Appearance.spacing.normal
+        spacing: Appearance.spacing.small
 
         StyledText {
             Layout.fillWidth: true
             text: parent.label
+            color: Colours.palette.m3onSurface
+            font.weight: Font.Medium
         }
 
         StyledSwitch {

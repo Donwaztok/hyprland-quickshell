@@ -1,7 +1,8 @@
 pragma Singleton
 
 import qs.components
-import qs.services.m3
+import qs.services.shell
+import qs.modules.controlcenter
 import Quickshell
 import QtQuick
 
@@ -23,9 +24,8 @@ Item {
             id: win
 
             property alias active: cc.active
-            property alias navExpanded: cc.navExpanded
 
-            color: Colours.tPalette.m3surface
+            color: ControlCenterChrome.shellBackdropColor
 
             onVisibleChanged: {
                 if (!visible)
@@ -40,7 +40,8 @@ Item {
             maximumSize.width: implicitWidth
             maximumSize.height: implicitHeight
 
-            title: qsTr("Donwaztok Settings - %1").arg(cc.active.slice(0, 1).toUpperCase() + cc.active.slice(1))
+            readonly property var activePaneInfo: PaneRegistry.getByLabel(cc.active)
+            title: qsTr("Donwaztok Settings — %1").arg(activePaneInfo ? activePaneInfo.title : cc.active)
 
             ControlCenter {
                 id: cc

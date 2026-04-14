@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import Quickshell
 import Quickshell.Services.SystemTray

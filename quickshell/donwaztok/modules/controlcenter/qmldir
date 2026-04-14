@@ -1,6 +1,7 @@
 module qs.modules.controlcenter
 ControlCenter 1.0 ControlCenter.qml
 singleton PaneRegistry 1.0 PaneRegistry.qml
+singleton HyprlandSettings 1.0 hyprland/HyprlandSettings.qml
 Panes 1.0 Panes.qml
 Session 1.0 Session.qml
 singleton WindowFactory 1.0 WindowFactory.qml

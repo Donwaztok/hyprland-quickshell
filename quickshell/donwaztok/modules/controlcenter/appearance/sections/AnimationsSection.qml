@@ -4,8 +4,7 @@ import ".."
 import "../../components"
 import qs.components
 import qs.components.controls
-import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
@@ -17,28 +16,26 @@ CollapsibleSection {
 
     title: qsTr("Animations")
     showBackground: true
+    gnomeListRow: true
+    collapsible: false
 
-    SectionContainer {
-        contentSpacing: Appearance.spacing.normal
+    SliderInput {
+        Layout.fillWidth: true
 
-        SliderInput {
-            Layout.fillWidth: true
+        label: qsTr("Animation duration scale")
+        value: rootPane.animDurationsScale
+        from: 0.1
+        to: 5.0
+        decimals: 1
+        suffix: "×"
+        validator: DoubleValidator {
+            bottom: 0.1
+            top: 5.0
+        }
 
-            label: qsTr("Animation duration scale")
-            value: rootPane.animDurationsScale
-            from: 0.1
-            to: 5.0
-            decimals: 1
-            suffix: "×"
-            validator: DoubleValidator {
-                bottom: 0.1
-                top: 5.0
-            }
-
-            onValueModified: newValue => {
-                rootPane.animDurationsScale = newValue;
-                rootPane.saveConfig();
-            }
+        onValueModified: newValue => {
+            rootPane.animDurationsScale = newValue;
+            rootPane.saveConfig();
         }
     }
 }

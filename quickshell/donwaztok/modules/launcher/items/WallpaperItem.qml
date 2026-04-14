@@ -1,7 +1,7 @@
 import qs.components
 import qs.components.effects
 import qs.components.images
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import Quickshell
 import QtQuick

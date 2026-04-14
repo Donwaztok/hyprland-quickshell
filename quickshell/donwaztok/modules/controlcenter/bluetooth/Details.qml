@@ -6,7 +6,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell.Bluetooth
@@ -188,8 +188,9 @@ StyledFlickable {
                                             anchors.left: parent.left
 
                                             text: qsTr("Device name")
-                                            color: Colours.palette.m3outline
+                                            color: Colours.light ? Colours.palette.m3onSurfaceVariant : Qt.lighter(Colours.palette.m3onSurfaceVariant, 1.2)
                                             font.pointSize: Appearance.font.size.small
+                                            font.weight: Font.Medium
                                         }
 
                                         StyledTextField {
@@ -205,24 +206,6 @@ StyledFlickable {
                                             onAccepted: {
                                                 root.session.bt.editingDeviceName = false;
                                                 root.device.name = text;
-                                            }
-
-                                            leftPadding: Appearance.padding.normal
-                                            rightPadding: Appearance.padding.normal
-
-                                            background: StyledRect {
-                                                radius: Appearance.rounding.small
-                                                border.width: 2
-                                                border.color: Colours.palette.m3primary
-                                                opacity: root.session.bt.editingDeviceName ? 1 : 0
-
-                                                Behavior on border.color {
-                                                    CAnim {}
-                                                }
-
-                                                Behavior on opacity {
-                                                    Anim {}
-                                                }
                                             }
 
                                             Behavior on anchors.leftMargin {
@@ -472,7 +455,7 @@ StyledFlickable {
                 implicitHeight: fabMenuItemInner.implicitHeight + Appearance.padding.larger * 2
 
                 radius: Appearance.rounding.full
-                color: Colours.palette.m3primaryContainer
+                color: Colours.palette.m3primary
 
                 opacity: 0
 
@@ -553,14 +536,14 @@ StyledFlickable {
 
                     MaterialIcon {
                         text: fabMenuItem.modelData.icon
-                        color: Colours.palette.m3onPrimaryContainer
+                        color: Colours.palette.m3onPrimary
                         fill: 1
                     }
 
                     StyledText {
                         animate: true
                         text: (root.device && root.device[`${fabMenuItem.modelData.name}ed`] ? fabMenuItem.modelData.name === "connect" ? "dis" : "un" : "") + fabMenuItem.modelData.name
-                        color: Colours.palette.m3onPrimaryContainer
+                        color: Colours.palette.m3onPrimary
                         font.capitalization: Font.Capitalize
                         Layout.preferredWidth: implicitWidth
 
@@ -594,7 +577,7 @@ StyledFlickable {
             implicitHeight: 64
 
             radius: Appearance.rounding.normal
-            color: root.session.bt.fabMenuOpen ? Colours.palette.m3primary : Colours.palette.m3primaryContainer
+            color: Colours.palette.m3primary
 
             states: State {
                 name: "expanded"
@@ -629,7 +612,7 @@ StyledFlickable {
             StateLayer {
                 id: fabState
 
-                color: root.session.bt.fabMenuOpen ? Colours.palette.m3onPrimary : Colours.palette.m3onPrimaryContainer
+                color: Colours.palette.m3onPrimary
 
                 function onClicked(): void {
                     root.session.bt.fabMenuOpen = !root.session.bt.fabMenuOpen;
@@ -642,7 +625,7 @@ StyledFlickable {
                 anchors.centerIn: parent
                 animate: true
                 text: root.session.bt.fabMenuOpen ? "close" : "settings"
-                color: root.session.bt.fabMenuOpen ? Colours.palette.m3onPrimary : Colours.palette.m3onPrimaryContainer
+                color: Colours.palette.m3onPrimary
                 font.pointSize: Appearance.font.size.large
                 fill: 1
             }
@@ -655,11 +638,13 @@ StyledFlickable {
         property alias toggle: toggle
 
         Layout.fillWidth: true
-        spacing: Appearance.spacing.normal
+        spacing: Appearance.spacing.small
 
         StyledText {
             Layout.fillWidth: true
             text: parent.label
+            font.weight: Font.Medium
+            color: Colours.palette.m3onSurface
         }
 
         StyledSwitch {

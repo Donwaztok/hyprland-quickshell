@@ -4,7 +4,7 @@ import ".."
 import qs.components
 import qs.components.controls
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import Quickshell
 import QtQuick
@@ -26,7 +26,7 @@ ColumnLayout {
 
     signal itemSelected(var item)
 
-    spacing: Appearance.spacing.small
+    spacing: Appearance.spacing.normal
 
     Loader {
         id: headerLoader
@@ -39,14 +39,15 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.topMargin: root.headerComponent ? 0 : 0
-        spacing: Appearance.spacing.small
+        spacing: Appearance.spacing.normal
         visible: root.title !== "" || root.description !== ""
 
         StyledText {
             visible: root.title !== ""
             text: root.title
-            font.pointSize: Appearance.font.size.large
-            font.weight: 500
+            font.pointSize: Appearance.font.size.larger
+            font.weight: Font.DemiBold
+            color: Colours.palette.m3onSurface
         }
 
         Loader {
@@ -65,7 +66,10 @@ ColumnLayout {
         visible: root.description !== ""
         Layout.fillWidth: true
         text: root.description
-        color: Colours.palette.m3outline
+        wrapMode: Text.WordWrap
+        font.pointSize: Appearance.font.size.small
+        font.weight: Font.Medium
+        color: Colours.palette.m3onSurfaceVariant
     }
 
     StyledListView {

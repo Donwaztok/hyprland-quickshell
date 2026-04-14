@@ -1,230 +1,154 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.modules.controlcenter
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
+// GNOME Settings sidebar: neutral gray selection, outline icons, optional section rules.
 Item {
     id: root
 
-    required property ShellScreen screen
     required property Session session
     required property bool initialOpeningComplete
 
-    implicitWidth: layout.implicitWidth + Appearance.padding.larger * 4
-    implicitHeight: layout.implicitHeight + Appearance.padding.large * 2
+    readonly property int sidebarWidth: 252
+    readonly property int rowHeight: 40
+    readonly property int rowRadius: 8
+
+    implicitWidth: sidebarWidth
+    implicitHeight: flick.implicitHeight
 
     ColumnLayout {
-        id: layout
+        id: flick
 
         anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.leftMargin: Appearance.padding.larger * 2
-        spacing: Appearance.spacing.normal
-
-        states: State {
-            name: "expanded"
-            when: root.session.navExpanded
-
-            PropertyChanges {
-                layout.spacing: Appearance.spacing.small
-            }
-        }
-
-        transitions: Transition {
-            Anim {
-                properties: "spacing"
-            }
-        }
-
-        Loader {
-            Layout.topMargin: Appearance.spacing.large
-            active: !root.session.floating
-            visible: active
-
-            sourceComponent: StyledRect {
-                readonly property int nonAnimWidth: normalWinIcon.implicitWidth + (root.session.navExpanded ? normalWinLabel.anchors.leftMargin + normalWinLabel.implicitWidth : 0) + normalWinIcon.anchors.leftMargin * 2
-
-                implicitWidth: nonAnimWidth
-                implicitHeight: root.session.navExpanded ? normalWinIcon.implicitHeight + Appearance.padding.normal * 2 : nonAnimWidth
-
-                color: Colours.palette.m3primaryContainer
-                radius: Appearance.rounding.small
-
-                StateLayer {
-                    id: normalWinState
-
-                    color: Colours.palette.m3onPrimaryContainer
-
-                    function onClicked(): void {
-                        root.session.root.close();
-                        WindowFactory.create(null, {
-                            active: root.session.active,
-                            navExpanded: root.session.navExpanded
-                        });
-                    }
-                }
-
-                MaterialIcon {
-                    id: normalWinIcon
-
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: Appearance.padding.large
-
-                    text: "select_window"
-                    color: Colours.palette.m3onPrimaryContainer
-                    font.pointSize: Appearance.font.size.large
-                    fill: 1
-                }
-
-                StyledText {
-                    id: normalWinLabel
-
-                    anchors.left: normalWinIcon.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: Appearance.spacing.normal
-
-                    text: qsTr("Float window")
-                    color: Colours.palette.m3onPrimaryContainer
-                    opacity: root.session.navExpanded ? 1 : 0
-
-                    Behavior on opacity {
-                        Anim {
-                            duration: Appearance.anim.durations.small
-                        }
-                    }
-                }
-
-                Behavior on implicitWidth {
-                    Anim {
-                        duration: Appearance.anim.durations.expressiveDefaultSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
-                    }
-                }
-
-                Behavior on implicitHeight {
-                    Anim {
-                        duration: Appearance.anim.durations.expressiveDefaultSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
-                    }
-                }
-            }
-        }
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: Appearance.padding.large
+        spacing: 0
 
         Repeater {
             model: PaneRegistry.count
 
-            NavItem {
+            ColumnLayout {
                 required property int index
-                Layout.topMargin: index === 0 ? Appearance.spacing.large * 2 : 0
-                icon: PaneRegistry.getByIndex(index).icon
-                label: PaneRegistry.getByIndex(index).label
+
+                Layout.fillWidth: true
+                spacing: 0
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.topMargin: index === 3 ? Appearance.spacing.normal : 0
+                    implicitHeight: index === 3 ? 1 : 0
+                    visible: index === 3
+                    color: Qt.alpha(Colours.palette.m3outlineVariant, 0.45)
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.topMargin: index === 7 ? Appearance.spacing.normal : 0
+                    implicitHeight: index === 7 ? 1 : 0
+                    visible: index === 7
+                    color: Qt.alpha(Colours.palette.m3outlineVariant, 0.45)
+                }
+
+                SidebarRow {
+                    Layout.fillWidth: true
+                    Layout.topMargin: (index === 3 || index === 7) ? Appearance.spacing.small : (index > 0 ? Appearance.spacing.smaller : 0)
+
+                    iconName: PaneRegistry.getByIndex(index).icon
+                    labelText: PaneRegistry.getByIndex(index).title
+                    selected: root.session.active === PaneRegistry.getByIndex(index).label
+                    rowHeight: root.rowHeight
+                    rowRadius: root.rowRadius
+
+                    onTriggered: {
+                        if (!root.initialOpeningComplete) {
+                            return;
+                        }
+                        root.session.active = PaneRegistry.getByIndex(index).label;
+                    }
+                }
             }
         }
     }
 
-    component NavItem: Item {
-        id: item
+    component SidebarRow: Item {
+        id: rowRoot
 
-        required property string icon
-        required property string label
-        readonly property bool active: root.session.active === label
+        property string iconName: ""
+        property string labelText: ""
+        property bool selected: false
+        property int rowHeight: 40
+        property int rowRadius: 8
 
-        implicitWidth: background.implicitWidth
-        implicitHeight: background.implicitHeight + smallLabel.implicitHeight + smallLabel.anchors.topMargin
+        signal triggered()
 
-        states: State {
-            name: "expanded"
-            when: root.session.navExpanded
-
-            PropertyChanges {
-                expandedLabel.opacity: 1
-                smallLabel.opacity: 0
-                background.implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2 + expandedLabel.anchors.leftMargin + expandedLabel.implicitWidth
-                background.implicitHeight: icon.implicitHeight + Appearance.padding.normal * 2
-                item.implicitHeight: background.implicitHeight
-            }
-        }
-
-        transitions: Transition {
-            Anim {
-                property: "opacity"
-                duration: Appearance.anim.durations.small
-            }
-
-            Anim {
-                properties: "implicitWidth,implicitHeight"
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
-            }
-        }
+        implicitWidth: root.sidebarWidth - Appearance.padding.large * 2
+        implicitHeight: rowHeight
 
         StyledRect {
-            id: background
+            id: rowBg
 
-            radius: Appearance.rounding.full
-            color: Qt.alpha(Colours.palette.m3secondaryContainer, item.active ? 1 : 0)
+            anchors.fill: parent
+            radius: rowRoot.rowRadius
+            color: rowRoot.selected
+                ? Colours.tPalette.m3surfaceContainerHigh
+                : "transparent"
 
-            implicitWidth: icon.implicitWidth + icon.anchors.leftMargin * 2
-            implicitHeight: icon.implicitHeight + Appearance.padding.small
+            Rectangle {
+                z: 2
+                visible: rowRoot.selected
+                width: 3
+                radius: 2
+                anchors.left: parent.left
+                anchors.leftMargin: 4
+                anchors.top: parent.top
+                anchors.topMargin: 6
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 6
+                color: Colours.palette.m3primary
+            }
+
+            RowLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: Appearance.padding.normal + (rowRoot.selected ? 5 : 0)
+                anchors.rightMargin: Appearance.padding.normal
+                spacing: Appearance.spacing.normal
+
+                MaterialIcon {
+                    text: rowRoot.iconName
+                    font.pointSize: Appearance.font.size.large
+                    fill: 0
+                    color: rowRoot.selected
+                        ? Colours.palette.m3onSurface
+                        : Colours.palette.m3onSurfaceVariant
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: rowRoot.labelText
+                    elide: Text.ElideRight
+                    font.pointSize: Appearance.font.size.normal
+                    font.weight: Font.Normal
+                    color: rowRoot.selected
+                        ? Colours.palette.m3onSurface
+                        : Colours.palette.m3onSurfaceVariant
+                }
+            }
 
             StateLayer {
-                color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
+                radius: rowRoot.rowRadius
+                color: Colours.palette.m3onSurface
 
                 function onClicked(): void {
-                    // Prevent tab switching during initial opening animation to avoid blank pages
-                    if (!root.initialOpeningComplete) {
-                        return;
-                    }
-                    root.session.active = item.label;
+                    rowRoot.triggered();
                 }
-            }
-
-            MaterialIcon {
-                id: icon
-
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: Appearance.padding.large
-
-                text: item.icon
-                color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                font.pointSize: Appearance.font.size.large
-                fill: item.active ? 1 : 0
-
-                Behavior on fill {
-                    Anim {}
-                }
-            }
-
-            StyledText {
-                id: expandedLabel
-
-                anchors.left: icon.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: Appearance.spacing.normal
-
-                opacity: 0
-                text: item.label
-                color: item.active ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
-                font.capitalization: Font.Capitalize
-            }
-
-            StyledText {
-                id: smallLabel
-
-                anchors.horizontalCenter: icon.horizontalCenter
-                anchors.top: icon.bottom
-                anchors.topMargin: Appearance.spacing.small / 2
-
-                text: item.label
-                font.pointSize: Appearance.font.size.small
-                font.capitalization: Font.Capitalize
             }
         }
     }

@@ -1,5 +1,5 @@
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Shapes
@@ -29,7 +29,7 @@ ShapePath {
         : (wrapper.y - root.rounding * root.sideRounding)
 
     strokeWidth: -1
-    fillColor: wrapper.isDetached ? Qt.rgba(0, 0, 0, 0) : Colours.palette.m3surface
+    fillColor: wrapper.isDetached ? Qt.rgba(0, 0, 0, 0) : Colours.shellSurface
     fillRule: ShapePath.WindingFill
 
     PathArc {

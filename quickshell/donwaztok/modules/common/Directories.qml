@@ -26,7 +26,7 @@ Singleton {
     property string coverArt: FileUtils.trimFileProtocol(`${Directories.cache}/media/coverart`)
     property string tempImages: "/tmp/quickshell/media/images"
     property string latexOutput: FileUtils.trimFileProtocol(`${Directories.cache}/media/latex`)
-    /// `~/.config/donwaztok`: JSON principal, `actions/`, `ai/prompts/`, etc.
+    /// `~/.config/donwaztok`: JSON principal, `actions/`, etc.
     property string shellConfig: FileUtils.trimFileProtocol(`${Directories.config}/donwaztok`)
     property string unifiedConfigUrl: `${Directories.config}/donwaztok/config.json`
     property string unifiedConfigPath: FileUtils.trimFileProtocol(unifiedConfigUrl)
@@ -37,10 +37,7 @@ Singleton {
     property string cliphistDecode: FileUtils.trimFileProtocol(`/tmp/quickshell/media/cliphist`)
     property string screenshotTemp: "/tmp/quickshell/media/screenshot"
     property string wallpaperSwitchScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/colors/switchwall.sh`)
-    property string defaultAiPrompts: Quickshell.shellPath("defaults/ai/prompts")
-    property string userAiPrompts: FileUtils.trimFileProtocol(`${Directories.shellConfig}/ai/prompts`)
     property string userActions: FileUtils.trimFileProtocol(`${Directories.shellConfig}/actions`)
-    property string aiChats: FileUtils.trimFileProtocol(`${Directories.state}/user/ai/chats`)
     property string userAvatarPathAccountsService: FileUtils.trimFileProtocol(`/var/lib/AccountsService/icons/${Quickshell.env("USER") || ""}`)
     property string userAvatarPathRicersAndWeirdSystems: FileUtils.trimFileProtocol(`${Directories.home}.face`)
     property string userAvatarPathRicersAndWeirdSystems2: FileUtils.trimFileProtocol(`${Directories.home}.face.icon`)
@@ -52,7 +49,6 @@ Singleton {
         Quickshell.execDetached(["bash", "-c", `rm -rf '${coverArt}'; mkdir -p '${coverArt}'`])
         Quickshell.execDetached(["bash", "-c", `rm -rf '${latexOutput}'; mkdir -p '${latexOutput}'`])
         Quickshell.execDetached(["bash", "-c", `rm -rf '${cliphistDecode}'; mkdir -p '${cliphistDecode}'`])
-        Quickshell.execDetached(["mkdir", "-p", `${aiChats}`])
         Quickshell.execDetached(["mkdir", "-p", `${userActions}`])
         Quickshell.execDetached(["rm", "-rf", `${tempImages}`])
     }

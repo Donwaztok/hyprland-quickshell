@@ -6,7 +6,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -102,8 +102,6 @@ Item {
         id: taskbarClippingRect
         anchors.fill: parent
         anchors.margins: Appearance.padding.normal
-        anchors.leftMargin: 0
-        anchors.rightMargin: Appearance.padding.normal
 
         radius: taskbarBorder.innerRadius
         color: "transparent"
@@ -112,9 +110,7 @@ Item {
             id: taskbarLoader
 
             anchors.fill: parent
-            anchors.margins: Appearance.padding.large + Appearance.padding.normal
-            anchors.leftMargin: Appearance.padding.large
-            anchors.rightMargin: Appearance.padding.large
+            anchors.margins: Appearance.padding.normal
 
             sourceComponent: taskbarContentComponent
         }
@@ -144,378 +140,289 @@ Item {
                 anchors.right: parent.right
                 anchors.top: parent.top
 
-                spacing: Appearance.spacing.normal
+                spacing: Appearance.spacing.large
 
-                RowLayout {
-                    spacing: Appearance.spacing.smaller
-
-                    StyledText {
-                        text: qsTr("Taskbar")
-                        font.pointSize: Appearance.font.size.large
-                        font.weight: 500
-                    }
+                SettingsHeader {
+                    title: qsTr("Taskbar")
+                    subtitle: qsTr("Edge position, system indicators, tray, and which monitors show the bar.")
                 }
 
-                SectionContainer {
-                    Layout.fillWidth: true
-                    alignTop: true
+                PreferencesGroup {
+                    title: qsTr("Position")
+                    description: qsTr("Which edge of the screen the bar is attached to.")
 
-                    StyledText {
-                        text: qsTr("Position")
-                        font.pointSize: Appearance.font.size.normal
-                    }
-
-                    RowLayout {
-                        Layout.topMargin: Appearance.spacing.smaller
-                        spacing: Appearance.spacing.small
-
-                        ToggleButton {
-                            toggled: root.position === "left"
-                            icon: "west"
-                            label: qsTr("Left")
-                            onClicked: {
-                                root.position = "left";
-                                root.saveConfig();
-                            }
-                        }
-                        ToggleButton {
-                            toggled: root.position === "right"
-                            icon: "east"
-                            label: qsTr("Right")
-                            onClicked: {
-                                root.position = "right";
-                                root.saveConfig();
-                            }
-                        }
-                        ToggleButton {
-                            toggled: root.position === "top"
-                            icon: "north"
-                            label: qsTr("Top")
-                            onClicked: {
-                                root.position = "top";
-                                root.saveConfig();
-                            }
-                        }
-                        ToggleButton {
-                            toggled: root.position === "bottom"
-                            icon: "south"
-                            label: qsTr("Bottom")
-                            onClicked: {
-                                root.position = "bottom";
-                                root.saveConfig();
-                            }
-                        }
-                    }
-                }
-
-                SectionContainer {
-                    Layout.fillWidth: true
-                    alignTop: true
-
-                    StyledText {
-                        text: qsTr("Bar thickness")
-                        font.pointSize: Appearance.font.size.normal
-                    }
-
-                    SectionContainer {
-                        contentSpacing: Appearance.spacing.normal
-
-                        SliderInput {
-                            Layout.fillWidth: true
-                            label: qsTr("Thickness (px)")
-                            value: root.barThickness
-                            from: 28
-                            to: 72
-                            stepSize: 1
-                            suffix: "px"
-                            validator: IntValidator {
-                                bottom: 28
-                                top: 72
-                            }
-                            formatValueFunction: val => Math.round(val).toString()
-                            parseValueFunction: text => parseInt(text)
-                            onValueModified: newValue => {
-                                root.barThickness = Math.round(newValue);
-                                root.saveConfig();
-                            }
-                        }
-                    }
-                }
-
-                SectionContainer {
-                    Layout.fillWidth: true
-                    alignTop: true
-
-                    StyledText {
-                        text: qsTr("Status Icons")
-                        font.pointSize: Appearance.font.size.normal
-                    }
-
-                    ConnectedButtonGroup {
-                        rootItem: root
-
+                    OptionSelectRow {
+                        Layout.fillWidth: true
+                        label: qsTr("Edge")
+                        currentValue: root.position
                         options: [
                             {
-                                label: qsTr("Speakers"),
-                                propertyName: "showAudio",
-                                onToggled: function (checked) {
-                                    root.showAudio = checked;
-                                    root.saveConfig();
-                                }
+                                text: qsTr("Left"),
+                                value: "left"
                             },
                             {
-                                label: qsTr("Microphone"),
-                                propertyName: "showMicrophone",
-                                onToggled: function (checked) {
-                                    root.showMicrophone = checked;
-                                    root.saveConfig();
-                                }
+                                text: qsTr("Right"),
+                                value: "right"
                             },
                             {
-                                label: qsTr("Keyboard"),
-                                propertyName: "showKbLayout",
-                                onToggled: function (checked) {
-                                    root.showKbLayout = checked;
-                                    root.saveConfig();
-                                }
+                                text: qsTr("Top"),
+                                value: "top"
                             },
                             {
-                                label: qsTr("Network"),
-                                propertyName: "showNetwork",
-                                onToggled: function (checked) {
-                                    root.showNetwork = checked;
-                                    root.saveConfig();
-                                }
-                            },
-                            {
-                                label: qsTr("Bluetooth"),
-                                propertyName: "showBluetooth",
-                                onToggled: function (checked) {
-                                    root.showBluetooth = checked;
-                                    root.saveConfig();
-                                }
-                            },
-                            {
-                                label: qsTr("Battery"),
-                                propertyName: "showBattery",
-                                onToggled: function (checked) {
-                                    root.showBattery = checked;
-                                    root.saveConfig();
-                                }
-                            },
-                            {
-                                label: qsTr("Capslock"),
-                                propertyName: "showLockStatus",
-                                onToggled: function (checked) {
-                                    root.showLockStatus = checked;
-                                    root.saveConfig();
-                                }
+                                text: qsTr("Bottom"),
+                                value: "bottom"
                             }
                         ]
+                        onOptionChosen: v => {
+                            root.position = v;
+                            root.saveConfig();
+                        }
                     }
                 }
 
-                RowLayout {
-                    id: mainRowLayout
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.normal
+                PreferencesGroup {
+                    title: qsTr("Bar thickness")
+                    description: qsTr("Height or width of the bar in pixels.")
 
-                    ColumnLayout {
-                        id: leftColumnLayout
+                    SliderInput {
                         Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignTop
-                        spacing: Appearance.spacing.normal
+                        label: qsTr("Thickness (px)")
+                        value: root.barThickness
+                        from: 28
+                        to: 72
+                        stepSize: 1
+                        suffix: "px"
+                        validator: IntValidator {
+                            bottom: 28
+                            top: 72
+                        }
+                        formatValueFunction: val => Math.round(val).toString()
+                        parseValueFunction: text => parseInt(text)
+                        onValueModified: newValue => {
+                            root.barThickness = Math.round(newValue);
+                            root.saveConfig();
+                        }
+                    }
+                }
+
+                PreferencesGroup {
+                    title: qsTr("Status icons")
+                    description: qsTr("Which status indicators appear on the bar.")
+
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Speakers")
+                        checked: root.showAudio
+                        onToggled: checked => {
+                            root.showAudio = checked;
+                            root.saveConfig();
+                        }
                     }
 
-                    ColumnLayout {
-                        id: middleColumnLayout
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignTop
-                        spacing: Appearance.spacing.normal
-
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
-
-                            StyledText {
-                                text: qsTr("Clock")
-                                font.pointSize: Appearance.font.size.normal
-                            }
-
-                            SwitchRow {
-                                label: qsTr("Show clock icon")
-                                checked: root.clockShowIcon
-                                onToggled: checked => {
-                                    root.clockShowIcon = checked;
-                                    root.saveConfig();
-                                }
-                            }
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Microphone")
+                        checked: root.showMicrophone
+                        onToggled: checked => {
+                            root.showMicrophone = checked;
+                            root.saveConfig();
                         }
-
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
-
-                            StyledText {
-                                text: qsTr("Bar Behavior")
-                                font.pointSize: Appearance.font.size.normal
-                            }
-
-                            SwitchRow {
-                                label: qsTr("Persistent")
-                                checked: root.persistent
-                                onToggled: checked => {
-                                    root.persistent = checked;
-                                    root.saveConfig();
-                                }
-                            }
-
-                            SwitchRow {
-                                label: qsTr("Show on hover")
-                                checked: root.showOnHover
-                                onToggled: checked => {
-                                    root.showOnHover = checked;
-                                    root.saveConfig();
-                                }
-                            }
-
-                            SectionContainer {
-                                contentSpacing: Appearance.spacing.normal
-
-                                SliderInput {
-                                    Layout.fillWidth: true
-
-                                    label: qsTr("Drag threshold")
-                                    value: root.dragThreshold
-                                    from: 0
-                                    to: 100
-                                    suffix: "px"
-                                    validator: IntValidator {
-                                        bottom: 0
-                                        top: 100
-                                    }
-                                    formatValueFunction: val => Math.round(val).toString()
-                                    parseValueFunction: text => parseInt(text)
-
-                                    onValueModified: newValue => {
-                                        root.dragThreshold = Math.round(newValue);
-                                        root.saveConfig();
-                                    }
-                                }
-                            }
-                        }
-
                     }
 
-                    ColumnLayout {
-                        id: rightColumnLayout
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Keyboard layout")
+                        checked: root.showKbLayout
+                        onToggled: checked => {
+                            root.showKbLayout = checked;
+                            root.saveConfig();
+                        }
+                    }
+
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Network")
+                        checked: root.showNetwork
+                        onToggled: checked => {
+                            root.showNetwork = checked;
+                            root.saveConfig();
+                        }
+                    }
+
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Bluetooth")
+                        checked: root.showBluetooth
+                        onToggled: checked => {
+                            root.showBluetooth = checked;
+                            root.saveConfig();
+                        }
+                    }
+
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Battery")
+                        checked: root.showBattery
+                        onToggled: checked => {
+                            root.showBattery = checked;
+                            root.saveConfig();
+                        }
+                    }
+
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Caps lock")
+                        checked: root.showLockStatus
+                        onToggled: checked => {
+                            root.showLockStatus = checked;
+                            root.saveConfig();
+                        }
+                    }
+                }
+
+                PreferencesGroup {
+                    title: qsTr("Clock")
+                    description: qsTr("Clock appearance on the bar.")
+
+                    SwitchRow {
+                        label: qsTr("Show clock icon")
+                        checked: root.clockShowIcon
+                        onToggled: checked => {
+                            root.clockShowIcon = checked;
+                            root.saveConfig();
+                        }
+                    }
+                }
+
+                PreferencesGroup {
+                    title: qsTr("Bar behavior")
+                    description: qsTr("Visibility and drag sensitivity.")
+
+                    SwitchRow {
+                        label: qsTr("Persistent")
+                        checked: root.persistent
+                        onToggled: checked => {
+                            root.persistent = checked;
+                            root.saveConfig();
+                        }
+                    }
+
+                    SwitchRow {
+                        label: qsTr("Show on hover")
+                        checked: root.showOnHover
+                        onToggled: checked => {
+                            root.showOnHover = checked;
+                            root.saveConfig();
+                        }
+                    }
+
+                    SliderInput {
                         Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignTop
-                        spacing: Appearance.spacing.normal
+                        Layout.topMargin: Appearance.spacing.small
 
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
-
-                            StyledText {
-                                text: qsTr("Popouts")
-                                font.pointSize: Appearance.font.size.normal
-                            }
-
-                            SwitchRow {
-                                label: qsTr("Tray")
-                                checked: root.popoutTray
-                                onToggled: checked => {
-                                    root.popoutTray = checked;
-                                    root.saveConfig();
-                                }
-                            }
-
-                            SwitchRow {
-                                label: qsTr("Status icons")
-                                checked: root.popoutStatusIcons
-                                onToggled: checked => {
-                                    root.popoutStatusIcons = checked;
-                                    root.saveConfig();
-                                }
-                            }
+                        label: qsTr("Drag threshold")
+                        value: root.dragThreshold
+                        from: 0
+                        to: 100
+                        suffix: "px"
+                        validator: IntValidator {
+                            bottom: 0
+                            top: 100
                         }
+                        formatValueFunction: val => Math.round(val).toString()
+                        parseValueFunction: text => parseInt(text)
 
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
-
-                            StyledText {
-                                text: qsTr("Tray Settings")
-                                font.pointSize: Appearance.font.size.normal
-                            }
-
-                            ConnectedButtonGroup {
-                                rootItem: root
-
-                                options: [
-                                    {
-                                        label: qsTr("Background"),
-                                        propertyName: "trayBackground",
-                                        onToggled: function (checked) {
-                                            root.trayBackground = checked;
-                                            root.saveConfig();
-                                        }
-                                    },
-                                    {
-                                        label: qsTr("Compact"),
-                                        propertyName: "trayCompact",
-                                        onToggled: function (checked) {
-                                            root.trayCompact = checked;
-                                            root.saveConfig();
-                                        }
-                                    },
-                                    {
-                                        label: qsTr("Recolour"),
-                                        propertyName: "trayRecolour",
-                                        onToggled: function (checked) {
-                                            root.trayRecolour = checked;
-                                            root.saveConfig();
-                                        }
-                                    }
-                                ]
-                            }
+                        onValueModified: newValue => {
+                            root.dragThreshold = Math.round(newValue);
+                            root.saveConfig();
                         }
+                    }
+                }
 
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
+                PreferencesGroup {
+                    title: qsTr("Popouts")
+                    description: qsTr("Whether tray and status popouts detach from the bar.")
 
-                            StyledText {
-                                text: qsTr("Monitors")
-                                font.pointSize: Appearance.font.size.normal
-                            }
+                    SwitchRow {
+                        label: qsTr("Tray")
+                        checked: root.popoutTray
+                        onToggled: checked => {
+                            root.popoutTray = checked;
+                            root.saveConfig();
+                        }
+                    }
 
-                            ConnectedButtonGroup {
-                                rootItem: root
-                                // max 3 options per line
-                                rows: Math.ceil(root.monitorNames.length / 3)
+                    SwitchRow {
+                        label: qsTr("Status icons")
+                        checked: root.popoutStatusIcons
+                        onToggled: checked => {
+                            root.popoutStatusIcons = checked;
+                            root.saveConfig();
+                        }
+                    }
+                }
 
-                                options: root.monitorNames.map(e => ({
-                                            label: qsTr(e),
-                                            propertyName: `monitor${e}`,
-                                            onToggled: function (_) {
-                                                // if the given monitor is in the excluded list, it should be added back
-                                                let addedBack = excludedScreens.includes(e);
-                                                if (addedBack) {
-                                                    const index = excludedScreens.indexOf(e);
-                                                    if (index !== -1) {
-                                                        excludedScreens.splice(index, 1);
-                                                    }
-                                                } else {
-                                                    if (!excludedScreens.includes(e)) {
-                                                        excludedScreens.push(e);
-                                                    }
-                                                }
-                                                root.saveConfig();
-                                            },
-                                            state: !Strings.testRegexList(root.excludedScreens, e)
-                                        }))
+                PreferencesGroup {
+                    title: qsTr("Tray")
+                    description: qsTr("Tray layout and coloring.")
+
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Background")
+                        checked: root.trayBackground
+                        onToggled: checked => {
+                            root.trayBackground = checked;
+                            root.saveConfig();
+                        }
+                    }
+
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Compact")
+                        checked: root.trayCompact
+                        onToggled: checked => {
+                            root.trayCompact = checked;
+                            root.saveConfig();
+                        }
+                    }
+
+                    SwitchRow {
+                        flatStyle: true
+                        label: qsTr("Recolour")
+                        checked: root.trayRecolour
+                        onToggled: checked => {
+                            root.trayRecolour = checked;
+                            root.saveConfig();
+                        }
+                    }
+                }
+
+                PreferencesGroup {
+                    title: qsTr("Monitors")
+                    description: qsTr("Turn off to hide the bar on that monitor.")
+
+                    Repeater {
+                        Layout.fillWidth: true
+                        model: root.monitorNames
+
+                        SwitchRow {
+                            required property string modelData
+
+                            flatStyle: true
+                            label: modelData
+                            checked: !Strings.testRegexList(root.excludedScreens, modelData)
+                            onToggled: checked => {
+                                let list = root.excludedScreens.slice();
+                                const idx = list.indexOf(modelData);
+                                if (checked) {
+                                    if (idx !== -1)
+                                        list.splice(idx, 1);
+                                } else {
+                                    if (idx === -1)
+                                        list.push(modelData);
+                                }
+                                root.excludedScreens = list;
+                                root.saveConfig();
                             }
                         }
                     }

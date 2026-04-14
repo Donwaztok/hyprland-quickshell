@@ -1,5 +1,5 @@
 import qs.config
-import qs.services.m3
+import qs.services.shell
 import qs.modules.notifications as Notifications
 import qs.modules.session as Session
 import qs.modules.launcher as Launcher

@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.modules.windowinfo
 import qs.modules.controlcenter
@@ -22,8 +22,9 @@ Item {
     // so find() returns the wrong item and implicitHeight collapses (Shape gap bug).
     // While detached, also use Config fallbacks so size is never 0 before Loader.item exists,
     // and disable implicit size Behaviors so height does not lag behind the real content.
-    readonly property real detachedCcHeight: screen.height * Config.controlCenter.sizes.heightMult
-    readonly property real detachedCcWidth: detachedCcHeight * Config.controlCenter.sizes.ratio
+    readonly property var ccSizes: Config.controlCenter && Config.controlCenter.sizes ? Config.controlCenter.sizes : null
+    readonly property real detachedCcHeight: screen.height * (ccSizes ? ccSizes.heightMult : 0.7)
+    readonly property real detachedCcWidth: detachedCcHeight * (ccSizes ? ccSizes.ratio : 16 / 9)
     readonly property real nonAnimWidth: detachedMode === "any"
         ? Math.max(detachedCcWidth, detachedLoader.item?.implicitWidth ?? detachedLoader.implicitWidth ?? 0)
         : detachedMode === "winfo"
@@ -89,8 +90,8 @@ Item {
         z: -1
         anchors.fill: parent
         visible: root.isDetached
-        radius: Config.border.rounding
-        color: Colours.palette.m3surface
+        radius: Config.border && Config.border.rounding !== undefined ? Config.border.rounding : 12
+        color: Colours.shellSurface
 
         Behavior on color {
             CAnim {}

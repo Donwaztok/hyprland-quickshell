@@ -4,7 +4,7 @@ import qs.components
 import qs.components.controls
 import qs.components.containers
 import qs.components.effects
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import Quickshell
 import Quickshell.Widgets

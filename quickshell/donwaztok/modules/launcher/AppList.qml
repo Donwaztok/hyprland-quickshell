@@ -5,7 +5,7 @@ import qs.modules.launcher.services
 import qs.components
 import qs.components.controls
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.services
 import qs.modules.common.functions

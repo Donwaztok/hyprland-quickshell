@@ -2,7 +2,7 @@ pragma Singleton
 
 import ".."
 import qs.config
-import qs.services.m3
+import qs.services.shell
 import qs.utils
 import Quickshell
 import QtQuick
@@ -80,23 +80,9 @@ Searcher {
 
         function onClicked(list: AppList): void {
             list.visibilities.launcher = false;
-            if (DonwaztokCli.available) {
+            Colours.writeMaterialVariant(variant);
+            if (DonwaztokCli.available)
                 DonwaztokCli.exec(["scheme", "set", "-v", variant]);
-            } else {
-                const builtin = Colours.currentLight ? Colours.builtinSchemes.defaultLight : Colours.builtinSchemes.defaultDark;
-                const raw = builtin.colours;
-                const coloursCopy = {};
-                for (const key in raw) {
-                    if (raw.hasOwnProperty(key))
-                        coloursCopy[key] = raw[key];
-                }
-                Colours.writeScheme({
-                    name: Colours.scheme,
-                    flavour: variant,
-                    mode: builtin.mode,
-                    colours: coloursCopy
-                });
-            }
         }
     }
 }

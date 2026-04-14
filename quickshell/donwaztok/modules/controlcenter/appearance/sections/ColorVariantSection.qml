@@ -5,7 +5,7 @@ import qs.modules.launcher.services
 import qs.components
 import qs.components.controls
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -16,6 +16,8 @@ CollapsibleSection {
     title: qsTr("Color variant")
     description: qsTr("Material theme variant")
     showBackground: true
+    gnomeListRow: true
+    collapsible: false
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -38,25 +40,9 @@ CollapsibleSection {
                     function onClicked(): void {
                         const variant = modelData.variant;
 
-                        if (DonwaztokCli.available) {
-                            Schemes._currentVariantFromCli = variant;
+                        Colours.writeMaterialVariant(variant);
+                        if (DonwaztokCli.available)
                             DonwaztokCli.exec(["scheme", "set", "-v", variant]);
-                        } else {
-                            const builtin = Colours.currentLight ? Colours.builtinSchemes.defaultLight : Colours.builtinSchemes.defaultDark;
-                            const raw = builtin.colours;
-                            const coloursCopy = {};
-                            for (const key in raw) {
-                                if (raw.hasOwnProperty(key))
-                                    coloursCopy[key] = raw[key];
-                            }
-                            Colours.writeScheme({
-                                name: Colours.scheme,
-                                flavour: variant,
-                                mode: builtin.mode,
-                                colours: coloursCopy
-                            });
-                            Schemes._currentVariantFromCli = variant;
-                        }
 
                         Qt.callLater(() => {
                             reloadTimer.restart();

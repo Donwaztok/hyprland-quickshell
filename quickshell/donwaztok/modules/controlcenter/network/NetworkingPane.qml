@@ -7,7 +7,7 @@ import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import Quickshell
@@ -43,16 +43,18 @@ Item {
 
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    spacing: Appearance.spacing.normal
+                    spacing: Appearance.spacing.larger
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: Appearance.spacing.smaller
+                        spacing: Appearance.spacing.normal
 
                         StyledText {
                             text: qsTr("Network")
-                            font.pointSize: Appearance.font.size.large
-                            font.weight: 500
+                            font.pointSize: Appearance.font.size.extraLarge
+                            font.weight: Font.DemiBold
+                            color: Colours.palette.m3onSurface
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
                         Item {
@@ -60,9 +62,10 @@ Item {
                         }
 
                         ToggleButton {
+                            Layout.alignment: Qt.AlignVCenter
                             toggled: Nmcli.wifiEnabled
                             icon: "wifi"
-                            accent: "Tertiary"
+                            accent: "Secondary"
                             iconSize: Appearance.font.size.normal
                             horizontalPadding: Appearance.padding.normal
                             verticalPadding: Appearance.padding.smaller
@@ -74,6 +77,7 @@ Item {
                         }
 
                         ToggleButton {
+                            Layout.alignment: Qt.AlignVCenter
                             toggled: Nmcli.scanning
                             icon: "wifi_find"
                             accent: "Secondary"
@@ -88,9 +92,10 @@ Item {
                         }
 
                         ToggleButton {
+                            Layout.alignment: Qt.AlignVCenter
                             toggled: !root.session.ethernet.active && !root.session.network.active
                             icon: "settings"
-                            accent: "Primary"
+                            accent: "Secondary"
                             iconSize: Appearance.font.size.normal
                             horizontalPadding: Appearance.padding.normal
                             verticalPadding: Appearance.padding.smaller
@@ -109,6 +114,13 @@ Item {
                                 }
                             }
                         }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: Appearance.spacing.normal
+                        implicitHeight: 1
+                        color: ControlCenterChrome.paneSectionRule
                     }
 
                     CollapsibleSection {

@@ -1,4 +1,4 @@
-import qs.services.m3
+import qs.services.shell
 import QtQuick
 import QtQuick.Layouts
 import qs.modules.common
@@ -32,7 +32,7 @@ Item {
     Rectangle {
         id: background
         anchors.fill: parent
-        // tPalette = Caelestia layer() (transparency / wallpaper tint); differs from Appearance after MaterialThemeLoader sync.
+        // tPalette = layer() over palette; Appearance.m3colors is Colours.current.
         color: Colours.tPalette.m3surfaceContainer
         border.width: 1
         border.color: Colours.tPalette.m3outlineVariant

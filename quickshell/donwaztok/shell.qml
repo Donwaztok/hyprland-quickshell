@@ -22,8 +22,6 @@ ShellRoot {
     ReloadPopup {}
 
     Component.onCompleted: {
-        MaterialThemeLoader.reapplyTheme()
-        Qt.callLater(() => MaterialThemeLoader.applyDonwaztokPaletteToSharedUi())
         ConflictKiller.load()
         Cliphist.refresh()
         Wallpapers.load()

@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.containers
-import qs.services.m3
+import qs.services.shell
 import qs.config
 import qs.utils
 import qs.modules.bar
