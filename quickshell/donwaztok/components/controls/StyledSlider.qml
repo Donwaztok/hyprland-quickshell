@@ -9,11 +9,14 @@ Slider {
     id: root
 
     implicitHeight: 32
+    leftPadding: 10
+    rightPadding: 10
+    property real trackHeight: 4
 
     background: Item {
-        implicitHeight: 32
-
-        readonly property real trackH: 4
+        anchors.fill: parent
+        anchors.leftMargin: root.leftPadding
+        anchors.rightMargin: root.rightPadding
 
         StyledRect {
             id: trackGroove
@@ -21,17 +24,22 @@ Slider {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.right: parent.right
-            height: trackH
-            radius: trackH / 2
-            color: Colours.tPalette.m3surfaceContainerHighest
+            height: root.trackHeight
+            radius: root.trackHeight / 2
+            color: Qt.rgba(
+                Colours.palette.m3onSurface.r,
+                Colours.palette.m3onSurface.g,
+                Colours.palette.m3onSurface.b,
+                0.28
+            )
         }
 
         StyledRect {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            height: trackH
-            width: Math.max(0, root.visualPosition * parent.width)
-            radius: trackH / 2
+            height: root.trackHeight
+            width: Math.max(0, root.visualPosition * trackGroove.width)
+            radius: root.trackHeight / 2
             color: Colours.palette.m3primary
         }
     }
