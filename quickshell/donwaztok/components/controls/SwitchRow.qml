@@ -11,8 +11,9 @@ StyledRect {
 
     required property string label
     required property bool checked
-    property bool enabled: true
-    /** Flat list row: no nested card (use inside `PreferencesGroup` / `SectionContainer`). Default on — avoids “card in card”. */
+    /** When false, the switch is disabled (does not shadow `Item.enabled`). */
+    property bool interactive: true
+    /** Flat list row: no nested card (use inside `PreferencesGroup`). Default on — avoids “card in card”. */
     property bool flatStyle: true
     property var onToggled: function (checked) {}
 
@@ -46,7 +47,7 @@ StyledRect {
 
         StyledSwitch {
             checked: root.checked
-            enabled: root.enabled
+            enabled: root.interactive
             onToggled: {
                 root.onToggled(checked);
             }

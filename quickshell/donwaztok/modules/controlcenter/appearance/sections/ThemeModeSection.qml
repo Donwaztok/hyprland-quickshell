@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import ".."
+import "../../components"
 import qs.modules.launcher.services
 import qs.components
 import qs.components.controls
@@ -11,16 +12,14 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-CollapsibleSection {
+PreferencesGroup {
     id: root
 
+    Layout.fillWidth: true
     title: qsTr("Style")
-    showBackground: true
-    gnomeListRow: true
-    collapsible: false
+    description: qsTr("Light or dark look, and the accent color used across the shell.")
 
     ColumnLayout {
-        id: styleColumn
         Layout.fillWidth: true
         spacing: Appearance.spacing.normal
 
@@ -172,13 +171,13 @@ CollapsibleSection {
                 }
             }
         }
-    }
 
-    Timer {
-        id: reloadTimer
-        interval: 300
-        onTriggered: {
-            Schemes.reload();
+        Timer {
+            id: reloadTimer
+            interval: 300
+            onTriggered: {
+                Schemes.reload();
+            }
         }
     }
 

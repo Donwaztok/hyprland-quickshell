@@ -4,7 +4,6 @@ import ".."
 import "../components"
 import qs.components
 import qs.components.controls
-import qs.components.effects
 import qs.components.containers
 import qs.services.shell
 import qs.config
@@ -19,8 +18,8 @@ Item {
 
     required property Session session
 
-    // General Settings
-    property bool enabled: Config.dashboard.enabled ?? true
+    // General Settings (not named `enabled` — that shadows `Item.enabled` and triggers Qt warnings)
+    property bool dashboardEnabled: Config.dashboard.enabled ?? true
     property bool showOnHover: Config.dashboard.showOnHover ?? true
     property int mediaUpdateInterval: Config.dashboard.mediaUpdateInterval ?? 1000
     property int resourceUpdateInterval: Config.dashboard.resourceUpdateInterval ?? 1000
@@ -44,7 +43,7 @@ Item {
     anchors.fill: parent
 
     function saveConfig() {
-        Config.dashboard.enabled = root.enabled;
+        Config.dashboard.enabled = root.dashboardEnabled;
         Config.dashboard.showOnHover = root.showOnHover;
         Config.dashboard.mediaUpdateInterval = root.mediaUpdateInterval;
         Config.dashboard.resourceUpdateInterval = root.resourceUpdateInterval;
@@ -64,62 +63,56 @@ Item {
         Config.save();
     }
 
-    ClippingRectangle {
-        id: dashboardClippingRect
+    StyledFlickable {
+        id: contentFlickable
         anchors.fill: parent
-        anchors.margins: Appearance.padding.normal
-        anchors.leftMargin: 0
-        anchors.rightMargin: Appearance.padding.normal
+        flickableDirection: Flickable.VerticalFlick
+        contentHeight: contentLayout.implicitHeight
 
-        radius: dashboardBorder.innerRadius
-        color: "transparent"
-
-        Loader {
-            id: dashboardLoader
-
-            anchors.fill: parent
-            anchors.margins: Appearance.padding.large + Appearance.padding.normal
-            anchors.leftMargin: Appearance.padding.large
-            anchors.rightMargin: Appearance.padding.large
-
-            sourceComponent: dashboardContentComponent
+        StyledScrollBar.vertical: StyledScrollBar {
+            flickable: contentFlickable
         }
-    }
 
-    InnerBorder {
-        id: dashboardBorder
-        leftThickness: 0
-        rightThickness: Appearance.padding.normal
-    }
+        ColumnLayout {
+            id: contentLayout
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: Appearance.spacing.normal
 
-    Component {
-        id: dashboardContentComponent
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: constrainedColumn.implicitHeight
 
-        StyledFlickable {
-            id: dashboardFlickable
-            flickableDirection: Flickable.VerticalFlick
-            contentHeight: dashboardLayout.height
+                readonly property real maxContentWidth: 860
 
-            StyledScrollBar.vertical: StyledScrollBar {
-                flickable: dashboardFlickable
-            }
+                ColumnLayout {
+                    id: constrainedColumn
+                    width: Math.min(parent.width, parent.maxContentWidth)
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: Appearance.spacing.normal
 
-            ColumnLayout {
-                id: dashboardLayout
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
+                    SettingsHeader {
+                        title: qsTr("Dashboard")
+                        subtitle: qsTr("Which tabs appear, weather location, and performance meters.")
+                        layoutBottomMargin: Appearance.spacing.smaller
+                    }
 
-                spacing: Appearance.spacing.large
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: Appearance.spacing.smaller
+                        implicitHeight: 1
+                        color: ControlCenterChrome.paneSectionRule
+                    }
 
-                // General Settings Section (pane title is only in the window header bar)
-                GeneralSection {
-                    rootItem: root
-                }
+                    GeneralSection {
+                        Layout.fillWidth: true
+                        rootItem: root
+                    }
 
-                // Performance Resources Section
-                PerformanceSection {
-                    rootItem: root
+                    PerformanceSection {
+                        Layout.fillWidth: true
+                        rootItem: root
+                    }
                 }
             }
         }

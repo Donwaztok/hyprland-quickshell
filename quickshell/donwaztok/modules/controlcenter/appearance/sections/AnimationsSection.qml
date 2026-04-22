@@ -9,19 +9,17 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-CollapsibleSection {
+PreferencesGroup {
     id: root
 
     required property var rootPane
 
+    Layout.fillWidth: true
     title: qsTr("Animations")
-    showBackground: true
-    gnomeListRow: true
-    collapsible: false
+    description: qsTr("Scales how long transitions take across the shell.")
 
     SliderInput {
         Layout.fillWidth: true
-
         label: qsTr("Animation duration scale")
         value: rootPane.animDurationsScale
         from: 0.1

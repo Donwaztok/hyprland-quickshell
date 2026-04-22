@@ -13,8 +13,8 @@ Item {
     property var validator: null
     property bool readOnly: false
     property int horizontalAlignment: TextInput.AlignHCenter
-    property int implicitWidth: 70
-    property bool enabled: true
+    /** When false, the field is read-only and dimmed (does not shadow `Item.enabled`). */
+    property bool inputEnabled: true
 
     // Expose activeFocus through alias to avoid FINAL property override
     readonly property alias hasFocus: inputField.activeFocus
@@ -22,8 +22,9 @@ Item {
     signal textEdited(string text)
     signal editingFinished
 
+    implicitWidth: 70
     implicitHeight: inputField.implicitHeight
-    opacity: root.enabled ? 1 : 0.5
+    opacity: root.inputEnabled ? 1 : 0.5
 
     StyledTextField {
         id: inputField
@@ -32,7 +33,7 @@ Item {
         horizontalAlignment: root.horizontalAlignment
         validator: root.validator
         readOnly: root.readOnly
-        enabled: root.enabled
+        enabled: root.inputEnabled
 
         onActiveFocusChanged: {
             if (!inputField.activeFocus)
@@ -63,6 +64,6 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.IBeamCursor
         acceptedButtons: Qt.NoButton
-        enabled: root.enabled
+        enabled: root.inputEnabled
     }
 }

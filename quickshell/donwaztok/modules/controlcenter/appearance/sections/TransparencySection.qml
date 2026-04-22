@@ -9,21 +9,21 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-CollapsibleSection {
+PreferencesGroup {
     id: root
 
     required property var rootPane
 
+    Layout.fillWidth: true
     title: qsTr("Transparency")
-    showBackground: true
-    gnomeListRow: true
-    collapsible: false
+    description: qsTr("Whether layered surfaces are translucent and how strong the effect is.")
 
     ColumnLayout {
         Layout.fillWidth: true
         spacing: Appearance.spacing.normal
 
         SwitchRow {
+            flatStyle: true
             label: qsTr("Transparency enabled")
             checked: rootPane.transparencyEnabled
             onToggled: checked => {
@@ -40,7 +40,6 @@ CollapsibleSection {
 
         SliderInput {
             Layout.fillWidth: true
-
             label: qsTr("Transparency base")
             value: rootPane.transparencyBase * 100
             from: 0
@@ -67,7 +66,6 @@ CollapsibleSection {
 
         SliderInput {
             Layout.fillWidth: true
-
             label: qsTr("Transparency layers")
             value: rootPane.transparencyLayers * 100
             from: 0

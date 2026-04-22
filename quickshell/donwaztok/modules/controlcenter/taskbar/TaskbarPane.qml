@@ -4,7 +4,6 @@ import ".."
 import "../components"
 import qs.components
 import qs.components.controls
-import qs.components.effects
 import qs.components.containers
 import qs.services.shell
 import qs.config
@@ -98,89 +97,81 @@ Item {
         id: entriesModel
     }
 
-    ClippingRectangle {
-        id: taskbarClippingRect
+    StyledFlickable {
+        id: contentFlickable
         anchors.fill: parent
-        anchors.margins: Appearance.padding.normal
+        flickableDirection: Flickable.VerticalFlick
+        contentHeight: contentLayout.implicitHeight
 
-        radius: taskbarBorder.innerRadius
-        color: "transparent"
-
-        Loader {
-            id: taskbarLoader
-
-            anchors.fill: parent
-            anchors.margins: Appearance.padding.normal
-
-            sourceComponent: taskbarContentComponent
+        StyledScrollBar.vertical: StyledScrollBar {
+            flickable: contentFlickable
         }
-    }
 
-    InnerBorder {
-        id: taskbarBorder
-        leftThickness: 0
-        rightThickness: Appearance.padding.normal
-    }
+        ColumnLayout {
+            id: contentLayout
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: Appearance.spacing.normal
 
-    Component {
-        id: taskbarContentComponent
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: constrainedColumn.implicitHeight
 
-        StyledFlickable {
-            id: sidebarFlickable
-            flickableDirection: Flickable.VerticalFlick
-            contentHeight: sidebarLayout.height
+                readonly property real maxContentWidth: 860
 
-            StyledScrollBar.vertical: StyledScrollBar {
-                flickable: sidebarFlickable
-            }
+                ColumnLayout {
+                    id: constrainedColumn
+                    width: Math.min(parent.width, parent.maxContentWidth)
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: Appearance.spacing.normal
 
-            ColumnLayout {
-                id: sidebarLayout
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
+                    SettingsHeader {
+                        title: qsTr("Taskbar")
+                        subtitle: qsTr("Edge position, system indicators, tray, and which monitors show the bar.")
+                        layoutBottomMargin: Appearance.spacing.smaller
+                    }
 
-                spacing: Appearance.spacing.large
-
-                SettingsHeader {
-                    title: qsTr("Taskbar")
-                    subtitle: qsTr("Edge position, system indicators, tray, and which monitors show the bar.")
-                }
-
-                PreferencesGroup {
-                    title: qsTr("Position")
-                    description: qsTr("Which edge of the screen the bar is attached to.")
-
-                    OptionSelectRow {
+                    Rectangle {
                         Layout.fillWidth: true
-                        label: qsTr("Edge")
-                        currentValue: root.position
-                        options: [
-                            {
-                                text: qsTr("Left"),
-                                value: "left"
-                            },
-                            {
-                                text: qsTr("Right"),
-                                value: "right"
-                            },
-                            {
-                                text: qsTr("Top"),
-                                value: "top"
-                            },
-                            {
-                                text: qsTr("Bottom"),
-                                value: "bottom"
+                        Layout.bottomMargin: Appearance.spacing.smaller
+                        implicitHeight: 1
+                        color: ControlCenterChrome.paneSectionRule
+                    }
+
+                    PreferencesGroup {
+                        title: qsTr("Position")
+                        description: qsTr("Which edge of the screen the bar is attached to.")
+
+                        OptionSelectRow {
+                            Layout.fillWidth: true
+                            label: qsTr("Edge")
+                            currentValue: root.position
+                            options: [
+                                {
+                                    text: qsTr("Left"),
+                                    value: "left"
+                                },
+                                {
+                                    text: qsTr("Right"),
+                                    value: "right"
+                                },
+                                {
+                                    text: qsTr("Top"),
+                                    value: "top"
+                                },
+                                {
+                                    text: qsTr("Bottom"),
+                                    value: "bottom"
+                                }
+                            ]
+                            onOptionChosen: v => {
+                                root.position = v;
+                                root.saveConfig();
                             }
-                        ]
-                        onOptionChosen: v => {
-                            root.position = v;
-                            root.saveConfig();
                         }
                     }
-                }
 
-                PreferencesGroup {
+                    PreferencesGroup {
                     title: qsTr("Bar thickness")
                     description: qsTr("Height or width of the bar in pixels.")
 
@@ -430,4 +421,5 @@ Item {
             }
         }
     }
+}
 }

@@ -9,15 +9,14 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-CollapsibleSection {
+PreferencesGroup {
     id: root
 
     required property var rootPane
 
+    Layout.fillWidth: true
     title: qsTr("Border")
-    showBackground: true
-    gnomeListRow: true
-    collapsible: false
+    description: qsTr("Default corner radius and outline thickness for framed surfaces.")
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -25,7 +24,6 @@ CollapsibleSection {
 
         SliderInput {
             Layout.fillWidth: true
-
             label: qsTr("Border rounding")
             value: rootPane.borderRounding
             from: 0.1
@@ -51,7 +49,6 @@ CollapsibleSection {
 
         SliderInput {
             Layout.fillWidth: true
-
             label: qsTr("Border thickness")
             value: rootPane.borderThickness
             from: 0.1

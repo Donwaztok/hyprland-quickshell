@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import ".."
 import "../components"
 import QtQuick
@@ -8,99 +10,102 @@ import qs.components.controls
 import qs.config
 import qs.services.shell
 
-SectionContainer {
+ColumnLayout {
     id: root
 
     required property var rootItem
-    // GPU toggle is hidden when gpuType is "NONE" (no GPU data available)
     readonly property bool gpuAvailable: SystemUsage.gpuType !== "NONE"
-    // Battery toggle is hidden when no laptop battery is present
     readonly property bool batteryAvailable: UPower.displayDevice.isLaptopBattery
 
     Layout.fillWidth: true
-    alignTop: true
+    spacing: Appearance.spacing.normal
 
-    StyledText {
-        text: qsTr("Performance Resources")
-        font.pointSize: Appearance.font.size.normal
-    }
-
-    ConnectedButtonGroup {
-        rootItem: root.rootItem
-        options: {
-            let opts = [];
-            if (root.batteryAvailable)
-                opts.push({
-                    "label": qsTr("Battery"),
-                    "propertyName": "showBattery",
-                    "onToggled": function (checked) {
-                        root.rootItem.showBattery = checked;
-                        root.rootItem.saveConfig();
-                    }
-                });
-
-            if (root.gpuAvailable)
-                opts.push({
-                    "label": qsTr("GPU"),
-                    "propertyName": "showGpu",
-                    "onToggled": function (checked) {
-                        root.rootItem.showGpu = checked;
-                        root.rootItem.saveConfig();
-                    }
-                });
-
-            opts.push({
-                "label": qsTr("CPU"),
-                "propertyName": "showCpu",
-                "onToggled": function (checked) {
-                    root.rootItem.showCpu = checked;
-                    root.rootItem.saveConfig();
-                }
-            }, {
-                "label": qsTr("Memory"),
-                "propertyName": "showMemory",
-                "onToggled": function (checked) {
-                    root.rootItem.showMemory = checked;
-                    root.rootItem.saveConfig();
-                }
-            }, {
-                "label": qsTr("Storage"),
-                "propertyName": "showStorage",
-                "onToggled": function (checked) {
-                    root.rootItem.showStorage = checked;
-                    root.rootItem.saveConfig();
-                }
-            }, {
-                "label": qsTr("Network"),
-                "propertyName": "showNetwork",
-                "onToggled": function (checked) {
-                    root.rootItem.showNetwork = checked;
-                    root.rootItem.saveConfig();
-                }
-            });
-            return opts;
-        }
-    }
-
-    SliderInput {
+    PreferencesGroup {
         Layout.fillWidth: true
+        title: qsTr("Performance meters")
+        description: qsTr("Choose which resource graphs appear in the performance tab.")
 
-        label: qsTr("Resource update interval")
-        value: root.rootItem.resourceUpdateInterval
-        from: 100
-        to: 10000
-        stepSize: 100
-        suffix: "ms"
-        validator: IntValidator {
-            bottom: 100
-            top: 10000
+        SwitchRow {
+            visible: root.batteryAvailable
+            flatStyle: true
+            label: qsTr("Battery")
+            checked: root.rootItem.showBattery
+            onToggled: checked => {
+                root.rootItem.showBattery = checked;
+                root.rootItem.saveConfig();
+            }
         }
-        formatValueFunction: val => Math.round(val).toString()
-        parseValueFunction: text => parseInt(text)
 
-        onValueModified: newValue => {
-            root.rootItem.resourceUpdateInterval = Math.round(newValue);
-            root.rootItem.saveConfig();
+        SwitchRow {
+            visible: root.gpuAvailable
+            flatStyle: true
+            label: qsTr("GPU")
+            checked: root.rootItem.showGpu
+            onToggled: checked => {
+                root.rootItem.showGpu = checked;
+                root.rootItem.saveConfig();
+            }
+        }
+
+        SwitchRow {
+            flatStyle: true
+            label: qsTr("CPU")
+            checked: root.rootItem.showCpu
+            onToggled: checked => {
+                root.rootItem.showCpu = checked;
+                root.rootItem.saveConfig();
+            }
+        }
+
+        SwitchRow {
+            flatStyle: true
+            label: qsTr("Memory")
+            checked: root.rootItem.showMemory
+            onToggled: checked => {
+                root.rootItem.showMemory = checked;
+                root.rootItem.saveConfig();
+            }
+        }
+
+        SwitchRow {
+            flatStyle: true
+            label: qsTr("Storage")
+            checked: root.rootItem.showStorage
+            onToggled: checked => {
+                root.rootItem.showStorage = checked;
+                root.rootItem.saveConfig();
+            }
+        }
+
+        SwitchRow {
+            flatStyle: true
+            label: qsTr("Network")
+            checked: root.rootItem.showNetwork
+            onToggled: checked => {
+                root.rootItem.showNetwork = checked;
+                root.rootItem.saveConfig();
+            }
+        }
+
+        SliderInput {
+            Layout.fillWidth: true
+            label: qsTr("Resource update interval")
+            value: root.rootItem.resourceUpdateInterval
+            from: 100
+            to: 10000
+            stepSize: 100
+            suffix: "ms"
+            validator: IntValidator {
+                bottom: 100
+                top: 10000
+            }
+            formatValueFunction: val => Math.round(val).toString()
+            parseValueFunction: text => parseInt(text)
+
+            onValueModified: newValue => {
+                root.rootItem.resourceUpdateInterval = Math.round(newValue);
+                root.rootItem.saveConfig();
+            }
         }
     }
 }

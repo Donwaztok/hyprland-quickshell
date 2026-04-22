@@ -270,7 +270,7 @@ Item {
                                         bottom: 0
                                         top: 100
                                     }
-                                    enabled: !Audio.muted
+                                    inputEnabled: !Audio.muted
 
                                     Component.onCompleted: {
                                         text = Math.round(Audio.volume * 100).toString();
@@ -385,7 +385,7 @@ Item {
                                         bottom: 0
                                         top: 100
                                     }
-                                    enabled: !Audio.sourceMuted
+                                    inputEnabled: !Audio.sourceMuted
 
                                     Component.onCompleted: {
                                         text = Math.round(Audio.sourceVolume * 100).toString();
@@ -516,7 +516,7 @@ Item {
                                                 bottom: 0
                                                 top: 100
                                             }
-                                            enabled: !Audio.getStreamMuted(modelData)
+                                            inputEnabled: !Audio.getStreamMuted(modelData)
 
                                             Component.onCompleted: {
                                                 text = Math.round(Audio.getStreamVolume(modelData) * 100).toString();

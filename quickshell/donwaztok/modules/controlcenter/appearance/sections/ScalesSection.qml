@@ -9,15 +9,14 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-CollapsibleSection {
+PreferencesGroup {
     id: root
 
     required property var rootPane
 
+    Layout.fillWidth: true
     title: qsTr("Scales")
-    showBackground: true
-    gnomeListRow: true
-    collapsible: false
+    description: qsTr("Padding, corner rounding, and spacing between UI elements.")
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -25,7 +24,6 @@ CollapsibleSection {
 
         SliderInput {
             Layout.fillWidth: true
-
             label: qsTr("Padding scale")
             value: rootPane.paddingScale
             from: 0.5
@@ -51,7 +49,6 @@ CollapsibleSection {
 
         SliderInput {
             Layout.fillWidth: true
-
             label: qsTr("Rounding scale")
             value: rootPane.roundingScale
             from: 0.1
@@ -77,7 +74,6 @@ CollapsibleSection {
 
         SliderInput {
             Layout.fillWidth: true
-
             label: qsTr("Spacing scale")
             value: rootPane.spacingScale
             from: 0.1

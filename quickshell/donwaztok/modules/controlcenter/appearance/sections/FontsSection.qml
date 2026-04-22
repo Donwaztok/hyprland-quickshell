@@ -9,15 +9,14 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 
-CollapsibleSection {
+PreferencesGroup {
     id: root
 
     required property var rootPane
 
+    Layout.fillWidth: true
     title: qsTr("Fonts")
-    showBackground: true
-    gnomeListRow: true
-    collapsible: false
+    description: qsTr("Global text size and which font families are used for icons, code, and UI.")
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -25,7 +24,6 @@ CollapsibleSection {
 
         SliderInput {
             Layout.fillWidth: true
-
             label: qsTr("Font size scale")
             value: rootPane.fontSizeScale
             from: 0.7

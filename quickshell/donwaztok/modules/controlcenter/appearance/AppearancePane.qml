@@ -5,9 +5,7 @@ import "../components"
 import "./sections"
 import qs.components
 import qs.components.controls
-import qs.components.effects
 import qs.components.containers
-import qs.components.images
 import qs.services.shell
 import qs.config
 import qs.utils
@@ -91,7 +89,7 @@ Item {
         readonly property var rootPane: root
         anchors.fill: parent
         flickableDirection: Flickable.VerticalFlick
-        contentHeight: contentLayout.height
+        contentHeight: contentLayout.implicitHeight
 
         StyledScrollBar.vertical: StyledScrollBar {
             flickable: contentFlickable
@@ -117,25 +115,10 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: Appearance.spacing.normal
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: Appearance.spacing.smaller / 2
-
-                        StyledText {
-                            text: qsTr("Appearance")
-                            font.pointSize: Appearance.font.size.extraLarge
-                            font.weight: Font.DemiBold
-                            color: Colours.palette.m3onSurface
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: qsTr("Theme, type, wallpaper, and desktop clock.")
-                            wrapMode: Text.WordWrap
-                            font.pointSize: Appearance.font.size.small
-                            font.weight: Font.Medium
-                            color: Colours.light ? Colours.palette.m3onSurfaceVariant : Qt.lighter(Colours.palette.m3onSurfaceVariant, 1.12)
-                        }
+                    SettingsHeader {
+                        title: qsTr("Appearance")
+                        subtitle: qsTr("Theme, type, wallpaper, and desktop clock.")
+                        layoutBottomMargin: Appearance.spacing.smaller
                     }
 
                     Rectangle {
@@ -147,6 +130,7 @@ Item {
 
                     ThemeModeSection {
                         id: themeModeSection
+                        Layout.fillWidth: true
                     }
 
                     PreferencesGroup {
@@ -162,33 +146,45 @@ Item {
                         }
                     }
 
+                    BackgroundSection {
+                        id: backgroundSection
+                        Layout.fillWidth: true
+                        rootPane: contentFlickable.rootPane
+                    }
+
+                    DesktopClockSection {
+                        id: desktopClockSection
+                        Layout.fillWidth: true
+                        rootPane: contentFlickable.rootPane
+                    }
+
                     AnimationsSection {
                         id: animationsSection
+                        Layout.fillWidth: true
                         rootPane: contentFlickable.rootPane
                     }
 
                     FontsSection {
                         id: fontsSection
+                        Layout.fillWidth: true
                         rootPane: contentFlickable.rootPane
                     }
 
                     ScalesSection {
                         id: scalesSection
+                        Layout.fillWidth: true
                         rootPane: contentFlickable.rootPane
                     }
 
                     TransparencySection {
                         id: transparencySection
+                        Layout.fillWidth: true
                         rootPane: contentFlickable.rootPane
                     }
 
                     BorderSection {
                         id: borderSection
-                        rootPane: contentFlickable.rootPane
-                    }
-
-                    BackgroundSection {
-                        id: backgroundSection
+                        Layout.fillWidth: true
                         rootPane: contentFlickable.rootPane
                     }
                 }
