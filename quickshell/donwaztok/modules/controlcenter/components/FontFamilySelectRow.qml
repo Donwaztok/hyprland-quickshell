@@ -45,10 +45,10 @@ RowLayout {
     Item {
         id: triggerHost
 
-        Layout.preferredWidth: Math.min(360, Math.floor(parent.width * 0.55))
+        // Same pattern as OptionSelectRow: no `parent.width` in layout hints (avoids recursive rearrange).
+        Layout.fillWidth: true
         Layout.minimumWidth: 180
         Layout.maximumWidth: 400
-        Layout.fillWidth: false
         implicitHeight: trigger.height
 
         StyledRect {

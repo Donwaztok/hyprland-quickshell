@@ -71,7 +71,7 @@ PreferencesGroup {
 
         OptionSelectRow {
             label: qsTr("Vertical")
-            enabled: rootPane.desktopClockEnabled
+            interactive: rootPane.desktopClockEnabled
             options: root.verticalOptions
             currentValue: root.clockV
             onOptionChosen: v => root.setClockPos(v, root.clockH)
@@ -79,7 +79,7 @@ PreferencesGroup {
 
         OptionSelectRow {
             label: qsTr("Horizontal")
-            enabled: rootPane.desktopClockEnabled
+            interactive: rootPane.desktopClockEnabled
             options: root.horizontalOptions
             currentValue: root.clockH
             onOptionChosen: v => root.setClockPos(root.clockV, v)

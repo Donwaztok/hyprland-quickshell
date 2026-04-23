@@ -180,7 +180,6 @@ Item {
     }
 
     component WrappedLoader: Loader {
-        required property bool enabled
         required property string id
         required property int index
 

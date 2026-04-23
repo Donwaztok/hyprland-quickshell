@@ -15,13 +15,14 @@ RowLayout {
     required property var options
     required property string currentValue
 
-    property bool enabled: true
+    /** When false, the row is dimmed and the menu cannot open (does not shadow `Item.enabled`). */
+    property bool interactive: true
 
     signal optionChosen(string value)
 
     Layout.fillWidth: true
     spacing: Appearance.spacing.normal
-    opacity: root.enabled ? 1 : 0.45
+    opacity: root.interactive ? 1 : 0.45
 
     readonly property string currentLabel: {
         const o = root.options;
@@ -45,10 +46,10 @@ RowLayout {
     Item {
         id: triggerHost
 
-        Layout.preferredWidth: Math.min(280, Math.floor(parent.width * 0.5))
+        // Share row with label via stretch; min/max only — no `parent.width` (avoids recursive rearrange).
+        Layout.fillWidth: true
         Layout.minimumWidth: 140
         Layout.maximumWidth: 320
-        Layout.fillWidth: false
         implicitHeight: trigger.height
 
         StyledRect {
@@ -57,7 +58,7 @@ RowLayout {
             anchors.fill: parent
             implicitHeight: 40
             radius: Appearance.rounding.normal
-            color: !root.enabled ? Colours.tPalette.m3surfaceContainerLow : triggerMa.containsMouse ? Colours.tPalette.m3surfaceContainer : Colours.tPalette.m3surfaceContainerHighest
+            color: !root.interactive ? Colours.tPalette.m3surfaceContainerLow : triggerMa.containsMouse ? Colours.tPalette.m3surfaceContainer : Colours.tPalette.m3surfaceContainerHighest
             border.width: 1
             border.color: Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.55 : 0.42)
 
@@ -94,7 +95,7 @@ RowLayout {
                 id: triggerMa
 
                 anchors.fill: parent
-                enabled: root.enabled
+                enabled: root.interactive
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: menuPopup.open()
