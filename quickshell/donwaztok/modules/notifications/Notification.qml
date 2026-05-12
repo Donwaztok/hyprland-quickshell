@@ -16,7 +16,8 @@ StyledRect {
     id: root
 
     required property Notifs.Notif modelData
-    readonly property bool hasImage: modelData.image.length > 0
+    property bool imageLoadFailed: false
+    readonly property bool hasImage: modelData.image.length > 0 && !imageLoadFailed
     readonly property bool hasAppIcon: modelData.appIcon.length > 0
     readonly property int bodyTextFormat: /[<*_`#\[\]]/.test(modelData.body) ? Text.MarkdownText : Text.PlainText
     readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
@@ -33,6 +34,13 @@ StyledRect {
         modelData.lock(this);
     }
     Component.onDestruction: modelData.unlock(this)
+
+    Connections {
+        target: root.modelData
+        function onImageChanged(): void {
+            root.imageLoadFailed = false;
+        }
+    }
 
     Behavior on x {
         Anim {
@@ -130,6 +138,12 @@ StyledRect {
                         sourceSize.height: Config.notifs.sizes.image
                         cache: false
                         asynchronous: true
+
+                        onSourceChanged: root.imageLoadFailed = false
+                        onStatusChanged: {
+                            if (status === Image.Error)
+                                root.imageLoadFailed = true;
+                        }
                     }
                 }
             }

@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.config
+import qs.utils
 import Quickshell
 import Quickshell.Services.Pipewire
 import QtQuick
