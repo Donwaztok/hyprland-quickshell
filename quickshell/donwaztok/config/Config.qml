@@ -61,6 +61,15 @@ Singleton {
         };
     }
 
+    function cloneRealList(lst) {
+        const o = [];
+        if (!lst)
+            return o;
+        for (let i = 0; i < lst.length; ++i)
+            o.push(lst[i]);
+        return o;
+    }
+
     function serializeAppearance(): var {
         return {
             themeMode: appearance.themeMode || "dark",
@@ -85,9 +94,20 @@ Singleton {
                 }
             },
             anim: {
-                mediaGifSpeedAdjustment: 300,
+                mediaGifSpeedAdjustment: appearance.anim.mediaGifSpeedAdjustment ?? 300,
                 durations: {
                     scale: appearance.anim.durations.scale
+                },
+                curves: {
+                    emphasized: cloneRealList(appearance.anim.curves.emphasized),
+                    emphasizedAccel: cloneRealList(appearance.anim.curves.emphasizedAccel),
+                    emphasizedDecel: cloneRealList(appearance.anim.curves.emphasizedDecel),
+                    standard: cloneRealList(appearance.anim.curves.standard),
+                    standardAccel: cloneRealList(appearance.anim.curves.standardAccel),
+                    standardDecel: cloneRealList(appearance.anim.curves.standardDecel),
+                    expressiveFastSpatial: cloneRealList(appearance.anim.curves.expressiveFastSpatial),
+                    expressiveDefaultSpatial: cloneRealList(appearance.anim.curves.expressiveDefaultSpatial),
+                    expressiveEffects: cloneRealList(appearance.anim.curves.expressiveEffects)
                 }
             },
             transparency: {
