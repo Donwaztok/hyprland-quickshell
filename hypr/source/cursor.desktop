@@ -1,13 +1,3 @@
-# Hypr / menu launcher (abre o app normalmente). Não registre este arquivo para cursor:// —
-# use cursor-url-handler.desktop (veja comentários lá).
-#
-# Persistir após formatar / instalar sistema:
-#   cp ~/.config/hypr/source/cursor.desktop \
-#      ~/.config/hypr/source/cursor-url-handler.desktop \
-#      ~/.local/share/applications/
-#   update-desktop-database ~/.local/share/applications
-#   xdg-mime default cursor-url-handler.desktop x-scheme-handler/cursor
-#
 [Desktop Entry]
 Name=Cursor
 # Wayland: dead keys ('+c = ç) work. If you need X11, use the line below and cedilla may not work in Cursor.
