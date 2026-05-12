@@ -150,19 +150,6 @@ ColumnLayout {
         title: qsTr("Dwindle and master")
         description: qsTr("Layout-specific options (still apply when using the other layout; Hyprland may ignore some).")
 
-        SwitchRow {
-            label: qsTr("Dwindle: pseudotile focused window")
-            checked: ctl ? ctl.dwindlePseudotile : false
-            flatStyle: true
-            onToggled: v => ctl.applyDwindlePseudotile(v)
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 1
-            color: Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.45 : 0.32)
-        }
-
         SliderInput {
             Layout.fillWidth: true
             label: qsTr("Master layout factor")

@@ -52,13 +52,12 @@ Item {
     property int floatSwitchOverrideFocus: 0
 
     property bool workspaceSwipe: true
-    property bool dwindlePseudotile: false
     property real masterMfact: 0.55
     property string masterOrientation: "left"
 
     property string fetchHint: ""
 
-    readonly property int _optCount: 32
+    readonly property int _optCount: 31
 
     function refreshFromHyprland() {
         hyprFetchProc.running = true;
@@ -147,7 +146,7 @@ Item {
 
     function applyVfr(v) {
         root.vfr = v;
-        applyBool("misc:vfr", v);
+        applyBool("debug:vfr", v);
     }
 
     function applyFollowMouse(choice) {
@@ -208,11 +207,6 @@ Item {
     function applyWorkspaceSwipe(v) {
         root.workspaceSwipe = v;
         applyBool("gestures:workspace_swipe", v);
-    }
-
-    function applyDwindlePseudotile(v) {
-        root.dwindlePseudotile = v;
-        applyBool("dwindle:pseudotile", v);
     }
 
     function applyMasterMfact(v) {
@@ -368,13 +362,10 @@ Item {
         const b28 = parseOptionBool(parts[28]);
         if (b28 !== null)
             root.workspaceSwipe = b28;
-        const b29 = parseOptionBool(parts[29]);
-        if (b29 !== null)
-            root.dwindlePseudotile = b29;
-        const mf = a(30);
+        const mf = a(29);
         if (typeof mf === "number")
             root.masterMfact = mf;
-        const mo = a(31);
+        const mo = a(30);
         if (typeof mo === "string" && mo.length)
             root.masterOrientation = mo;
     }
@@ -402,7 +393,7 @@ Item {
                 + "hyprctl -j getoption decoration:fullscreen_opacity 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption animations:enabled 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption misc:disable_hyprland_logo 2>/dev/null; echo __SPLIT__; "
-                + "hyprctl -j getoption misc:vfr 2>/dev/null; echo __SPLIT__; "
+                + "hyprctl -j getoption debug:vfr 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption input:follow_mouse 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption input:sensitivity 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption general:resize_on_border 2>/dev/null; echo __SPLIT__; "
@@ -415,7 +406,6 @@ Item {
                 + "hyprctl -j getoption input:scroll_factor 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption input:float_switch_override_focus 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption gestures:workspace_swipe 2>/dev/null; echo __SPLIT__; "
-                + "hyprctl -j getoption dwindle:pseudotile 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption master:mfact 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption master:orientation 2>/dev/null"
         ]
