@@ -170,10 +170,15 @@ Item {
                 function onLauncherChanged(): void {
                     if (!root.visibilities.launcher) {
                         search.text = "";
-                    } else if (Config.launcher.pendingOpenPrefix) {
+                        return;
+                    }
+                    if (Config.launcher.pendingOpenPrefix) {
                         search.text = Config.launcher.pendingOpenPrefix;
                         Config.launcher.pendingOpenPrefix = "";
                     }
+                    // forceActiveFocus only runs in Component.onCompleted; reopening the launcher
+                    // leaves focus elsewhere until the user hovers. Defer so the surface is ready (Wayland).
+                    Qt.callLater(() => search.forceActiveFocus());
                 }
 
                 function onSessionChanged(): void {
