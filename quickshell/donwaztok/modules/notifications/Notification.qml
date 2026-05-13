@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components
 import qs.components.effects
+import qs.services
 import qs.services.shell
 import qs.config
 import qs.utils
@@ -19,6 +20,32 @@ StyledRect {
     property bool imageLoadFailed: false
     readonly property bool hasImage: modelData.image.length > 0 && !imageLoadFailed
     readonly property bool hasAppIcon: modelData.appIcon.length > 0
+
+    readonly property string notifDesktopEntryHint: {
+        const h = root.modelData.hints;
+        if (!h || typeof h !== "object")
+            return "";
+        const v = h["desktop-entry"] ?? h.desktop_entry ?? h.desktopEntry;
+        return typeof v === "string" && v.length > 0 ? v : "";
+    }
+
+    readonly property bool duplicateImageAndAppIcon: {
+        const img = root.modelData.image;
+        const ico = root.modelData.appIcon;
+        if (!img.length || !ico.length || root.imageLoadFailed)
+            return false;
+        const u1 = Qt.resolvedUrl(img).toString();
+        const u2 = Qt.resolvedUrl(ico).toString();
+        if (u1 === u2)
+            return true;
+        const f1 = Paths.toLocalFile(img);
+        const f2 = Paths.toLocalFile(ico);
+        return f1.length > 0 && f2.length > 0 && f1 === f2;
+    }
+
+    readonly property string badgeIconSource: root.duplicateImageAndAppIcon
+        ? AppSearch.guessIcon(root.notifDesktopEntryHint || root.modelData.appName)
+        : root.modelData.appIcon
     readonly property int bodyTextFormat: /[<*_`#\[\]]/.test(modelData.body) ? Text.MarkdownText : Text.PlainText
     readonly property int nonAnimHeight: summary.implicitHeight + (root.expanded ? appName.height + body.height + actions.height + actions.anchors.topMargin : bodyPreview.height) + inner.anchors.margins * 2
     property bool expanded: Config.notifs.openExpanded
@@ -176,9 +203,9 @@ StyledRect {
 
                         sourceComponent: ColouredIcon {
                             anchors.fill: parent
-                            source: Quickshell.iconPath(root.modelData.appIcon)
+                            source: Quickshell.iconPath(root.badgeIconSource)
                             colour: root.modelData.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.modelData.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
-                            layer.enabled: root.modelData.appIcon.endsWith("symbolic")
+                            layer.enabled: root.badgeIconSource.endsWith("symbolic")
                         }
                     }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # Install script – https://github.com/Donwaztok/hyprland-quickshell
-# Installs packages (app.lst), themes (SDDM, GRUB, GTK/icons), services and setup.
+# Installs packages (app.lst), themes (SDDM Qt6 Candy, GRUB, GTK/icons), services and setup.
 #
 # Usage: ./install.sh
 # =============================================================================
@@ -106,14 +106,17 @@ if [ ! -f "$HOME/.icons/default/index.theme" ]; then
   echo "Inherits=Bibata-Modern-Classic" >> "$HOME/.icons/default/index.theme"
 fi
 
-if [ -f "$REPO_ROOT/hypr/source/Sddm_Candy.tar.gz" ]; then
-  echo -e "\033[0;32m[SDDM]\033[0m Installing Candy theme..."
+if [ -d "$REPO_ROOT/hypr/source/sddm-theme-candy" ]; then
+  echo -e "\033[0;32m[SDDM]\033[0m Installing Sugar Candy (Qt6) theme..."
   sudo mkdir -p /usr/share/sddm/themes
-  sudo tar -xzf "$REPO_ROOT/hypr/source/Sddm_Candy.tar.gz" -C /usr/share/sddm/themes/
+  sudo rm -rf /usr/share/sddm/themes/Candy
+  sudo cp -a "$REPO_ROOT/hypr/source/sddm-theme-candy" /usr/share/sddm/themes/Candy
   sudo mkdir -p /etc/sddm.conf.d
   if [ -f /usr/share/sddm/themes/Candy/kde_settings.conf ]; then
     sudo cp /usr/share/sddm/themes/Candy/kde_settings.conf /etc/sddm.conf.d/kde_settings.conf
   fi
+else
+  echo -e "\033[0;33m[SKIP]\033[0m hypr/source/sddm-theme-candy missing; SDDM theme not installed."
 fi
 
 if [ ! -d /usr/share/themes/Graphite-Dark ]; then

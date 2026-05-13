@@ -56,6 +56,7 @@ gnome-system-monitor              # task manager (donwaztok apps.taskManager)
 networkmanager                    # network management
 polkit-gnome                      # Polkit authentication agent (hypr exec-once)
 sddm                              # display manager (login; independent of KDE apps)
+qt6-5compat                       # Qt5Compat.GraphicalEffects (SDDM Sugar Candy Qt6 / eucalyptus-based theme)
 
 # --------------------------------------------------- // XDG portals
 xdg-desktop-portal                # desktop integration portal

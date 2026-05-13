@@ -1,0 +1,16 @@
+[SddmGreeterTheme]
+Name=Sugar Candy (Qt6)
+Description=SDDM Sugar Candy look (colours, wallpapers) on Eucalyptus Drop Qt6 base — https://gitlab.com/Matt.Jolly/sddm-eucalyptus-drop/
+Author=Marian Arlt; Matt Jolly; Donwaztok config
+Copyright=GPL-3.0-or-later (Eucalyptus); GPLv3+ (Sugar Candy assets)
+License=GPL-3.0-or-later
+Type=sddm-theme
+Version=3.0.0
+Website=https://gitlab.com/Matt.Jolly/sddm-eucalyptus-drop/
+Screenshot=Backgrounds/bg.png
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+Theme-Id=candy-qt6
+Theme-API=2.11
+QtVersion=6
