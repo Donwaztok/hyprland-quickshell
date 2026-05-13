@@ -127,9 +127,9 @@ function command_not_found_handler {
 
 # Detect AUR wrapper
 if pacman -Qi yay &>/dev/null; then
-   aurhelper="yay"
+  aurhelper="yay"
 elif pacman -Qi paru &>/dev/null; then
-   aurhelper="paru"
+  aurhelper="paru"
 fi
 
 # Set personal aliases, overriding those provided by Oh My Zsh libs,
@@ -161,3 +161,18 @@ alias vc='code' # gui code editor
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# nvm (Node versions)
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+
+# Android SDK (Studio / cmdline-tools / platform-tools)
+if [[ -d "$HOME/Android/Sdk" ]]; then
+  export ANDROID_HOME="$HOME/Android/Sdk"
+  path+=(
+    "$ANDROID_HOME/platform-tools"
+    "$ANDROID_HOME/emulator"
+  )
+  [[ -d "$ANDROID_HOME/cmdline-tools/latest/bin" ]] && path+=("$ANDROID_HOME/cmdline-tools/latest/bin")
+fi
