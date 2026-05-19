@@ -8,6 +8,7 @@ JsonObject {
     property string specialPrefix: "@"
     property string actionPrefix: ">"
     property string clipboardPrefix: ";"
+    property string emojiPrefix: ":"
     property string pendingOpenPrefix: ""
     property bool enableDangerousActions: false // Show launcher actions marked dangerous (add your own via donwaztok config)
     property int dragThreshold: 50

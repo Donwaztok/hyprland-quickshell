@@ -1,0 +1,2 @@
+-- Custom keybinds
+-- https://wiki.hypr.land/Configuring/Basics/Binds/

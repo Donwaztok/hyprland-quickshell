@@ -81,6 +81,18 @@ Scope {
     }
 
     CustomShortcut {
+        name: "launcherOpenEmoji"
+        description: "Open launcher with emoji search"
+        onReleased: {
+            if (root.hasFullscreen)
+                return;
+            Config.launcher.pendingOpenPrefix = Config.launcher.emojiPrefix;
+            const visibilities = Visibilities.getForActive();
+            visibilities.launcher = true;
+        }
+    }
+
+    CustomShortcut {
         name: "sidebar"
         description: "Toggle sidebar"
         onPressed: {
@@ -109,6 +121,14 @@ Scope {
             if (root.hasFullscreen)
                 return;
             Config.launcher.pendingOpenPrefix = Config.launcher.clipboardPrefix;
+            const visibilities = Visibilities.getForActive();
+            visibilities.launcher = true;
+        }
+
+        function openEmoji(): void {
+            if (root.hasFullscreen)
+                return;
+            Config.launcher.pendingOpenPrefix = Config.launcher.emojiPrefix;
             const visibilities = Visibilities.getForActive();
             visibilities.launcher = true;
         }

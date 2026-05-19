@@ -171,7 +171,7 @@ Singleton {
 
     function _moveWindowToFocusedCenter(win, staggerIndex) {
         const box = root._focusedMonitorBox();
-        if (!box)
+        if (!box || !win?.address)
             return;
         const mx = box.x, my = box.y, mw = box.width, mh = box.height;
         const ww = win.size[0], wh = win.size[1];
@@ -179,8 +179,16 @@ Singleton {
         let nx = mx + Math.max(0, Math.floor((mw - ww) / 2)) + k * 48;
         nx = Math.min(nx, mx + mw - ww - 5);
         const ny = my + Math.max(0, Math.floor((mh - wh) / 2));
-        Hyprland.dispatch(`movewindowpixel exact ${nx} ${ny},address:${win.address}`);
+        // 0.55: focus the target window, then move (absolute) — one hyprctl batch per window
+        Quickshell.execDetached([
+            "hyprctl", "--batch",
+            `dispatch hl.dsp.focus({ window = 'address:${win.address}' })`,
+            `dispatch hl.dsp.window.move({ x = ${nx}, y = ${ny}, relative = false })`
+        ]);
     }
+
+    property var _recoveryWins: []
+    property int _recoveryIdx: 0
 
     function collectRecoveryFloatingWindows() {
         const wins = root.windowList;
@@ -226,6 +234,27 @@ Singleton {
         }
     }
 
+    Timer {
+        id: recoveryTimer
+        interval: 120
+        repeat: false
+        onTriggered: {
+            if (root._recoveryIdx >= root._recoveryWins.length) {
+                root._recoveryWins = [];
+                root.updateWindowList();
+                return;
+            }
+            root._moveWindowToFocusedCenter(root._recoveryWins[root._recoveryIdx], root._recoveryIdx);
+            root._recoveryIdx++;
+            if (root._recoveryIdx < root._recoveryWins.length)
+                recoveryTimer.restart();
+            else {
+                root._recoveryWins = [];
+                root.updateWindowList();
+            }
+        }
+    }
+
     function bringOneWindowInRequest(addr: string): void {
         root._pendingBringOneAddress = addr;
         root.updateWindowList();
@@ -248,10 +277,14 @@ Singleton {
         const off = root.collectRecoveryFloatingWindows();
         if (off.length === 0)
             return;
-
-        for (let k = 0; k < off.length; ++k)
-            root._moveWindowToFocusedCenter(off[k], k);
-        root.updateWindowList();
+        if (off.length === 1) {
+            root._moveWindowToFocusedCenter(off[0], 0);
+            root.updateWindowList();
+            return;
+        }
+        root._recoveryWins = off;
+        root._recoveryIdx = 0;
+        recoveryTimer.restart();
     }
 
     Timer {
