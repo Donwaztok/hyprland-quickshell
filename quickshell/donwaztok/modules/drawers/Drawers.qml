@@ -44,7 +44,7 @@ Variants {
                     return 0;
 
                 const thresholds = [];
-                for (const panel of ["dashboard", "launcher", "session", "sidebar"])
+                for (const panel of ["dashboard", "session", "sidebar"])
                     if (Config[panel].enabled)
                         thresholds.push(Config[panel].dragThreshold);
                 return Math.max(...thresholds);
@@ -171,7 +171,6 @@ Variants {
 
             Item {
                 anchors.fill: parent
-                opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     shadowEnabled: true

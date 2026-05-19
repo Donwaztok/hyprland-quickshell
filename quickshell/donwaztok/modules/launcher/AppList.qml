@@ -24,25 +24,78 @@ StyledListView {
         onValuesChanged: root.currentIndex = 0
     }
 
-    spacing: Appearance.spacing.small
+    spacing: 0
     orientation: Qt.Vertical
-    implicitHeight: (Config.launcher.sizes.itemHeight + spacing) * Math.min(Config.launcher.maxShown, count) - spacing
+
+    readonly property real clipboardViewportHeight: {
+        root.contentHeight;
+        const limit = Math.min(Config.launcher.clipboardMaxShown, count);
+        let total = 0;
+        for (let i = 0; i < limit; ++i) {
+            if (i > 0)
+                total += spacing;
+            const item = root.itemAtIndex(i);
+            if (item)
+                total += item.implicitHeight;
+            else {
+                const entry = model.values?.[i];
+                if (entry && Cliphist.entryIsImage(entry)) {
+                    const match = entry.match(/(\d+)x(\d+)/);
+                    if (match) {
+                        const srcW = parseInt(match[1]);
+                        const srcH = parseInt(match[2]);
+                        const listWidth = root.width > 0 ? root.width : Config.launcher.sizes.itemWidth;
+                        const maxW = Math.max(0, listWidth - 24 - 24 - Appearance.spacing.normal);
+                        const maxH = Config.launcher.sizes.clipboardImagePreviewHeight;
+                        const scale = Math.min(maxW / srcW, maxH / srcH);
+                        total += Appearance.padding.smaller * 2 + srcH * scale;
+                    } else {
+                        total += Config.launcher.sizes.clipboardImagePreviewHeight;
+                    }
+                } else {
+                    total += Config.launcher.sizes.itemHeight;
+                }
+            }
+        }
+        return total;
+    }
+
+    implicitHeight: root.state === "calc" && root.currentItem
+        ? root.currentItem.implicitHeight
+        : root.state === "clipboard"
+        ? root.clipboardViewportHeight
+        : (Config.launcher.sizes.itemHeight + spacing) * Math.min(Config.launcher.maxShown, count) - spacing
 
     preferredHighlightBegin: 0
     preferredHighlightEnd: height
     highlightRangeMode: ListView.ApplyRange
 
     highlightFollowsCurrentItem: false
-    highlight: StyledRect {
-        radius: Appearance.rounding.normal
-        color: Colours.palette.m3onSurface
-        opacity: 0.08
-
+    highlight: Item {
+        visible: root.state !== "calc"
         y: root.currentItem?.y ?? 0
-        implicitWidth: root.width
+        width: root.width
         implicitHeight: root.currentItem?.implicitHeight ?? 0
 
+        Rectangle {
+            anchors.fill: parent
+            color: Qt.alpha(Colours.palette.m3onSurface, 0.1)
+        }
+
+        Rectangle {
+            width: 3
+            height: parent.height
+            color: Colours.palette.m3primary
+        }
+
         Behavior on y {
+            Anim {
+                duration: Appearance.anim.durations.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            }
+        }
+
+        Behavior on implicitHeight {
             Anim {
                 duration: Appearance.anim.durations.expressiveDefaultSpatial
                 easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
@@ -93,7 +146,7 @@ StyledListView {
 
             PropertyChanges {
                 model.values: [0]
-                root.delegate: calcItem
+                root.delegate: calcPanelItem
             }
         },
         State {
@@ -183,6 +236,7 @@ StyledListView {
             properties: "opacity,scale"
             from: 0
             to: 1
+            easing.bezierCurve: Appearance.anim.curves.standardDecel
         }
     }
 
@@ -193,38 +247,27 @@ StyledListView {
             properties: "opacity,scale"
             from: 1
             to: 0
+            easing.bezierCurve: Appearance.anim.curves.standardAccel
         }
     }
 
     move: Transition {
-        Anim {
-            property: "y"
-        }
-        Anim {
-            properties: "opacity,scale"
-            to: 1
-        }
+        Anim { property: "y" }
+        Anim { properties: "opacity,scale"; to: 1 }
     }
 
     addDisplaced: Transition {
         Anim {
             property: "y"
-            duration: Appearance.anim.durations.small
+            duration: Appearance.anim.durations.expressiveDefaultSpatial
+            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
         }
-        Anim {
-            properties: "opacity,scale"
-            to: 1
-        }
+        Anim { properties: "opacity,scale"; to: 1 }
     }
 
     displaced: Transition {
-        Anim {
-            property: "y"
-        }
-        Anim {
-            properties: "opacity,scale"
-            to: 1
-        }
+        Anim { property: "y" }
+        Anim { properties: "opacity,scale"; to: 1 }
     }
 
     Component {
@@ -244,10 +287,12 @@ StyledListView {
     }
 
     Component {
-        id: calcItem
+        id: calcPanelItem
 
-        CalcItem {
-            list: root
+        CalcPanel {
+            search: root.search
+            visibilities: root.visibilities
+            bottomRadius: Config.launcher.sizes.cardRadius
         }
     }
 

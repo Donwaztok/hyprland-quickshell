@@ -133,12 +133,7 @@
             "small": 7,
             "smaller": 10
         },
-        "themeMode": "dark",
-        "transparency": {
-            "base": 0.9503437738731857,
-            "enabled": false,
-            "layers": 0.40959541944908184
-        }
+        "themeMode": "dark"
     },
     "background": {
         "desktopClock": {
@@ -513,6 +508,9 @@
                 "name": "Settings"
             }
         ],
+        "cardOpacity": 0.95,
+        "clipboardMaxHeightRatio": 0.75,
+        "clipboardMaxShown": 12,
         "clipboardPrefix": ";",
         "dragThreshold": 50,
         "enableDangerousActions": false,
@@ -524,21 +522,16 @@
         "maxShown": 7,
         "maxWallpapers": 9,
         "pendingOpenPrefix": "",
-        "showOnHover": false,
         "sizes": {
-            "itemHeight": 57,
-            "itemWidth": 600,
+            "cardRadius": 10,
+            "clipboardImagePreviewHeight": 320,
+            "itemHeight": 40,
+            "itemWidth": 640,
+            "searchBarHeight": 48,
             "wallpaperHeight": 200,
             "wallpaperWidth": 280
         },
-        "specialPrefix": "@",
-        "useFuzzy": {
-            "actions": false,
-            "apps": false,
-            "schemes": false,
-            "variants": false,
-            "wallpapers": false
-        },
+        "verticalAnchor": 0.38,
         "vimKeybinds": false
     },
     "lock": {
@@ -632,12 +625,6 @@
                 "numbers": "Google Sans Flex",
                 "reading": "Readex Pro",
                 "title": "Google Sans Flex"
-            },
-            "transparency": {
-                "automatic": true,
-                "backgroundTransparency": 0.11,
-                "contentTransparency": 0.57,
-                "enable": true
             }
         },
         "apps": {

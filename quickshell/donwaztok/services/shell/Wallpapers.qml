@@ -111,10 +111,9 @@ Searcher {
 
     list: wallpaperScanResults
     key: "relativePath"
-    useFuzzy: Config.launcher.useFuzzy.wallpapers
-    extraOpts: useFuzzy ? ({}) : ({
-            forward: false
-        })
+    extraOpts: {
+        forward: false
+    }
 
     IpcHandler {
         target: "wallpaper"

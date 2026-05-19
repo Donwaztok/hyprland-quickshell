@@ -109,11 +109,6 @@ Singleton {
                     expressiveDefaultSpatial: cloneRealList(appearance.anim.curves.expressiveDefaultSpatial),
                     expressiveEffects: cloneRealList(appearance.anim.curves.expressiveEffects)
                 }
-            },
-            transparency: {
-                enabled: appearance.transparency.enabled,
-                base: appearance.transparency.base,
-                layers: appearance.transparency.layers
             }
         };
     }
@@ -259,22 +254,28 @@ Singleton {
     function serializeLauncher(): var {
         return {
             enabled: launcher.enabled,
-            showOnHover: launcher.showOnHover,
             maxShown: launcher.maxShown,
             maxWallpapers: launcher.maxWallpapers,
-            specialPrefix: launcher.specialPrefix,
+            clipboardMaxShown: launcher.clipboardMaxShown,
+            clipboardMaxHeightRatio: launcher.clipboardMaxHeightRatio,
             actionPrefix: launcher.actionPrefix,
+            clipboardPrefix: launcher.clipboardPrefix,
+            pendingOpenPrefix: launcher.pendingOpenPrefix,
             enableDangerousActions: launcher.enableDangerousActions,
             dragThreshold: launcher.dragThreshold,
             vimKeybinds: launcher.vimKeybinds,
+            cardOpacity: launcher.cardOpacity,
+            verticalAnchor: launcher.verticalAnchor,
             favouriteApps: launcher.favouriteApps,
             hiddenApps: launcher.hiddenApps,
-            useFuzzy: {
-                apps: launcher.useFuzzy.apps,
-                actions: launcher.useFuzzy.actions,
-                schemes: launcher.useFuzzy.schemes,
-                variants: launcher.useFuzzy.variants,
-                wallpapers: launcher.useFuzzy.wallpapers
+            sizes: {
+                itemWidth: launcher.sizes.itemWidth,
+                itemHeight: launcher.sizes.itemHeight,
+                searchBarHeight: launcher.sizes.searchBarHeight,
+                cardRadius: launcher.sizes.cardRadius,
+                wallpaperWidth: launcher.sizes.wallpaperWidth,
+                wallpaperHeight: launcher.sizes.wallpaperHeight,
+                clipboardImagePreviewHeight: launcher.sizes.clipboardImagePreviewHeight
             },
             actions: launcher.actions
         };

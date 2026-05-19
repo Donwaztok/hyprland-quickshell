@@ -179,12 +179,21 @@ Singleton {
         let nx = mx + Math.max(0, Math.floor((mw - ww) / 2)) + k * 48;
         nx = Math.min(nx, mx + mw - ww - 5);
         const ny = my + Math.max(0, Math.floor((mh - wh) / 2));
-        // 0.55: focus the target window, then move (absolute) — one hyprctl batch per window
-        Quickshell.execDetached([
-            "hyprctl", "--batch",
-            `dispatch hl.dsp.focus({ window = 'address:${win.address}' })`,
-            `dispatch hl.dsp.window.move({ x = ${nx}, y = ${ny}, relative = false })`
-        ]);
+        Hyprland.dispatch(`hl.dsp.focus({ window = 'address:${win.address}' })`);
+        Hyprland.dispatch(`hl.dsp.window.move({ x = ${nx}, y = ${ny}, relative = false })`);
+    }
+
+    property bool _bringOffscreenPending: false
+    property bool _bringOffscreenClientsReady: false
+    property bool _bringOffscreenMonitorsReady: false
+
+    function _tryBringOffscreenAfterRefresh(): void {
+        if (!root._bringOffscreenPending)
+            return;
+        if (!root._bringOffscreenClientsReady || !root._bringOffscreenMonitorsReady)
+            return;
+        root._bringOffscreenPending = false;
+        root._bringOffscreenFloatsInWork();
     }
 
     property var _recoveryWins: []
@@ -268,9 +277,11 @@ Singleton {
     }
 
     function bringOffscreenFloatsInRequest(): void {
+        root._bringOffscreenPending = true;
+        root._bringOffscreenClientsReady = false;
+        root._bringOffscreenMonitorsReady = false;
         root.updateWindowList();
         root.updateMonitors();
-        bringOffscreenTimer.restart();
     }
 
     function _bringOffscreenFloatsInWork(): void {
@@ -285,13 +296,6 @@ Singleton {
         root._recoveryWins = off;
         root._recoveryIdx = 0;
         recoveryTimer.restart();
-    }
-
-    Timer {
-        id: bringOffscreenTimer
-        interval: 220
-        repeat: false
-        onTriggered: root._bringOffscreenFloatsInWork()
     }
 
     Component.onCompleted: {
@@ -323,6 +327,8 @@ Singleton {
                 root.windowByAddress = tempWinByAddress;
                 root.addresses = root.windowList.map(win => win.address);
                 root.recomputeRecoveryCandidates();
+                root._bringOffscreenClientsReady = true;
+                root._tryBringOffscreenAfterRefresh();
             }
         }
     }
@@ -335,6 +341,8 @@ Singleton {
             onStreamFinished: {
                 root.monitors = JSON.parse(monitorsCollector.text);
                 root.recomputeRecoveryCandidates();
+                root._bringOffscreenMonitorsReady = true;
+                root._tryBringOffscreenAfterRefresh();
             }
         }
     }

@@ -22,8 +22,6 @@ Singleton {
     readonly property M3TPalette tPalette: M3TPalette {}
     readonly property M3Palette current: M3Palette {}
     readonly property M3Palette preview: M3Palette {}
-    readonly property Transparency transparency: Transparency {}
-    readonly property alias wallLuminance: analyser.luminance
 
     /**
      * One background for all shell chrome (Control Center, bar popouts, sidebar, session, etc.).
@@ -47,29 +45,8 @@ Singleton {
         monochrome: "9e9e9e"
     })
 
-    function getLuminance(c: color): real {
-        if (c.r == 0 && c.g == 0 && c.b == 0)
-            return 0;
-        return Math.sqrt(0.299 * (c.r ** 2) + 0.587 * (c.g ** 2) + 0.114 * (c.b ** 2));
-    }
-
-    function alterColour(c: color, a: real, layer: int): color {
-        const luminance = getLuminance(c);
-
-        const offset = (!light || layer == 1 ? 1 : -layer / 2) * (light ? 0.2 : 0.3) * (1 - transparency.base) * (1 + wallLuminance * (light ? (layer == 1 ? 3 : 1) : 2.5));
-        const scale = (luminance + offset) / luminance;
-        const r = Math.max(0, Math.min(1, c.r * scale));
-        const g = Math.max(0, Math.min(1, c.g * scale));
-        const b = Math.max(0, Math.min(1, c.b * scale));
-
-        return Qt.rgba(r, g, b, a);
-    }
-
     function layer(c: color, layer: var): color {
-        if (!transparency.enabled)
-            return c;
-
-        return layer === 0 ? Qt.alpha(c, transparency.base) : alterColour(c, transparency.layers, layer ?? 1);
+        return c;
     }
 
     function on(c: color): color {
@@ -334,18 +311,6 @@ Singleton {
             }
         }
     })
-
-    ImageAnalyser {
-        id: analyser
-
-        source: Wallpapers.current
-    }
-
-    component Transparency: QtObject {
-        readonly property bool enabled: Appearance.transparency.enabled
-        readonly property real base: Appearance.transparency.base - (root.light ? 0.1 : 0)
-        readonly property real layers: Appearance.transparency.layers
-    }
 
     component M3TPalette: QtObject {
         /** Primary / accent: never pass through wallpaper layer() — keeps same vivid hue as Colours.palette (esp. light mode). */

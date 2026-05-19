@@ -16,17 +16,36 @@ Item {
     property int contentHeight
 
     readonly property real maxHeight: {
-        let max = screen.height - Config.border.thickness * 2 - Appearance.spacing.large;
+        let max = screen.height * 0.55;
         if (visibilities.dashboard)
-            max -= panels.dashboard.nonAnimHeight;
-        return max;
+            max -= panels.dashboard.nonAnimHeight * 0.5;
+        return Math.min(max, root.availableHeight);
     }
 
+    readonly property real availableHeight: {
+        if (!parent)
+            return screen.height;
+        return Math.max(Config.launcher.sizes.searchBarHeight, parent.height - y);
+    }
+
+    property real contentOpacity: 0
+    property real contentScale: 0.96
+
     onMaxHeightChanged: timer.start()
+    onAvailableHeightChanged: timer.start()
+    onYChanged: timer.start()
 
     function updateContentHeight(): void {
-        if (content.status === Loader.Ready && content.item)
-            root.contentHeight = Math.min(root.maxHeight, content.item.implicitHeight);
+        if (content.status === Loader.Ready && content.item) {
+            const cap = content.item.panelMaxHeight ?? root.maxHeight;
+            root.contentHeight = Math.min(cap, content.item.implicitHeight);
+        }
+    }
+
+    function requestSearchFocus(): void {
+        if (!root.shouldBeActive || content.status !== Loader.Ready || !content.item)
+            return;
+        content.item.focusSearchField();
     }
 
     visible: height > 0
@@ -37,6 +56,8 @@ Item {
         if (shouldBeActive) {
             timer.stop();
             hideAnim.stop();
+            contentOpacity = 0;
+            contentScale = 0.96;
             showAnim.start();
         } else {
             showAnim.stop();
@@ -47,16 +68,47 @@ Item {
     SequentialAnimation {
         id: showAnim
 
-        Anim {
-            target: root
-            property: "implicitHeight"
-            to: root.contentHeight
-            duration: Appearance.anim.durations.expressiveDefaultSpatial
-            easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+        ParallelAnimation {
+            Anim {
+                target: root
+                property: "implicitHeight"
+                to: root.contentHeight
+                duration: Appearance.anim.durations.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            }
+            Anim {
+                target: root
+                property: "contentOpacity"
+                from: 0
+                to: 1
+                duration: Appearance.anim.durations.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            }
+            Anim {
+                target: root
+                property: "contentScale"
+                from: 0.96
+                to: 1
+                duration: Appearance.anim.durations.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            }
         }
         ScriptAction {
-            script: root.implicitHeight = Qt.binding(() => content.implicitHeight)
+            script: {
+                root.contentOpacity = 1;
+                root.contentScale = 1;
+                root.implicitHeight = Qt.binding(() => content.implicitHeight);
+                focusTimer.restart();
+            }
         }
+    }
+
+    Timer {
+        id: focusTimer
+
+        interval: 50
+        repeat: false
+        onTriggered: root.requestSearchFocus()
     }
 
     SequentialAnimation {
@@ -65,11 +117,34 @@ Item {
         ScriptAction {
             script: root.implicitHeight = root.implicitHeight
         }
-        Anim {
-            target: root
-            property: "implicitHeight"
-            to: 0
-            easing.bezierCurve: Appearance.anim.curves.emphasized
+        ParallelAnimation {
+            Anim {
+                target: root
+                property: "implicitHeight"
+                to: 0
+                duration: Appearance.anim.durations.normal
+                easing.bezierCurve: Appearance.anim.curves.emphasized
+            }
+            Anim {
+                target: root
+                property: "contentOpacity"
+                to: 0
+                duration: Appearance.anim.durations.expressiveEffects
+                easing.bezierCurve: Appearance.anim.curves.expressiveEffects
+            }
+            Anim {
+                target: root
+                property: "contentScale"
+                to: 0.96
+                duration: Appearance.anim.durations.expressiveEffects
+                easing.bezierCurve: Appearance.anim.curves.expressiveEffects
+            }
+        }
+        ScriptAction {
+            script: {
+                root.contentOpacity = 0;
+                root.contentScale = 0.96;
+            }
         }
     }
 
@@ -83,14 +158,9 @@ Item {
         function onMaxShownChanged(): void {
             timer.start();
         }
-    }
 
-    Connections {
-        target: DesktopEntries.applications
-
-        function onValuesChanged(): void {
-            if (DesktopEntries.applications.values.length < Config.launcher.maxShown)
-                timer.start();
+        function onClipboardMaxShownChanged(): void {
+            timer.start();
         }
     }
 
@@ -103,13 +173,9 @@ Item {
                 content.visible = false;
                 content.active = true;
             } else {
-                root.contentHeight = Math.min(root.maxHeight, content.implicitHeight);
+                root.contentHeight = Math.min(content.item?.panelMaxHeight ?? root.maxHeight, content.implicitHeight);
                 content.active = Qt.binding(() => root.shouldBeActive || root.visible);
                 content.visible = true;
-                if (showAnim.running) {
-                    showAnim.stop();
-                    showAnim.start();
-                }
             }
         }
     }
@@ -119,9 +185,11 @@ Item {
         id: launcherContentComponent
 
         Content {
+            screen: root.screen
             visibilities: root.visibilities
             panels: root.panels
             maxHeight: root.maxHeight
+            availableHeight: root.availableHeight
 
             Component.onCompleted: root.updateContentHeight()
         }
@@ -133,6 +201,10 @@ Item {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
 
+        opacity: root.contentOpacity
+        scale: root.contentScale
+        transformOrigin: Item.Top
+
         visible: false
         active: false
         asynchronous: false
@@ -140,7 +212,11 @@ Item {
 
         Component.onCompleted: timer.start()
 
-        onLoaded: root.updateContentHeight()
+        onLoaded: {
+            root.updateContentHeight();
+            if (root.shouldBeActive)
+                focusTimer.restart();
+        }
 
         onImplicitHeightChanged: root.updateContentHeight()
     }
@@ -151,6 +227,14 @@ Item {
         enabled: content.status === Loader.Ready && content.item !== null
 
         function onImplicitHeightChanged(): void {
+            root.updateContentHeight();
+        }
+
+        function onPanelMaxHeightChanged(): void {
+            root.updateContentHeight();
+        }
+
+        function onAvailableHeightChanged(): void {
             root.updateContentHeight();
         }
     }

@@ -29,7 +29,6 @@ Searcher {
     readonly property var builtinSchemeList: [Colours.builtinSchemes.defaultDark, Colours.builtinSchemes.defaultLight]
 
     list: schemes.instances
-    useFuzzy: Config.launcher.useFuzzy.schemes
     keys: ["name", "flavour"]
     weights: [0.9, 0.1]
 

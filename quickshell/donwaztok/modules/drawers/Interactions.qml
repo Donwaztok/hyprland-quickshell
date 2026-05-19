@@ -56,11 +56,7 @@ CustomMouseArea {
     }
 
     function inBottomPanel(panel: Item, x: real, y: real): bool {
-        let ph = Math.max(panel.height, panel.implicitHeight);
-        if (visibilities.launcher && panel === panels.launcher) {
-            const ch = panels.launcher.contentHeight ?? 0;
-            ph = Math.max(ph, ch);
-        }
+        const ph = Math.max(panel.height, panel.implicitHeight);
         return y > root.height - Config.border.thickness - ph - Config.border.rounding && withinPanelWidth(panel, x, y);
     }
 
@@ -142,20 +138,6 @@ CustomMouseArea {
                 visibilities.sidebar = false;
         }
 
-        if (Config.launcher.showOnHover) {
-            if (!visibilities.launcher && inBottomPanel(panels.launcher, x, y)) {
-                Visibilities.closeLauncherExcept(Hypr.monitorFor(screen));
-                visibilities.launcher = true;
-            }
-        } else if (pressed && inBottomPanel(panels.launcher, dragStart.x, dragStart.y) && withinPanelWidth(panels.launcher, x, y)) {
-            if (dragY < -Config.launcher.dragThreshold) {
-                Visibilities.closeLauncherExcept(Hypr.monitorFor(screen));
-                visibilities.launcher = true;
-            }
-            else if (dragY > Config.launcher.dragThreshold)
-                visibilities.launcher = false;
-        }
-
         const showDashboard = Config.dashboard.showOnHover && inTopPanel(panels.dashboard, x, y);
 
         if (!dashboardShortcutActive) {
@@ -191,13 +173,14 @@ CustomMouseArea {
         target: root.visibilities
 
         function onLauncherChanged() {
-            if (!root.visibilities.launcher) {
-                root.dashboardShortcutActive = false;
-                root.utilitiesShortcutActive = false;
+            if (root.visibilities.launcher)
+                return;
 
-                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
-                if (!inDashboardArea)
-                    root.visibilities.dashboard = false;
+            root.dashboardShortcutActive = false;
+            root.utilitiesShortcutActive = false;
+
+            if (!root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY)) {
+                root.visibilities.dashboard = false;
             }
         }
 

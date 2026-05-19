@@ -15,7 +15,6 @@ Searcher {
     }
 
     list: variants.instances
-    useFuzzy: Config.launcher.useFuzzy.actions
 
     Variants {
         id: variants

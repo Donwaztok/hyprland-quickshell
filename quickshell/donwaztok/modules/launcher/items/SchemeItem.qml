@@ -15,6 +15,8 @@ Item {
     anchors.left: parent?.left
     anchors.right: parent?.right
 
+    readonly property bool selected: ListView.isCurrentItem
+
     StateLayer {
         radius: Appearance.rounding.normal
 
@@ -35,12 +37,16 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             border.width: 1
-            border.color: Qt.alpha(`#${root.modelData?.colours?.outline}`, 0.5)
+            border.color: root.selected
+                ? Colours.palette.m3primary
+                : Qt.alpha(`#${root.modelData?.colours?.outline}`, 0.5)
 
             color: `#${root.modelData?.colours?.surface}`
             radius: Appearance.rounding.full
             implicitWidth: parent.height * 0.8
             implicitHeight: parent.height * 0.8
+
+            Behavior on border.color { CAnim {} }
 
             Item {
                 anchors.top: parent.top

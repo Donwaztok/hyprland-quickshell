@@ -15,6 +15,8 @@ Item {
     anchors.left: parent?.left
     anchors.right: parent?.right
 
+    readonly property bool selected: ListView.isCurrentItem
+
     StateLayer {
         radius: Appearance.rounding.normal
 
@@ -34,8 +36,11 @@ Item {
 
             text: root.modelData?.icon ?? ""
             font.pointSize: Appearance.font.size.extraLarge
+            color: root.selected ? Colours.palette.m3primary : Colours.palette.m3onSurface
 
             anchors.verticalCenter: parent.verticalCenter
+
+            Behavior on color { CAnim {} }
         }
 
         Column {

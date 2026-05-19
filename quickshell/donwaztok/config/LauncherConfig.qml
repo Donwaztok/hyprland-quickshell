@@ -2,34 +2,30 @@ import Quickshell.Io
 
 JsonObject {
     property bool enabled: true
-    property bool showOnHover: false
     property int maxShown: 7
     property int maxWallpapers: 9 // Warning: even numbers look bad
-    property string specialPrefix: "@"
+    property int clipboardMaxShown: 12
+    property real clipboardMaxHeightRatio: 0.75
     property string actionPrefix: ">"
     property string clipboardPrefix: ";"
     property string pendingOpenPrefix: ""
     property bool enableDangerousActions: false // Show launcher actions marked dangerous (add your own via donwaztok config)
     property int dragThreshold: 50
     property bool vimKeybinds: false
+    property real cardOpacity: 0.88
+    property real verticalAnchor: 0.38
     property list<string> favouriteApps: []
     property list<string> hiddenApps: []
-    property UseFuzzy useFuzzy: UseFuzzy {}
     property Sizes sizes: Sizes {}
 
-    component UseFuzzy: JsonObject {
-        property bool apps: false
-        property bool actions: false
-        property bool schemes: false
-        property bool variants: false
-        property bool wallpapers: false
-    }
-
     component Sizes: JsonObject {
-        property int itemWidth: 600
-        property int itemHeight: 57
+        property int itemWidth: 640
+        property int itemHeight: 40
+        property int searchBarHeight: 48
+        property int cardRadius: 10
         property int wallpaperWidth: 280
         property int wallpaperHeight: 200
+        property int clipboardImagePreviewHeight: 320
     }
 
     property list<var> actions: [

@@ -87,11 +87,6 @@ Item {
         font.pointSize: Appearance.font.size.normal
     }
 
-    Behavior on scale {
-        Anim {}
-    }
-
-    Behavior on opacity {
-        Anim {}
-    }
+    Behavior on scale { Anim {} }
+    Behavior on opacity { Anim {} }
 }

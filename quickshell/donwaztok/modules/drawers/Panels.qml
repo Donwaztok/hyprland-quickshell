@@ -60,7 +60,8 @@ Item {
         panels: root
 
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
+        anchors.top: parent.top
+        anchors.topMargin: Math.round(root.screen.height * 0.38 - Config.launcher.sizes.searchBarHeight / 2)
     }
 
     Dashboard.Wrapper {

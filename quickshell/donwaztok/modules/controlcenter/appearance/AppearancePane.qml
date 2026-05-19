@@ -27,9 +27,6 @@ Item {
     property real paddingScale: Config.appearance.padding.scale ?? 1
     property real roundingScale: Config.appearance.rounding.scale ?? 1
     property real spacingScale: Config.appearance.spacing.scale ?? 1
-    property bool transparencyEnabled: Config.appearance.transparency.enabled ?? false
-    property real transparencyBase: Config.appearance.transparency.base ?? 0.85
-    property real transparencyLayers: Config.appearance.transparency.layers ?? 0.4
     property real borderRounding: Config.border.rounding ?? 1
     property real borderThickness: Config.border.thickness ?? 1
 
@@ -59,10 +56,6 @@ Item {
         Config.appearance.padding.scale = root.paddingScale;
         Config.appearance.rounding.scale = root.roundingScale;
         Config.appearance.spacing.scale = root.spacingScale;
-
-        Config.appearance.transparency.enabled = root.transparencyEnabled;
-        Config.appearance.transparency.base = root.transparencyBase;
-        Config.appearance.transparency.layers = root.transparencyLayers;
 
         Config.background.desktopClock.enabled = root.desktopClockEnabled;
         Config.background.enabled = root.backgroundEnabled;
@@ -172,12 +165,6 @@ Item {
 
                     ScalesSection {
                         id: scalesSection
-                        Layout.fillWidth: true
-                        rootPane: contentFlickable.rootPane
-                    }
-
-                    TransparencySection {
-                        id: transparencySection
                         Layout.fillWidth: true
                         rootPane: contentFlickable.rootPane
                     }

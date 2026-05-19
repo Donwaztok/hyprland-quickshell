@@ -7,7 +7,6 @@ JsonObject {
     property Padding padding: Padding {}
     property FontStuff font: FontStuff {}
     property Anim anim: Anim {}
-    property Transparency transparency: Transparency {}
 
     component Rounding: JsonObject {
         property real scale: 1
@@ -84,11 +83,5 @@ JsonObject {
         property real mediaGifSpeedAdjustment: 300
         property AnimCurves curves: AnimCurves {}
         property AnimDurations durations: AnimDurations {}
-    }
-
-    component Transparency: JsonObject {
-        property bool enabled: false
-        property real base: 0.85
-        property real layers: 0.4
     }
 }
