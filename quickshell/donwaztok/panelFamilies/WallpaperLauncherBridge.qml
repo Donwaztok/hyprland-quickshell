@@ -21,8 +21,7 @@ Scope {
             v.launcher = false;
             return;
         }
-        DwCfg.Config.launcher.pendingOpenPrefix = `${DwCfg.Config.launcher.actionPrefix}wallpaper`;
-        v.launcher = true;
+        Visibilities.openLauncher(`${DwCfg.Config.launcher.actionPrefix}wallpaper`);
     }
 
     function pickRandomWallpaper(): void {

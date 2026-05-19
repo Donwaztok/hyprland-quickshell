@@ -2,6 +2,7 @@ import qs.components.misc
 import qs.config
 import qs.services.shell
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 
 Scope {
@@ -23,7 +24,10 @@ Scope {
             if (root.hasFullscreen)
                 return;
             const v = Visibilities.getForActive();
-            v.launcher = v.dashboard = v.utilities = !(v.launcher || v.dashboard || v.utilities);
+            const open = !(v.launcher || v.dashboard || v.utilities);
+            if (open)
+                Visibilities.closeLauncherExcept(Hypr.focusedMonitor);
+            v.launcher = v.dashboard = v.utilities = open;
         }
     }
 
@@ -54,10 +58,8 @@ Scope {
         description: "Toggle launcher"
         onPressed: root.launcherInterrupted = false
         onReleased: {
-            if (!root.launcherInterrupted && !root.hasFullscreen) {
-                const visibilities = Visibilities.getForActive();
-                visibilities.launcher = !visibilities.launcher;
-            }
+            if (!root.launcherInterrupted && !root.hasFullscreen)
+                Visibilities.toggleLauncher();
             root.launcherInterrupted = false;
         }
     }
@@ -74,21 +76,7 @@ Scope {
         onReleased: {
             if (root.hasFullscreen)
                 return;
-            Config.launcher.pendingOpenPrefix = Config.launcher.clipboardPrefix;
-            const visibilities = Visibilities.getForActive();
-            visibilities.launcher = true;
-        }
-    }
-
-    CustomShortcut {
-        name: "launcherOpenEmoji"
-        description: "Open launcher with emoji search"
-        onReleased: {
-            if (root.hasFullscreen)
-                return;
-            Config.launcher.pendingOpenPrefix = Config.launcher.emojiPrefix;
-            const visibilities = Visibilities.getForActive();
-            visibilities.launcher = true;
+            Visibilities.openLauncher(Config.launcher.clipboardPrefix);
         }
     }
 
@@ -120,17 +108,7 @@ Scope {
         function openClipboard(): void {
             if (root.hasFullscreen)
                 return;
-            Config.launcher.pendingOpenPrefix = Config.launcher.clipboardPrefix;
-            const visibilities = Visibilities.getForActive();
-            visibilities.launcher = true;
-        }
-
-        function openEmoji(): void {
-            if (root.hasFullscreen)
-                return;
-            Config.launcher.pendingOpenPrefix = Config.launcher.emojiPrefix;
-            const visibilities = Visibilities.getForActive();
-            visibilities.launcher = true;
+            Visibilities.openLauncher(Config.launcher.clipboardPrefix);
         }
     }
 
@@ -141,8 +119,10 @@ Scope {
             if (list().split("\n").includes(drawer)) {
                 if (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer))
                     return;
-                const visibilities = Visibilities.getForActive();
-                visibilities[drawer] = true;
+                if (drawer === "launcher")
+                    Visibilities.openLauncher();
+                else
+                    Visibilities.getForActive()[drawer] = true;
             } else {
                 console.warn(`[IPC] Drawer "${drawer}" does not exist`);
             }
@@ -161,8 +141,12 @@ Scope {
             if (list().split("\n").includes(drawer)) {
                 if (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer))
                     return;
-                const visibilities = Visibilities.getForActive();
-                visibilities[drawer] = !visibilities[drawer];
+                if (drawer === "launcher")
+                    Visibilities.toggleLauncher();
+                else {
+                    const visibilities = Visibilities.getForActive();
+                    visibilities[drawer] = !visibilities[drawer];
+                }
             } else {
                 console.warn(`[IPC] Drawer "${drawer}" does not exist`);
             }

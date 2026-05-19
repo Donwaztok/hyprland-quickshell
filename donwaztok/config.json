@@ -515,7 +515,6 @@
         ],
         "clipboardPrefix": ";",
         "dragThreshold": 50,
-        "emojiPrefix": ":",
         "enableDangerousActions": false,
         "enabled": true,
         "favouriteApps": [
@@ -786,7 +785,6 @@
                 "action": "/",
                 "app": ">",
                 "clipboard": ";",
-                "emojis": ":",
                 "math": "=",
                 "shellCommand": "$",
                 "showDefaultActionsWithoutPrefix": true,

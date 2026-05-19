@@ -24,16 +24,13 @@ Item {
         const t = search.text;
         return t === p || t.startsWith(p + " ");
     }
-    readonly property bool showEmojis: search.text.startsWith(Config.launcher.emojiPrefix)
-    readonly property Item currentList: showWallpapers
-        ? wallpaperList.item
-        : (showEmojis ? emojiGrid.item : appList.item)
+    readonly property Item currentList: showWallpapers ? wallpaperList.item : appList.item
 
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
 
     clip: true
-    state: showWallpapers ? "wallpapers" : (showEmojis ? "emoji" : "apps")
+    state: showWallpapers ? "wallpapers" : "apps"
 
     states: [
         State {
@@ -57,20 +54,6 @@ Item {
                 root.implicitWidth: Math.max(Config.launcher.sizes.itemWidth * 1.2, wallpaperList.implicitWidth)
                 root.implicitHeight: Config.launcher.sizes.wallpaperHeight
                 wallpaperList.active: true
-            }
-        },
-        State {
-            name: "emoji"
-
-            PropertyChanges {
-                root.implicitWidth: Math.max(Config.launcher.sizes.itemWidth, emojiGrid.implicitWidth)
-                root.implicitHeight: Math.min(root.maxHeight, emojiGrid.implicitHeight > 0 ? emojiGrid.implicitHeight : empty.implicitHeight)
-                emojiGrid.active: true
-            }
-
-            AnchorChanges {
-                anchors.left: root.parent.left
-                anchors.right: root.parent.right
             }
         }
     ]
@@ -125,19 +108,6 @@ Item {
         }
     }
 
-    Loader {
-        id: emojiGrid
-
-        active: false
-
-        anchors.fill: parent
-
-        sourceComponent: EmojiGrid {
-            search: root.search
-            visibilities: root.visibilities
-        }
-    }
-
     Row {
         id: empty
 
@@ -151,9 +121,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
 
             MaterialIcon {
-            text: root.state === "wallpapers"
-                ? "wallpaper_slideshow"
-                : (root.state === "emoji" ? "emoji_emotions" : "manage_search")
+            text: root.state === "wallpapers" ? "wallpaper_slideshow" : "manage_search"
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: Appearance.font.size.extraLarge
 
@@ -164,13 +132,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             StyledText {
-                text: {
-                    if (root.state === "wallpapers")
-                        return qsTr("No wallpapers found");
-                    if (root.state === "emoji")
-                        return qsTr("No emojis found");
-                    return qsTr("No results");
-                }
+                text: root.state === "wallpapers" ? qsTr("No wallpapers found") : qsTr("No results")
                 color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.larger
                 font.weight: 500

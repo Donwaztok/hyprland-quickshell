@@ -65,10 +65,6 @@ hl.bind(
 )
 
 -- Utilities
-hl.bind("SUPER + Period", hl.dsp.global("donwaztok:launcherOpenEmoji"), {
-    description = "Emoji picker (launcher)",
-    release = true,
-})
 hl.bind("SUPER + SHIFT + S", hl.dsp.global("donwaztok:regionScreenshot"), { description = "Screen snip" })
 hl.bind(
     "SUPER + SHIFT + S",

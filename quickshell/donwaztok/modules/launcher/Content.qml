@@ -114,15 +114,6 @@ Item {
                     if (typeof currentItem.modelData === "string")
                         Cliphist.copy(currentItem.modelData);
                     root.visibilities.launcher = false;
-                } else if (list.showEmojis) {
-                    const cell = list.currentList?.currentItem;
-                    const entry = cell?.entry;
-                    if (entry && entry.length > 0) {
-                        const emoji = entry.split(" ")[0];
-                        if (emoji.length > 0)
-                            Quickshell.execDetached(["wl-copy", emoji]);
-                    }
-                    root.visibilities.launcher = false;
                 } else if (text.startsWith(Config.launcher.actionPrefix)) {
                     if (text.startsWith(`${Config.launcher.actionPrefix}calc `))
                         currentItem.onClicked();
@@ -136,14 +127,6 @@ Item {
 
             Keys.onUpPressed: list.currentList?.decrementCurrentIndex()
             Keys.onDownPressed: list.currentList?.incrementCurrentIndex()
-            Keys.onLeftPressed: {
-                if (list.showEmojis)
-                    list.currentList?.decrementCurrentIndexHorizontal();
-            }
-            Keys.onRightPressed: {
-                if (list.showEmojis)
-                    list.currentList?.incrementCurrentIndexHorizontal();
-            }
 
             Keys.onEscapePressed: root.visibilities.launcher = false
 
@@ -163,24 +146,12 @@ Item {
                     } else if (event.key === Qt.Key_K) {
                         list.currentList?.decrementCurrentIndex();
                         event.accepted = true;
-                    } else if (list.showEmojis && event.key === Qt.Key_H) {
-                        list.currentList?.decrementCurrentIndexHorizontal();
-                        event.accepted = true;
-                    } else if (list.showEmojis && event.key === Qt.Key_L) {
-                        list.currentList?.incrementCurrentIndexHorizontal();
-                        event.accepted = true;
                     }
                 } else if (event.key === Qt.Key_Tab) {
-                    if (list.showEmojis)
-                        list.currentList?.incrementCurrentIndexHorizontal();
-                    else
-                        list.currentList?.incrementCurrentIndex();
+                    list.currentList?.incrementCurrentIndex();
                     event.accepted = true;
                 } else if (event.key === Qt.Key_Backtab || (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier))) {
-                    if (list.showEmojis)
-                        list.currentList?.decrementCurrentIndexHorizontal();
-                    else
-                        list.currentList?.decrementCurrentIndex();
+                    list.currentList?.decrementCurrentIndex();
                     event.accepted = true;
                 }
             }
@@ -193,6 +164,14 @@ Item {
                 }
             }
 
+            function applyPendingPrefix(): void {
+                if (!Config.launcher.pendingOpenPrefix)
+                    return;
+                search.text = Config.launcher.pendingOpenPrefix;
+                Config.launcher.pendingOpenPrefix = "";
+                Qt.callLater(() => search.forceActiveFocus());
+            }
+
             Connections {
                 target: root.visibilities
 
@@ -201,18 +180,22 @@ Item {
                         search.text = "";
                         return;
                     }
-                    if (Config.launcher.pendingOpenPrefix) {
-                        search.text = Config.launcher.pendingOpenPrefix;
-                        Config.launcher.pendingOpenPrefix = "";
-                    }
-                    // forceActiveFocus only runs in Component.onCompleted; reopening the launcher
-                    // leaves focus elsewhere until the user hovers. Defer so the surface is ready (Wayland).
-                    Qt.callLater(() => search.forceActiveFocus());
+                    applyPendingPrefix();
                 }
 
                 function onSessionChanged(): void {
                     if (!root.visibilities.session)
                         search.forceActiveFocus();
+                }
+            }
+
+            Connections {
+                target: Visibilities
+
+                function onLauncherPrefixNonceChanged(): void {
+                    if (!root.visibilities.launcher)
+                        return;
+                    search.applyPendingPrefix();
                 }
             }
         }

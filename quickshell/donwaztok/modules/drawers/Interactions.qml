@@ -1,7 +1,9 @@
 import qs.components.controls
 import qs.config
 import qs.modules.bar.popouts as BarPopouts
+import qs.services.shell
 import Quickshell
+import Quickshell.Hyprland
 import QtQuick
 
 CustomMouseArea {
@@ -141,11 +143,15 @@ CustomMouseArea {
         }
 
         if (Config.launcher.showOnHover) {
-            if (!visibilities.launcher && inBottomPanel(panels.launcher, x, y))
+            if (!visibilities.launcher && inBottomPanel(panels.launcher, x, y)) {
+                Visibilities.closeLauncherExcept(Hypr.monitorFor(screen));
                 visibilities.launcher = true;
+            }
         } else if (pressed && inBottomPanel(panels.launcher, dragStart.x, dragStart.y) && withinPanelWidth(panels.launcher, x, y)) {
-            if (dragY < -Config.launcher.dragThreshold)
+            if (dragY < -Config.launcher.dragThreshold) {
+                Visibilities.closeLauncherExcept(Hypr.monitorFor(screen));
                 visibilities.launcher = true;
+            }
             else if (dragY > Config.launcher.dragThreshold)
                 visibilities.launcher = false;
         }
