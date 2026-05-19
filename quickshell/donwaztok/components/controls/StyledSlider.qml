@@ -12,6 +12,7 @@ Slider {
     leftPadding: 10
     rightPadding: 10
     property real trackHeight: 4
+    property real handleSize: 20
 
     background: Item {
         anchors.fill: parent
@@ -38,15 +39,15 @@ Slider {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             height: root.trackHeight
-            width: Math.max(0, root.visualPosition * trackGroove.width)
+            width: Math.max(0, root.visualPosition * (trackGroove.width - root.handleSize) + root.handleSize / 2)
             radius: root.trackHeight / 2
             color: Colours.palette.m3primary
         }
     }
 
     handle: Item {
-        width: 20
-        height: 20
+        width: root.handleSize
+        height: root.handleSize
 
         x: root.visualPosition * (root.availableWidth - width)
         y: (root.implicitHeight - height) / 2

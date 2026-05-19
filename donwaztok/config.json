@@ -508,7 +508,7 @@
                 "name": "Settings"
             }
         ],
-        "cardOpacity": 0.95,
+        "cardOpacity": 0.98,
         "clipboardMaxHeightRatio": 0.75,
         "clipboardMaxShown": 12,
         "clipboardPrefix": ";",
