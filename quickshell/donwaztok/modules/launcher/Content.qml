@@ -126,12 +126,9 @@ Item {
                     anchors.rightMargin: root.padding + searchIcon.implicitWidth + 8
 
                     color: Colours.palette.m3onSurface
-                    placeholderTextColor: Qt.alpha(Colours.palette.m3onSurfaceVariant, 0.65)
                     font.pointSize: Appearance.font.size.normal
                     font.weight: Font.Normal
                     padding: 0
-
-                    placeholderText: qsTr("Search")
 
                     onAccepted: {
                         if (list.showWallpapers) {
