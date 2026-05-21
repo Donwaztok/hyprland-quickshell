@@ -54,7 +54,10 @@ Item {
 
     function focusSearchField(): void {
         search.forceActiveFocus();
-        search.selectAll();
+    }
+
+    function searchHasFocus(): bool {
+        return search.activeFocus;
     }
 
     function applyWallpaperFromLauncher(): bool {
@@ -222,7 +225,10 @@ Item {
                             return;
                         search.text = Config.launcher.pendingOpenPrefix;
                         Config.launcher.pendingOpenPrefix = "";
-                        Qt.callLater(() => root.focusSearchField());
+                        Qt.callLater(() => {
+                            root.focusSearchField();
+                            search.cursorPosition = search.text.length;
+                        });
                     }
 
                     Connections {

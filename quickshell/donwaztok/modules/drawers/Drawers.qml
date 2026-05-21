@@ -59,7 +59,12 @@ Variants {
             screen: scope.modelData
             name: "drawers"
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
-            WlrLayershell.keyboardFocus: visibilities.launcher || visibilities.session ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+            // Hyprland + follow_mouse: OnDemand drops keyboard until the cursor hits the launcher
+            // input hole. Exclusive while open keeps typing without hovering (see noctalia-shell dd4ebda).
+            WlrLayershell.keyboardFocus: (visibilities.launcher && Config.launcher.enabled)
+                || (visibilities.session && Config.session.enabled)
+                ? WlrKeyboardFocus.Exclusive
+                : WlrKeyboardFocus.None
 
             mask: Region {
                 x: bar.leftMargin + win.dragMaskPadding
@@ -94,7 +99,8 @@ Variants {
                         const hImplicit = modelData.implicitHeight ?? 0;
                         if (visibilities.launcher && modelData === panels.launcher) {
                             const ch = panels.launcher.contentHeight ?? 0;
-                            return Math.max(hGeom, hImplicit, ch, 1);
+                            const minH = Config.launcher.sizes.searchBarHeight;
+                            return Math.max(hGeom, hImplicit, ch, minH);
                         }
                         return Math.max(hGeom, hImplicit);
                     }
@@ -107,7 +113,10 @@ Variants {
 
                 interval: 280
                 repeat: false
-                onTriggered: win.suppressGrabClear = false
+                onTriggered: {
+                    win.suppressGrabClear = false;
+                    interval = 280;
+                }
             }
 
             Connections {
@@ -116,6 +125,7 @@ Variants {
                 function onLauncherChanged(): void {
                     if (visibilities.launcher && Config.launcher.enabled) {
                         win.suppressGrabClear = true;
+                        grabClearSuppressTimer.interval = Appearance.anim.durations.expressiveDefaultSpatial + 80;
                         grabClearSuppressTimer.restart();
                     }
                 }
@@ -123,6 +133,7 @@ Variants {
                 function onSessionChanged(): void {
                     if (visibilities.session && Config.session.enabled) {
                         win.suppressGrabClear = true;
+                        grabClearSuppressTimer.interval = Appearance.anim.durations.normal + 80;
                         grabClearSuppressTimer.restart();
                     }
                 }

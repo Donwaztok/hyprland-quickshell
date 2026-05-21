@@ -56,10 +56,16 @@ Item {
         if (shouldBeActive) {
             timer.stop();
             hideAnim.stop();
+            updateContentHeight();
+            const minOpenHeight = Math.max(contentHeight, Config.launcher.sizes.searchBarHeight);
+            contentHeight = minOpenHeight;
+            implicitHeight = minOpenHeight;
             contentOpacity = 0;
             contentScale = 0.96;
+            focusTimer.restart();
             showAnim.start();
         } else {
+            focusTimer.stop();
             showAnim.stop();
             hideAnim.start();
         }
@@ -106,9 +112,30 @@ Item {
     Timer {
         id: focusTimer
 
-        interval: 50
-        repeat: false
-        onTriggered: root.requestSearchFocus()
+        interval: 40
+        repeat: true
+        triggeredOnStart: true
+        property int focusAttempts: 0
+
+        onTriggered: {
+            root.requestSearchFocus();
+            if (content.item?.searchHasFocus()) {
+                focusAttempts = 0;
+                stop();
+                return;
+            }
+            focusAttempts++;
+            // Keep trying through the open animation; never selectAll here (breaks fast typing).
+            if (focusAttempts >= 16) {
+                focusAttempts = 0;
+                stop();
+            }
+        }
+
+        onRunningChanged: {
+            if (!running)
+                focusAttempts = 0;
+        }
     }
 
     SequentialAnimation {

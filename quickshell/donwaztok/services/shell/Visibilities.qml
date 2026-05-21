@@ -40,6 +40,15 @@ Singleton {
         launcherPrefixNonce++;
     }
 
+    /// Places the cursor over the launcher anchor so Hyprland sloppy-focus routes keys there.
+    function warpCursorToLauncher(monitor: var): void {
+        if (!monitor)
+            return;
+        const cx = Math.round(monitor.x + monitor.width / 2);
+        const cy = Math.round(monitor.y + monitor.height * Config.launcher.verticalAnchor);
+        Hyprland.dispatch(`hl.dsp.cursor.move({ x = ${cx}, y = ${cy} })`);
+    }
+
     /// Opens launcher on the focused monitor and closes it on all others.
     function openLauncher(prefix) {
         if (prefix === undefined)
@@ -57,7 +66,10 @@ Singleton {
         } else {
             Config.launcher.pendingOpenPrefix = "";
         }
+        const wasOpen = v.launcher;
         v.launcher = true;
+        if (!wasOpen)
+            Qt.callLater(() => warpCursorToLauncher(monitor));
     }
 
     function toggleLauncher(): void {
