@@ -66,17 +66,7 @@ hl.bind(
 
 -- Utilities
 hl.bind("SUPER + SHIFT + S", hl.dsp.global("donwaztok:regionScreenshot"), { description = "Screen snip" })
-hl.bind(
-    "SUPER + SHIFT + S",
-    hl.dsp.exec_cmd(qs("ipc call TEST_ALIVE") .. " || pidof slurp || hyprshot --freeze --clipboard-only --mode region --silent"),
-    hidden
-)
 hl.bind("SUPER + SHIFT + A", hl.dsp.global("donwaztok:regionSearch"), { description = "Google Lens snip" })
-hl.bind(
-    "SUPER + SHIFT + A",
-    hl.dsp.exec_cmd(qs("ipc call TEST_ALIVE") .. " || pidof slurp || ~/.config/hypr/hyprland/scripts/snip_to_search.sh"),
-    hidden
-)
 hl.bind("SUPER + SHIFT + X", hl.dsp.global("donwaztok:regionOcr"), { description = "OCR region >> clipboard" })
 hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"), { description = "Color picker" })
 
