@@ -22,8 +22,8 @@ hl.config({
     },
 
     general = {
-        gaps_in = 4,
-        gaps_out = 5,
+        gaps_in = 3,
+        gaps_out = 3,
         gaps_workspaces = 50,
         border_size = 2,
         col = {
@@ -57,8 +57,8 @@ hl.config({
         allow_tearing = true,
         snap = {
             enabled = true,
-            window_gap = 4,
-            monitor_gap = 5,
+            window_gap = 3,
+            monitor_gap = 3,
             respect_gaps = true,
         },
     },
