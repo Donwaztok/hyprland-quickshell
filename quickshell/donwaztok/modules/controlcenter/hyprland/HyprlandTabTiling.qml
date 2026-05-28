@@ -20,7 +20,7 @@ ColumnLayout {
     PreferencesGroup {
         Layout.fillWidth: true
         title: qsTr("Tiling and layout")
-        description: qsTr("Workspace layout, gaps, borders, and corner rounding.")
+        description: qsTr("Workspace layout and gaps. Border colors are under Hyprland look.")
 
         RowLayout {
             Layout.fillWidth: true
@@ -96,52 +96,6 @@ ColumnLayout {
             }
 
             onValueModified: newValue => ctl.applyGapsOut(newValue)
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 1
-            color: Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.45 : 0.32)
-        }
-
-        SliderInput {
-            Layout.fillWidth: true
-            label: qsTr("Window border size")
-            value: ctl ? ctl.borderSize : 0
-            from: 0
-            to: 12
-            stepSize: 1
-            decimals: 0
-            suffix: " px"
-            validator: IntValidator {
-                bottom: 0
-                top: 12
-            }
-
-            onValueModified: newValue => ctl.applyBorder(newValue)
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 1
-            color: Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.45 : 0.32)
-        }
-
-        SliderInput {
-            Layout.fillWidth: true
-            label: qsTr("Window rounding")
-            value: ctl ? ctl.rounding : 0
-            from: 0
-            to: 30
-            stepSize: 1
-            decimals: 0
-            suffix: " px"
-            validator: IntValidator {
-                bottom: 0
-                top: 30
-            }
-
-            onValueModified: newValue => ctl.applyRounding(newValue)
         }
     }
 

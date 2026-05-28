@@ -1,10 +1,5 @@
 hl.config({
-    general = {
-        col = {
-            active_border = "rgba(91919177)",
-            inactive_border = "rgba(47474755)",
-        },
-    },
+    -- Border colors live in lua/hyprland/general.lua (avoid overriding them here).
     misc = {
         background_color = "rgba(131313FF)",
     },
