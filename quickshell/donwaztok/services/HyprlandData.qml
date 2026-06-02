@@ -2,16 +2,16 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
 /**
- * Provides access to some Hyprland data not available in Quickshell.Hyprland.
+ * Hyprland state not exposed by Quickshell.Hyprland (hyprctl clients, monitors, recovery, etc.).
  */
 Singleton {
     id: root
+
     property var windowList: []
     property var addresses: []
     property var windowByAddress: ({})
@@ -22,17 +22,16 @@ Singleton {
     property var monitors: []
     property var layers: ({})
 
-    /// Clients that look off-monitor (see `windowNeedsRecoveryReason`) — updated with hyprctl clients/monitors.
+    /// Off-monitor clients for the recovery UI (see windowNeedsRecoveryReason).
     property var recoveryCandidates: []
 
-    // Convenient stuff
+    // --- Public queries -------------------------------------------------------
 
     function toplevelsForWorkspace(workspace) {
         return ToplevelManager.toplevels.values.filter(toplevel => {
             const address = `0x${toplevel.HyprlandToplevel?.address}`;
-            var win = HyprlandData.windowByAddress[address];
-            return win?.workspace?.id === workspace;
-        })
+            return root.windowByAddress[address]?.workspace?.id === workspace;
+        });
     }
 
     function hyprlandClientsForWorkspace(workspace) {
@@ -40,32 +39,30 @@ Singleton {
     }
 
     function clientForToplevel(toplevel) {
-        if (!toplevel || !toplevel.HyprlandToplevel) {
+        if (!toplevel?.HyprlandToplevel)
             return null;
-        }
-        const address = `0x${toplevel?.HyprlandToplevel?.address}`;
-        return root.windowByAddress[address];
+        return root.windowByAddress[`0x${toplevel.HyprlandToplevel.address}`];
     }
 
-    // Internals
-
-    function updateWindowList() {
-        getClients.running = true;
+    function biggestWindowForWorkspace(workspaceId) {
+        return root.windowList
+            .filter(w => w.workspace.id == workspaceId)
+            .reduce((best, win) => {
+                const area = (win.size?.[0] ?? 0) * (win.size?.[1] ?? 0);
+                const bestArea = (best?.size?.[0] ?? 0) * (best?.size?.[1] ?? 0);
+                return area > bestArea ? win : best;
+            }, null);
     }
 
-    function updateLayers() {
-        getLayers.running = true;
-    }
+    // --- Hyprctl refresh ------------------------------------------------------
 
-    function updateMonitors() {
-        getMonitors.running = true;
-    }
-
+    function updateWindowList() { getClients.running = true; }
+    function updateLayers() { getLayers.running = true; }
+    function updateMonitors() { getMonitors.running = true; }
     function updateWorkspaces() {
         getWorkspaces.running = true;
         getActiveWorkspace.running = true;
     }
-
     function updateAll() {
         updateWindowList();
         updateMonitors();
@@ -73,74 +70,55 @@ Singleton {
         updateWorkspaces();
     }
 
-    function biggestWindowForWorkspace(workspaceId) {
-        const windowsInThisWorkspace = HyprlandData.windowList.filter(w => w.workspace.id == workspaceId);
-        return windowsInThisWorkspace.reduce((maxWin, win) => {
-            const maxArea = (maxWin?.size?.[0] ?? 0) * (maxWin?.size?.[1] ?? 0);
-            const winArea = (win?.size?.[0] ?? 0) * (win?.size?.[1] ?? 0);
-            return winArea > maxArea ? win : maxWin;
-        }, null);
+    function refreshRecoveryUi() {
+        updateWindowList();
+        updateMonitors();
     }
 
-    function rectsOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
-        return !(ax + aw <= bx || ax >= bx + bw || ay + ah <= by || ay >= by + bh);
-    }
+    // --- Recovery detection ---------------------------------------------------
 
-    function windowOverlapsAnyMonitor(win) {
+    function _windowMonitorState(win) {
         const mons = root.monitors;
-        if (!mons || mons.length === 0)
-            return true;
-        const x = win.at[0], y = win.at[1], w = win.size[0], h = win.size[1];
+        if (!mons?.length)
+            return { overlap: true, centerIn: true };
+
+        const [x, y] = win.at;
+        const [w, h] = win.size;
+        const cx = x + w * 0.5;
+        const cy = y + h * 0.5;
+        let overlap = false;
+        let centerIn = false;
+
         for (let i = 0; i < mons.length; ++i) {
             const m = mons[i];
-            if (root.rectsOverlap(x, y, w, h, m.x, m.y, m.width, m.height))
-                return true;
+            if (!overlap && !(x + w <= m.x || x >= m.x + m.width || y + h <= m.y || y >= m.y + m.height))
+                overlap = true;
+            if (!centerIn && cx >= m.x && cx < m.x + m.width && cy >= m.y && cy < m.y + m.height)
+                centerIn = true;
+            if (overlap && centerIn)
+                break;
         }
-        return false;
+        return { overlap, centerIn };
     }
 
-    function windowCenterInsideAnyMonitor(win) {
-        const mons = root.monitors;
-        if (!mons || mons.length === 0)
-            return true;
-        const cx = win.at[0] + win.size[0] * 0.5;
-        const cy = win.at[1] + win.size[1] * 0.5;
-        for (let i = 0; i < mons.length; ++i) {
-            const m = mons[i];
-            if (cx >= m.x && cx < m.x + m.width && cy >= m.y && cy < m.y + m.height)
-                return true;
-        }
-        return false;
-    }
-
-    /// Returns null if OK, else a short reason code for UI.
+    /// null when OK, else a short reason code for the UI.
     function windowNeedsRecoveryReason(win) {
-        if (!win.mapped || win.hidden)
+        if (!win?.mapped || win.hidden || win.fullscreen || (win.fullscreenClient | 0) > 0)
             return null;
         if (!win.at || !win.size || win.size[0] < 1 || win.size[1] < 1)
             return null;
-        if (win.fullscreen)
-            return null;
-        if ((win.fullscreenClient | 0) > 0)
-            return null;
-        const overlap = root.windowOverlapsAnyMonitor(win);
-        const centerIn = root.windowCenterInsideAnyMonitor(win);
+
+        const { overlap, centerIn } = root._windowMonitorState(win);
         if (!overlap)
             return win.floating ? "no_overlap" : "no_overlap_tiled";
-        if (!win.floating)
-            return null;
-        if (!centerIn)
+        if (win.floating && !centerIn)
             return "center_off";
         return null;
     }
 
-    function recomputeRecoveryCandidates(): void {
+    function recomputeRecoveryCandidates() {
+        const wins = root.windowList ?? [];
         const out = [];
-        const wins = root.windowList;
-        if (!wins) {
-            root.recoveryCandidates = out;
-            return;
-        }
         for (let i = 0; i < wins.length; ++i) {
             const w = wins[i];
             const reason = root.windowNeedsRecoveryReason(w);
@@ -150,185 +128,149 @@ Singleton {
                 address: w.address,
                 class: w.class || "",
                 title: w.title || "",
-                reason: reason,
+                reason,
                 floating: !!w.floating
             });
         }
         root.recoveryCandidates = out;
     }
 
-    function _focusedMonitorBox() {
-        const mons = root.monitors;
-        if (!mons || mons.length === 0)
-            return null;
-        const fmId = Hyprland.focusedMonitor?.id ?? mons[0].id;
-        for (let i = 0; i < mons.length; ++i) {
-            if (mons[i].id == fmId)
-                return mons[i];
-        }
-        return mons[0];
+    function _floatingWindowsNeedingRecovery() {
+        return (root.windowList ?? [])
+            .filter(w => w.floating && root.windowNeedsRecoveryReason(w))
+            .sort((a, b) => (b.size[0] * b.size[1]) - (a.size[0] * a.size[1]));
     }
 
-    function _moveWindowToFocusedCenter(win, staggerIndex) {
-        const box = root._focusedMonitorBox();
-        if (!box || !win?.address)
+    // --- Recovery actions (Hyprland 0.55+ hl.dsp) -----------------------------
+
+    function _dispatchRecoverWindow(address, staggerIndex) {
+        if (!address)
             return;
-        const mx = box.x, my = box.y, mw = box.width, mh = box.height;
-        const ww = win.size[0], wh = win.size[1];
+        const sel = `address:${address}`;
+        const wsId = Hyprland.focusedWorkspace?.id;
+        const monName = Hyprland.focusedMonitor?.name;
+        if (wsId != null)
+            Hyprland.dispatch(`hl.dsp.window.move({ window = '${sel}', workspace = ${wsId}, follow = false })`);
+        if (monName)
+            Hyprland.dispatch(`hl.dsp.window.move({ window = '${sel}', monitor = '${monName}', follow = false })`);
+        Hyprland.dispatch(`hl.dsp.window.center({ window = '${sel}' })`);
         const k = staggerIndex || 0;
-        let nx = mx + Math.max(0, Math.floor((mw - ww) / 2)) + k * 48;
-        nx = Math.min(nx, mx + mw - ww - 5);
-        const ny = my + Math.max(0, Math.floor((mh - wh) / 2));
-        Hyprland.dispatch(`hl.dsp.focus({ window = 'address:${win.address}' })`);
-        Hyprland.dispatch(`hl.dsp.window.move({ x = ${nx}, y = ${ny}, relative = false })`);
+        if (k > 0)
+            Hyprland.dispatch(`hl.dsp.window.move({ window = '${sel}', x = ${k * 48}, y = 0, relative = true })`);
     }
 
-    property bool _bringOffscreenPending: false
-    property bool _bringOffscreenClientsReady: false
-    property bool _bringOffscreenMonitorsReady: false
+    /// null | "all" | window address
+    property var _recoveryAction: null
+    property int _recoveryRefreshMask: 0
 
-    function _tryBringOffscreenAfterRefresh(): void {
-        if (!root._bringOffscreenPending)
+    readonly property int _recoveryClientsBit: 1
+    readonly property int _recoveryMonitorsBit: 2
+
+    function _requestRecovery(action) {
+        root._recoveryAction = action;
+        root._recoveryRefreshMask = 0;
+        updateWindowList();
+        updateMonitors();
+    }
+
+    function _recoveryRefreshDone(bit) {
+        root._recoveryRefreshMask |= bit;
+        if (root._recoveryRefreshMask !== (root._recoveryClientsBit | root._recoveryMonitorsBit))
             return;
-        if (!root._bringOffscreenClientsReady || !root._bringOffscreenMonitorsReady)
+
+        const action = root._recoveryAction;
+        root._recoveryAction = null;
+        root._recoveryRefreshMask = 0;
+        if (!action)
             return;
-        root._bringOffscreenPending = false;
-        root._bringOffscreenFloatsInWork();
-    }
 
-    property var _recoveryWins: []
-    property int _recoveryIdx: 0
-
-    function collectRecoveryFloatingWindows() {
-        const wins = root.windowList;
-        const off = [];
-        if (!wins)
-            return off;
-        for (let j = 0; j < wins.length; ++j) {
-            const w = wins[j];
-            if (!w.floating)
-                continue;
-            if (root.windowNeedsRecoveryReason(w))
-                off.push(w);
+        if (action === "all") {
+            const wins = root._floatingWindowsNeedingRecovery();
+            if (!wins.length)
+                return;
+            root._recoveryBatch = wins.map(w => w.address);
+            root._recoveryIndex = 0;
+            recoveryTimer.restart();
+            return;
         }
-        off.sort((a, b) => (b.size[0] * b.size[1]) - (a.size[0] * a.size[1]));
-        return off;
+
+        const win = root.windowByAddress[action];
+        if (win?.floating)
+            root._dispatchRecoverWindow(action, 0);
+        updateWindowList();
     }
 
-    property string _pendingBringOneAddress: ""
-
-    Timer {
-        id: bringOneTimer
-        interval: 220
-        repeat: false
-        onTriggered: {
-            const addr = root._pendingBringOneAddress;
-            root._pendingBringOneAddress = "";
-            if (!addr)
-                return;
-            const wins = root.windowList;
-            if (!wins)
-                return;
-            let w = null;
-            for (let i = 0; i < wins.length; ++i) {
-                if (wins[i].address === addr) {
-                    w = wins[i];
-                    break;
-                }
-            }
-            if (!w || !w.floating)
-                return;
-            root._moveWindowToFocusedCenter(w, 0);
-            root.updateWindowList();
-        }
+    function bringOneWindowInRequest(addr) {
+        _requestRecovery(addr);
     }
+
+    function bringOffscreenFloatsInRequest() {
+        _requestRecovery("all");
+    }
+
+    property var _recoveryBatch: []
+    property int _recoveryIndex: 0
 
     Timer {
         id: recoveryTimer
         interval: 120
         repeat: false
         onTriggered: {
-            if (root._recoveryIdx >= root._recoveryWins.length) {
-                root._recoveryWins = [];
+            const batch = root._recoveryBatch;
+            if (root._recoveryIndex >= batch.length) {
+                root._recoveryBatch = [];
+                root._recoveryIndex = 0;
                 root.updateWindowList();
                 return;
             }
-            root._moveWindowToFocusedCenter(root._recoveryWins[root._recoveryIdx], root._recoveryIdx);
-            root._recoveryIdx++;
-            if (root._recoveryIdx < root._recoveryWins.length)
+            root._dispatchRecoverWindow(batch[root._recoveryIndex], root._recoveryIndex);
+            root._recoveryIndex++;
+            if (root._recoveryIndex < batch.length)
                 recoveryTimer.restart();
             else {
-                root._recoveryWins = [];
+                root._recoveryBatch = [];
+                root._recoveryIndex = 0;
                 root.updateWindowList();
             }
         }
     }
 
-    function bringOneWindowInRequest(addr: string): void {
-        root._pendingBringOneAddress = addr;
-        root.updateWindowList();
-        root.updateMonitors();
-        bringOneTimer.restart();
-    }
+    // --- Lifecycle ------------------------------------------------------------
 
-    function refreshRecoveryUi(): void {
-        root.updateWindowList();
-        root.updateMonitors();
-    }
+    Component.onCompleted: updateAll()
 
-    function bringOffscreenFloatsInRequest(): void {
-        root._bringOffscreenPending = true;
-        root._bringOffscreenClientsReady = false;
-        root._bringOffscreenMonitorsReady = false;
-        root.updateWindowList();
-        root.updateMonitors();
-    }
-
-    function _bringOffscreenFloatsInWork(): void {
-        const off = root.collectRecoveryFloatingWindows();
-        if (off.length === 0)
-            return;
-        if (off.length === 1) {
-            root._moveWindowToFocusedCenter(off[0], 0);
-            root.updateWindowList();
-            return;
-        }
-        root._recoveryWins = off;
-        root._recoveryIdx = 0;
-        recoveryTimer.restart();
-    }
-
-    Component.onCompleted: {
-        updateAll();
+    Timer {
+        id: eventRefreshDebounce
+        interval: 50
+        repeat: false
+        onTriggered: root.updateAll()
     }
 
     Connections {
         target: Hyprland
-
         function onRawEvent(event) {
-            // console.log("Hyprland raw event:", event.name);
-            if (["openlayer", "closelayer", "screencast"].includes(event.name)) return;
-            updateAll()
+            if (["openlayer", "closelayer", "screencast"].includes(event.name))
+                return;
+            eventRefreshDebounce.restart();
         }
     }
+
+    // --- Hyprctl processes ----------------------------------------------------
 
     Process {
         id: getClients
         command: ["hyprctl", "clients", "-j"]
         stdout: StdioCollector {
-            id: clientsCollector
             onStreamFinished: {
-                root.windowList = JSON.parse(clientsCollector.text)
-                let tempWinByAddress = {};
-                for (var i = 0; i < root.windowList.length; ++i) {
-                    var win = root.windowList[i];
-                    tempWinByAddress[win.address] = win;
-                }
-                root.windowByAddress = tempWinByAddress;
-                root.addresses = root.windowList.map(win => win.address);
+                const wins = JSON.parse(this.text);
+                const byAddress = {};
+                for (let i = 0; i < wins.length; ++i)
+                    byAddress[wins[i].address] = wins[i];
+                root.windowList = wins;
+                root.windowByAddress = byAddress;
+                root.addresses = wins.map(w => w.address);
                 root.recomputeRecoveryCandidates();
-                root._bringOffscreenClientsReady = true;
-                root._tryBringOffscreenAfterRefresh();
+                root._recoveryRefreshDone(root._recoveryClientsBit);
             }
         }
     }
@@ -337,12 +279,10 @@ Singleton {
         id: getMonitors
         command: ["hyprctl", "monitors", "-j"]
         stdout: StdioCollector {
-            id: monitorsCollector
             onStreamFinished: {
-                root.monitors = JSON.parse(monitorsCollector.text);
+                root.monitors = JSON.parse(this.text);
                 root.recomputeRecoveryCandidates();
-                root._bringOffscreenMonitorsReady = true;
-                root._tryBringOffscreenAfterRefresh();
+                root._recoveryRefreshDone(root._recoveryMonitorsBit);
             }
         }
     }
@@ -351,9 +291,8 @@ Singleton {
         id: getLayers
         command: ["hyprctl", "layers", "-j"]
         stdout: StdioCollector {
-            id: layersCollector
             onStreamFinished: {
-                root.layers = JSON.parse(layersCollector.text);
+                root.layers = JSON.parse(this.text);
             }
         }
     }
@@ -362,18 +301,14 @@ Singleton {
         id: getWorkspaces
         command: ["hyprctl", "workspaces", "-j"]
         stdout: StdioCollector {
-            id: workspacesCollector
             onStreamFinished: {
-                var rawWorkspaces = JSON.parse(workspacesCollector.text);
-                // Filter out invalid workspace ids (e.g. lock-screen temp workspace 2147483647 - N)
-                root.workspaces = rawWorkspaces.filter(ws => ws.id >= 1 && ws.id <= 100);
-                let tempWorkspaceById = {};
-                for (var i = 0; i < root.workspaces.length; ++i) {
-                    var ws = root.workspaces[i];
-                    tempWorkspaceById[ws.id] = ws;
-                }
-                root.workspaceById = tempWorkspaceById;
-                root.workspaceIds = root.workspaces.map(ws => ws.id);
+                const raw = JSON.parse(this.text).filter(ws => ws.id >= 1 && ws.id <= 100);
+                const byId = {};
+                for (let i = 0; i < raw.length; ++i)
+                    byId[raw[i].id] = raw[i];
+                root.workspaces = raw;
+                root.workspaceById = byId;
+                root.workspaceIds = raw.map(ws => ws.id);
             }
         }
     }
@@ -382,9 +317,8 @@ Singleton {
         id: getActiveWorkspace
         command: ["hyprctl", "activeworkspace", "-j"]
         stdout: StdioCollector {
-            id: activeWorkspaceCollector
             onStreamFinished: {
-                root.activeWorkspace = JSON.parse(activeWorkspaceCollector.text);
+                root.activeWorkspace = JSON.parse(this.text);
             }
         }
     }
