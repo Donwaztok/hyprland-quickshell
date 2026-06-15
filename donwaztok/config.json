@@ -329,7 +329,7 @@
         "excludedScreens": [
         ],
         "idle": {
-            "inhibitWhenAudio": true,
+            "inhibitWhenAudio": false,
             "lockBeforeSleep": true,
             "timeouts": [
                 {

@@ -132,18 +132,21 @@ hl.window_rule({
     name = "exe-immediate",
     match = { title = ".*\\.exe" },
     immediate = true,
+    idle_inhibit = "fullscreen",
 })
 
 hl.window_rule({
     name = "minecraft-immediate",
     match = { title = ".*[Mm]inecraft.*" },
     immediate = true,
+    idle_inhibit = "fullscreen",
 })
 
 hl.window_rule({
     name = "steam-immediate",
     match = { class = "^steam_app_[0-9]+$" },
     immediate = true,
+    idle_inhibit = "fullscreen",
 })
 
 -- JetBrains helper popups
