@@ -176,3 +176,5 @@ if [[ -d "$HOME/Android/Sdk" ]]; then
   )
   [[ -d "$ANDROID_HOME/cmdline-tools/latest/bin" ]] && path+=("$ANDROID_HOME/cmdline-tools/latest/bin")
 fi
+
+export UNITY_PATH="$HOME/Unity/Hub/Editor/6000.4.8f1/Editor/Unity"

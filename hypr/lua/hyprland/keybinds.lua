@@ -189,7 +189,7 @@ hl.bind(
     "SUPER + C",
     hl.dsp.exec_cmd(
         launchScript
-            .. ' "antigravity" "code" "codium" "gtk-launch cursor" "zed" "zedit" "zeditor" "kate" "gnome-text-editor" "emacs" "command -v nvim && kitty -1 nvim" "command -v micro && kitty -1 micro"'
+            .. '"gtk-launch cursor" "antigravity" "code" "codium" "zed" "zedit" "zeditor" "kate" "gnome-text-editor" "emacs" "command -v nvim && kitty -1 nvim" "command -v micro && kitty -1 micro"'
     ),
     { description = "Code editor" }
 )

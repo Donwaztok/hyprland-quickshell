@@ -155,7 +155,17 @@ for f in "$REPO_ROOT/hypr/source/"*.desktop; do
 done
 
 # -----------------------------------------------------------------------------
-# 7. User groups and services (backlight, ydotool, bluetooth)
+# 7. Systemd user units (Hyprland session / XDG portals)
+# -----------------------------------------------------------------------------
+if [ -f "$REPO_ROOT/hypr/systemd/user/hyprland-session.target" ]; then
+  echo -e "\033[0;32m[SYSTEMD]\033[0m Installing hyprland-session.target (screen share / portals)..."
+  mkdir -p "$HOME/.config/systemd/user"
+  cp -f "$REPO_ROOT/hypr/systemd/user/hyprland-session.target" "$HOME/.config/systemd/user/"
+  systemctl --user daemon-reload 2>/dev/null || true
+fi
+
+# -----------------------------------------------------------------------------
+# 8. User groups and services (backlight, ydotool, bluetooth)
 # -----------------------------------------------------------------------------
 if command -v systemctl &>/dev/null; then
   if ! getent group i2c &>/dev/null; then
