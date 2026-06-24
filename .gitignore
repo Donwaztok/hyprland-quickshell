@@ -41,10 +41,19 @@
 
 # Raiz do repo
 !.gitignore
-!app.lst
 !README.md
-!install.sh
-!.zshrc
+!install-nixos.sh
+!bootstrap.sh
+!flake.nix
+!flake.lock
+!nix/
+!nix/**
+
+# Hardware NixOS (específico da máquina — copie de hardware.example.nix)
+nix/hosts/desktop/hardware.nix
+
+# Config local por usuário/máquina (copie de local.example.nix)
+nix/local.nix
 
 # -----------------------------------------------------------------------------
 # Re-ignorar dentro das pastas rastreadas (cache, estado, gerados)

@@ -628,14 +628,14 @@
             }
         },
         "apps": {
-            "bluetooth": "kcmshell6 kcm_bluetooth",
+            "bluetooth": "blueman-manager",
             "changePassword": "kitty -1 --hold=yes zsh -i -c 'passwd'",
-            "manageUser": "kcmshell6 kcm_users",
-            "network": "kcmshell6 kcm_networkmanagement",
-            "networkEthernet": "kcmshell6 kcm_networkmanagement",
-            "taskManager": "plasma-systemmonitor --page-name Processes",
+            "manageUser": "gnome-control-center",
+            "network": "nm-connection-editor",
+            "networkEthernet": "nm-connection-editor",
+            "taskManager": "gnome-system-monitor",
             "terminal": "kitty -1",
-            "update": "kitty -1 --hold=yes zsh -i -c 'pkexec pacman -Syu'",
+            "update": "kitty -1 --hold=yes zsh -i -c 'up'",
             "volumeMixer": "~/.config/hypr/hyprland/scripts/launch_first_available.sh \"pavucontrol-qt\" \"pavucontrol\""
         },
         "audio": {

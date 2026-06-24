@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Cursor - URL Handler
 Comment=Abre deeplinks cursor:// no Cursor
-Exec=/usr/bin/cursor --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --open-url %U
+Exec=cursor --enable-features=UseOzonePlatform --ozone-platform=wayland --no-sandbox --open-url %U
 # Exec=env OZONE_PLATFORM=x11 /usr/bin/cursor --enable-features=UseOzonePlatform --ozone-platform=x11 --no-sandbox --open-url %U
 Terminal=false
 Type=Application
