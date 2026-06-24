@@ -1,10 +1,9 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, ... }:
 {
   nixpkgs.config.allowUnfree = true;
 
-  # Cursor: official AppImage via code-cursor-nix (updates ~3x/week).
-  # https://github.com/jacopone/code-cursor-nix
+  # Cursor 3.8.x from official AppImage (see nix/packages/cursor.nix).
   environment.systemPackages = [
-    inputs.code-cursor-nix.packages.${pkgs.system}.cursor
+    pkgs.callPackage ../packages/cursor.nix { }
   ];
 }
