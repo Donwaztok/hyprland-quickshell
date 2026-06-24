@@ -1,9 +1,9 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, dotfiles, ... }:
 {
   nixpkgs.config.allowUnfree = true;
 
   # Cursor 3.8.x from official AppImage (see nix/packages/cursor.nix).
   environment.systemPackages = [
-    pkgs.callPackage ../packages/cursor.nix { }
+    (pkgs.callPackage "${dotfiles}/nix/packages/cursor.nix" { })
   ];
 }
