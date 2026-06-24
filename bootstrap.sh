@@ -12,6 +12,7 @@
 
 set -euo pipefail
 
+BOOTSTRAP_URL="${BOOTSTRAP_URL:-https://raw.githubusercontent.com/Donwaztok/hyprland-quickshell/nixos/bootstrap.sh}"
 REPO_URL="${REPO_URL:-https://github.com/Donwaztok/hyprland-quickshell.git}"
 BRANCH="${BRANCH:-nixos}"
 TARGET="${TARGET:-$HOME/.config}"
@@ -20,15 +21,29 @@ info() { printf '\033[0;32m[INFO]\033[0m %s\n' "$*"; }
 warn() { printf '\033[0;33m[WARN]\033[0m %s\n' "$*"; }
 err() { printf '\033[0;31m[ERR]\033[0m %s\n' "$*" >&2; }
 
+ensure_git() {
+  if command -v git >/dev/null 2>&1; then
+    return 0
+  fi
+  if command -v nix-shell >/dev/null 2>&1; then
+    info "git não encontrado — provisionando via nix-shell ..."
+    exec nix-shell -p git curl --run "curl -fsSL '$BOOTSTRAP_URL' | bash -s -- $(printf '%q ' "$@")"
+  fi
+  if command -v nix >/dev/null 2>&1; then
+    info "git não encontrado — provisionando via nix shell ..."
+    exec nix shell nixpkgs#git nixpkgs#curl -c bash -c "curl -fsSL '$BOOTSTRAP_URL' | bash -s -- $(printf '%q ' "$@")"
+  fi
+  err "git não encontrado e nix/nix-shell indisponível."
+  err "Tente: nix-shell -p git --run \"curl -fsSL $BOOTSTRAP_URL | bash\""
+  exit 1
+}
+
 if [[ "$(id -un)" == "root" && -z "${SUDO_USER:-}" ]]; then
   err "Não rode como root. Entre com seu usuário normal (com sudo)."
   exit 1
 fi
 
-if ! command -v git >/dev/null 2>&1; then
-  err "git não encontrado. No NixOS mínimo: nix-shell -p git --run 'bash -s' <(curl -fsSL .../bootstrap.sh)"
-  exit 1
-fi
+ensure_git "$@"
 
 if [[ -e "$TARGET/.git" ]]; then
   warn "$TARGET já é um repositório git."

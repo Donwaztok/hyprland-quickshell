@@ -38,8 +38,8 @@
       lt = "eza --icons=auto --tree";
       vc = "cursor";
 
-      up = "sudo nixos-rebuild switch --flake ~/.config#${local.flakeHost}";
-      up-test = "sudo nixos-rebuild test --flake ~/.config#${local.flakeHost}";
+      up = "sudo nixos-rebuild switch --flake path:''${HOME}/.config#${local.flakeHost}";
+      up-test = "sudo nixos-rebuild test --flake path:''${HOME}/.config#${local.flakeHost}";
       pl = "nix profile list";
       pa = "nix search nixpkgs";
       pc = "nix-collect-garbage -d";

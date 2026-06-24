@@ -43,7 +43,7 @@ err() { printf '\033[0;31m[ERR]\033[0m %s\n' "$*" >&2; }
 sanitize_flake_host() {
   # Nix attribute names: letters, digits, _, -
   local raw="${1,,}" # lowercase
-  raw="$(printf '%s' "$raw" | tr -c 'a-z0-9_- ' '_' | tr ' ' '_')"
+  raw="$(printf '%s' "$raw" | tr -c 'a-z0-9_ -' '_' | tr ' ' '_')"
   raw="${raw##_}"
   raw="${raw%%_}"
   printf '%s' "$raw"
@@ -77,7 +77,7 @@ fi
 
 info "Usuário:    $USERNAME"
 info "Hostname:   $HOSTNAME"
-info "Flake host: $FLAKE_HOST  →  nixos-rebuild --flake .#$FLAKE_HOST"
+info "Flake host: $FLAKE_HOST  →  nixos-rebuild --flake path:$REPO_ROOT#$FLAKE_HOST"
 
 # --- nix/local.nix -----------------------------------------------------------
 
@@ -120,7 +120,7 @@ fi
 if [[ "$DO_REBUILD" -eq 0 ]]; then
   info "Arquivos gerados. Rebuild omitido (--no-rebuild)."
   info "Quando estiver pronto:"
-  info "  sudo nixos-rebuild switch --flake $REPO_ROOT#$FLAKE_HOST"
+  info "  sudo nixos-rebuild switch --flake path:$REPO_ROOT#$FLAKE_HOST"
   exit 0
 fi
 
@@ -135,11 +135,12 @@ if [[ "$(id -un)" == "root" ]]; then
 fi
 
 info "Iniciando nixos-rebuild (pode demorar na primeira vez) ..."
-sudo nixos-rebuild switch --flake "$REPO_ROOT#$FLAKE_HOST" \
+# path: inclui nix/local.nix (gitignored) — flakes via git ignoram arquivos não rastreados
+sudo nixos-rebuild switch --flake "path:$REPO_ROOT#$FLAKE_HOST" \
   --option extra-experimental-features 'nix-command flakes'
 
 echo ""
 info "Instalação concluída."
-info "  Rebuild: sudo nixos-rebuild switch --flake $REPO_ROOT#$FLAKE_HOST"
+info "  Rebuild: sudo nixos-rebuild switch --flake path:$REPO_ROOT#$FLAKE_HOST"
 info "  Atalho:  up   (após reiniciar sessão zsh)"
 info "  Reinicie se for a primeira instalação gráfica: sudo reboot"
