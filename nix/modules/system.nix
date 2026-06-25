@@ -16,6 +16,15 @@ in
       "flakes"
     ];
     auto-optimise-store = true;
+    substituters = [ "https://cache.nixos.org" ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrOdR04oFzG4x5BUuzebCzc6="
+    ];
+  }
+  // lib.optionalAttrs (local ? minimalInstall && local.minimalInstall) {
+    # VM / disco pequeno: builds em disco (não tmpfs /build) e menos jobs paralelos.
+    build-dir = "/var/tmp/nix-build";
+    max-jobs = 2;
   };
 
   nix.gc = {

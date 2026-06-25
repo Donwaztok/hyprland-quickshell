@@ -14,7 +14,11 @@
     ../../modules/hyprland.nix
     ../../modules/packages.nix
     ../../modules/cursor.nix
+  ]
+  ++ lib.optionals (!(local ? minimalInstall && local.minimalInstall)) [
     ../../modules/flatpak.nix
+  ]
+  ++ [
     (if builtins.pathExists ./hardware.nix then ./hardware.nix else ./hardware.example.nix)
   ];
 

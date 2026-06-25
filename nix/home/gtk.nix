@@ -11,6 +11,7 @@
       name = lib.mkDefault "Adwaita-dark";
       package = pkgs.gnome-themes-extra;
     };
+    gtk4.theme = config.gtk.theme;
     iconTheme = {
       name = lib.mkDefault "Adwaita";
       package = pkgs.adwaita-icon-theme;

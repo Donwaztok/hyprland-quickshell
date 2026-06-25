@@ -81,6 +81,23 @@ detect_nvidia() {
   return 1
 }
 
+ensure_build_dir() {
+  if grep -q 'minimalInstall = true' "$LOCAL_NIX" 2>/dev/null; then
+    sudo mkdir -p /var/tmp/nix-build
+    sudo chmod 1777 /var/tmp/nix-build
+  fi
+}
+
+check_disk_space() {
+  local avail_g
+  avail_g="$(df -BG / 2>/dev/null | awk 'NR==2 {gsub(/G/,"",$4); print $4}')"
+  if [[ -n "$avail_g" && "$avail_g" -lt 8 ]]; then
+    warn "Pouco espaço em / (${avail_g}G livres). Recomendado ≥ 15G para o primeiro rebuild."
+    warn "Rode: sudo nix-collect-garbage -d"
+    warn "Ou aumente o disco da VM antes de continuar."
+  fi
+}
+
 flake_ref() {
   printf 'path:%s#%s' "$REPO_ROOT" "$FLAKE_HOST"
 }
@@ -153,8 +170,10 @@ mkdir -p "$(dirname "$LOCAL_NIX")"
 GRUB_DEVICE="$(detect_grub_device || true)"
 SKIP_MONITOR=0
 USE_NVIDIA=0
+MINIMAL_INSTALL=0
 if detect_vm; then
   SKIP_MONITOR=1
+  MINIMAL_INSTALL=1
 fi
 if detect_nvidia && [[ "$SKIP_MONITOR" -eq 0 ]]; then
   USE_NVIDIA=1
@@ -175,6 +194,7 @@ $(if [[ -n "$GRUB_DEVICE" ]]; then
 fi)
   nvidia = $( [[ "$USE_NVIDIA" -eq 1 ]] && echo true || echo false );
   skipMonitorLayout = $( [[ "$SKIP_MONITOR" -eq 1 ]] && echo true || echo false );
+  minimalInstall = $( [[ "$MINIMAL_INSTALL" -eq 1 ]] && echo true || echo false );
   useUnstablePackages = false;
 }
 EOF
@@ -183,6 +203,9 @@ EOF
   fi
   if [[ "$SKIP_MONITOR" -eq 1 ]]; then
     warn "VM detectada — skipMonitorLayout = true (layout DP-1/HDMI-A-1 desativado)"
+  fi
+  if [[ "$MINIMAL_INSTALL" -eq 1 ]]; then
+    warn "VM detectada — minimalInstall = true (menos pacotes, builds em /var/tmp/nix-build)"
   fi
   if [[ "$USE_NVIDIA" -eq 1 ]]; then
     info "GPU NVIDIA detectada — nvidia = true"
@@ -257,6 +280,14 @@ elif ! ensure_boot_mounted; then
   warn "  sudo mount /boot"
   warn "  sudo nixos-rebuild switch --flake path:$REPO_ROOT#$FLAKE_HOST"
   REBUILD_ARGS+=(--install-bootloader no)
+fi
+
+check_disk_space
+ensure_build_dir
+
+if command -v nix-collect-garbage >/dev/null 2>&1; then
+  info "Limpando store antiga (nix-collect-garbage -d) ..."
+  sudo nix-collect-garbage -d || true
 fi
 
 info "Iniciando nixos-rebuild (pode demorar na primeira vez) ..."

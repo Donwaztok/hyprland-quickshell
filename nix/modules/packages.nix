@@ -1,4 +1,7 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, local, ... }:
+let
+  minimal = local ? minimalInstall && local.minimalInstall;
+in
 {
   # Stable packages mapped from app.lst (Arch → nixpkgs 26.05)
   environment.systemPackages = with pkgs; [
@@ -14,7 +17,6 @@
     # Basic
     bc
     cliphist
-    cmake
     curl
     yq-go
     jq
@@ -26,7 +28,7 @@
     # Hyprland ecosystem (0.55.3+ no nixos-26.05 stable)
     wl-clipboard
     udiskie
-    xorg.setxkbmap
+    setxkbmap
     libayatana-appindicator
     networkmanagerapplet
 
@@ -37,18 +39,10 @@
     polkit_gnome
     qt6.qt5compat
 
-    # Build / Python
-    clang
-    gobject-introspection
-    libsoup_3
-    uv
-
     # Screenshot / capture
     hyprshot
     slurp
     swappy
-    tesseract
-    wf-recorder
 
     # Toolkit
     wtype
@@ -68,13 +62,22 @@
     eog
     nautilus
     solaar
-    thunderbird
-    # zen-browser: install via Flatpak on stable if not in nixpkgs yet
-    #   flatpak install flathub app.zen_browser.zen
 
     # Shell
     eza
     fastfetch
     starship
+  ]
+  ++ lib.optionals (!minimal) [
+    # Pesados — omitidos em minimalInstall (VM / disco pequeno)
+    google-fonts
+    thunderbird
+    wf-recorder
+    tesseract
+    cmake
+    clang
+    gobject-introspection
+    libsoup_3
+    uv
   ];
 }

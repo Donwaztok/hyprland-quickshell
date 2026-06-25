@@ -22,6 +22,9 @@
   # VM / headless: não aplica layout DP-1 + HDMI-A-1 de monitors.lua.
   skipMonitorLayout = false;
 
+  # VM / disco pequeno: menos pacotes + builds em /var/tmp (evita openblas OOM).
+  minimalInstall = false;
+
   # Pacotes extras do nixos-unstable (não inclui Hyprland — use stable 26.05).
   useUnstablePackages = false;
 }
