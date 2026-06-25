@@ -1,6 +1,6 @@
 { config, pkgs, ... }:
 {
-  # Stable packages mapped from app.lst (Arch → nixpkgs 25.11)
+  # Stable packages mapped from app.lst (Arch → nixpkgs 26.05)
   environment.systemPackages = with pkgs; [
     # Audio
     libdbusmenu-gtk3
@@ -23,7 +23,7 @@
     wget
     xdg-user-dirs
 
-    # Hyprland ecosystem
+    # Hyprland ecosystem (0.55+ via nix/modules/unstable.nix)
     wl-clipboard
     udiskie
     xorg.setxkbmap

@@ -8,6 +8,7 @@
 }:
 {
   imports = [
+    ../../modules/unstable.nix
     ../../modules/system.nix
     ../../modules/hyprland.nix
     ../../modules/packages.nix
