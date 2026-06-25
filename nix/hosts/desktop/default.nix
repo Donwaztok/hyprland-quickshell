@@ -9,6 +9,7 @@
 {
   imports = [
     ../../modules/unstable.nix
+    ../../modules/graphics.nix
     ../../modules/system.nix
     ../../modules/hyprland.nix
     ../../modules/packages.nix
@@ -47,6 +48,9 @@
 
   environment.sessionVariables = {
     DONWAZTOK_CONFIG_ROOT = "${dotfiles}";
+  }
+  // lib.optionalAttrs (local ? skipMonitorLayout && local.skipMonitorLayout) {
+    DONWAZTOK_SKIP_MONITOR_LAYOUT = "1";
   };
 
   system.stateVersion = "25.11";

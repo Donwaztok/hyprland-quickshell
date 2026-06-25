@@ -64,6 +64,23 @@ detect_grub_device() {
   fi
 }
 
+detect_vm() {
+  if command -v systemd-detect-virt >/dev/null 2>&1 && systemd-detect-virt -q; then
+    return 0
+  fi
+  if grep -qiE 'hypervisor|qemu|kvm|vmware|virtualbox|bochs' /proc/cpuinfo 2>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
+detect_nvidia() {
+  if lspci 2>/dev/null | grep -qi nvidia; then
+    return 0
+  fi
+  return 1
+}
+
 flake_ref() {
   printf 'path:%s#%s' "$REPO_ROOT" "$FLAKE_HOST"
 }
@@ -134,6 +151,14 @@ info "Flake host: $FLAKE_HOST  →  nixos-rebuild --flake path:$REPO_ROOT#$FLAKE
 mkdir -p "$(dirname "$LOCAL_NIX")"
 
 GRUB_DEVICE="$(detect_grub_device || true)"
+SKIP_MONITOR=0
+USE_NVIDIA=0
+if detect_vm; then
+  SKIP_MONITOR=1
+fi
+if detect_nvidia && [[ "$SKIP_MONITOR" -eq 0 ]]; then
+  USE_NVIDIA=1
+fi
 
 if [[ -f "$LOCAL_NIX" && "$FORCE" -ne 1 ]]; then
   warn "nix/local.nix já existe. Use --force para sobrescrever."
@@ -148,10 +173,19 @@ else
 $(if [[ -n "$GRUB_DEVICE" ]]; then
   echo "  grubDevice = \"$GRUB_DEVICE\";  # sem ESP — usa GRUB"
 fi)
+  nvidia = $( [[ "$USE_NVIDIA" -eq 1 ]] && echo true || echo false );
+  skipMonitorLayout = $( [[ "$SKIP_MONITOR" -eq 1 ]] && echo true || echo false );
+  useUnstablePackages = false;
 }
 EOF
   if [[ -n "$GRUB_DEVICE" ]]; then
     warn "Sem partição EFI detectada — bootloader: GRUB em $GRUB_DEVICE"
+  fi
+  if [[ "$SKIP_MONITOR" -eq 1 ]]; then
+    warn "VM detectada — skipMonitorLayout = true (layout DP-1/HDMI-A-1 desativado)"
+  fi
+  if [[ "$USE_NVIDIA" -eq 1 ]]; then
+    info "GPU NVIDIA detectada — nvidia = true"
   fi
   if [[ -d "$REPO_ROOT/.git" ]]; then
     git -C "$REPO_ROOT" add -f nix/local.nix

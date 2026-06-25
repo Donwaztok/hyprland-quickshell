@@ -1,4 +1,9 @@
 -- Monitor layout (edit manually or regenerate from nwg-displays)
+-- Set DONWAZTOK_SKIP_MONITOR_LAYOUT=1 on VMs without DP-1 / HDMI-A-1.
+
+if os.getenv("DONWAZTOK_SKIP_MONITOR_LAYOUT") == "1" then
+    return
+end
 
 hl.monitor({
     output = "DP-1",

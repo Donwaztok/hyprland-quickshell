@@ -23,7 +23,7 @@
     wget
     xdg-user-dirs
 
-    # Hyprland ecosystem (0.55+ via nix/modules/unstable.nix)
+    # Hyprland ecosystem (0.55.3+ no nixos-26.05 stable)
     wl-clipboard
     udiskie
     xorg.setxkbmap

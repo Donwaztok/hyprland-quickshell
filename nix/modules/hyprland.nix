@@ -1,7 +1,10 @@
 { config, pkgs, lib, ... }:
 {
+  services.displayManager.defaultSession = lib.mkDefault "hyprland";
+
   programs.hyprland = {
     enable = true;
+    package = pkgs.hyprland;
     xwayland.enable = true;
     withUWSM = false;
   };
