@@ -3,8 +3,12 @@
   lib,
   pkgs,
   dotfiles,
+  local,
   ...
 }:
+let
+  useGrub = local ? grubDevice && local.grubDevice != null;
+in
 {
   nix.settings = {
     experimental-features = [
@@ -20,8 +24,10 @@
     options = "--delete-older-than 30d";
   };
 
-  boot.loader.systemd-boot.enable = lib.mkDefault true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.systemd-boot.enable = lib.mkDefault (!useGrub);
+  boot.loader.efi.canTouchEfiVariables = lib.mkDefault (!useGrub);
+  boot.loader.grub.enable = lib.mkDefault useGrub;
+  boot.loader.grub.device = lib.mkIf useGrub local.grubDevice;
 
   networking.networkmanager.enable = true;
 

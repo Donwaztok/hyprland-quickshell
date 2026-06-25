@@ -7,6 +7,7 @@
 #   ./install-nixos.sh              # generate configs + rebuild
 #   ./install-nixos.sh --no-rebuild # only generate local.nix + hardware.nix
 #   ./install-nixos.sh --force      # overwrite existing nix/local.nix
+#   ./install-nixos.sh --build-only # validate flake (no switch)
 # =============================================================================
 
 set -euo pipefail
@@ -18,11 +19,13 @@ HARDWARE_SRC="/etc/nixos/hardware-configuration.nix"
 
 DO_REBUILD=1
 FORCE=0
+BUILD_ONLY=0
 
 for arg in "$@"; do
   case "$arg" in
     --no-rebuild) DO_REBUILD=0 ;;
     --force) FORCE=1 ;;
+    --build-only) BUILD_ONLY=1 ;;
     -h | --help)
       sed -n '2,12p' "$0"
       exit 0
@@ -47,6 +50,53 @@ sanitize_flake_host() {
   raw="${raw##_}"
   raw="${raw%%_}"
   printf '%s' "$raw"
+}
+
+detect_grub_device() {
+  # Partição vfat = ESP → systemd-boot; disco único ext4 = GRUB no MBR
+  if lsblk -no FSTYPE 2>/dev/null | grep -qx vfat; then
+    return 0
+  fi
+  local disk
+  disk="$(lsblk -ndo NAME,TYPE 2>/dev/null | awk '$2=="disk"{print "/dev/"$1; exit}')"
+  if [[ -n "$disk" ]]; then
+    printf '%s' "$disk"
+  fi
+}
+
+flake_ref() {
+  printf 'path:%s#%s' "$REPO_ROOT" "$FLAKE_HOST"
+}
+
+ensure_boot_mounted() {
+  local mp
+  for mp in /boot /boot/efi; do
+    if mountpoint -q "$mp" 2>/dev/null; then
+      return 0
+    fi
+  done
+  for mp in /boot /boot/efi; do
+    if [[ -f /etc/fstab ]] && awk -v m="$mp" '$2==m{found=1} END{exit !found}' /etc/fstab; then
+      info "Montando $mp (fstab) ..."
+      if sudo mount "$mp"; then
+        return 0
+      fi
+      warn "Falha ao montar $mp via fstab."
+    fi
+  done
+  return 1
+}
+
+validate_config() {
+  if ! command -v nix >/dev/null 2>&1; then
+    warn "nix não encontrado — pulando validação do flake."
+    return 0
+  fi
+  info "Validando flake (nix build --dry-run) ..."
+  nix --extra-experimental-features 'nix-command flakes' build \
+    "path:${REPO_ROOT}#nixosConfigurations.${FLAKE_HOST}.config.system.build.toplevel" \
+    --dry-run \
+    --option extra-experimental-features 'nix-command flakes'
 }
 
 # --- detect user / host ------------------------------------------------------
@@ -83,6 +133,8 @@ info "Flake host: $FLAKE_HOST  →  nixos-rebuild --flake path:$REPO_ROOT#$FLAKE
 
 mkdir -p "$(dirname "$LOCAL_NIX")"
 
+GRUB_DEVICE="$(detect_grub_device || true)"
+
 if [[ -f "$LOCAL_NIX" && "$FORCE" -ne 1 ]]; then
   warn "nix/local.nix já existe. Use --force para sobrescrever."
 else
@@ -93,8 +145,21 @@ else
   username = "$USERNAME";
   hostname = "$HOSTNAME";
   flakeHost = "$FLAKE_HOST";
+$(if [[ -n "$GRUB_DEVICE" ]]; then
+  echo "  grubDevice = \"$GRUB_DEVICE\";  # sem ESP — usa GRUB"
+fi)
 }
 EOF
+  if [[ -n "$GRUB_DEVICE" ]]; then
+    warn "Sem partição EFI detectada — bootloader: GRUB em $GRUB_DEVICE"
+  fi
+  if [[ -d "$REPO_ROOT/.git" ]]; then
+    git -C "$REPO_ROOT" add -f nix/local.nix
+  fi
+fi
+
+if [[ -f "$LOCAL_NIX" && "$FORCE" -ne 1 && -d "$REPO_ROOT/.git" ]]; then
+  git -C "$REPO_ROOT" add -f nix/local.nix 2>/dev/null || true
 fi
 
 # --- hardware.nix ------------------------------------------------------------
@@ -117,6 +182,13 @@ fi
 
 # --- rebuild -----------------------------------------------------------------
 
+validate_config
+
+if [[ "$BUILD_ONLY" -eq 1 ]]; then
+  info "Validação concluída (--build-only)."
+  exit 0
+fi
+
 if [[ "$DO_REBUILD" -eq 0 ]]; then
   info "Arquivos gerados. Rebuild omitido (--no-rebuild)."
   info "Quando estiver pronto:"
@@ -134,10 +206,27 @@ if [[ "$(id -un)" == "root" ]]; then
   exit 1
 fi
 
+REBUILD_ARGS=(switch --flake "$(flake_ref)")
+REBUILD_ARGS+=(--option extra-experimental-features 'nix-command flakes')
+
+uses_grub=0
+if [[ -n "$GRUB_DEVICE" ]] || grep -q 'grubDevice' "$LOCAL_NIX" 2>/dev/null; then
+  uses_grub=1
+fi
+
+if [[ "$uses_grub" -eq 1 ]]; then
+  info "Bootloader: GRUB (disco sem ESP — /boot não necessário)."
+elif ! ensure_boot_mounted; then
+  warn "/boot não está montado."
+  warn "Continuando sem instalar o bootloader (--install-bootloader no)."
+  warn "Depois monte /boot e rode switch de novo:"
+  warn "  sudo mount /boot"
+  warn "  sudo nixos-rebuild switch --flake path:$REPO_ROOT#$FLAKE_HOST"
+  REBUILD_ARGS+=(--install-bootloader no)
+fi
+
 info "Iniciando nixos-rebuild (pode demorar na primeira vez) ..."
-# path: inclui nix/local.nix (gitignored) — flakes via git ignoram arquivos não rastreados
-sudo nixos-rebuild switch --flake "path:$REPO_ROOT#$FLAKE_HOST" \
-  --option extra-experimental-features 'nix-command flakes'
+sudo nixos-rebuild "${REBUILD_ARGS[@]}"
 
 echo ""
 info "Instalação concluída."

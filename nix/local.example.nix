@@ -12,4 +12,7 @@
 
   # Nome usado no flake: nixos-rebuild switch --flake ~/.config#<flakeHost>
   flakeHost = "don";
+
+  # VM / BIOS sem partição EFI: "/dev/vda". Desktop UEFI: null (usa systemd-boot).
+  grubDevice = null;
 }
