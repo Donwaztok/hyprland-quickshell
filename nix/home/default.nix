@@ -17,7 +17,7 @@
 
   home.username = local.username;
   home.homeDirectory = "/home/${local.username}";
-  home.stateVersion = "25.11";
+  home.stateVersion = "26.05";
 
   home.sessionVariables = {
     QML2_IMPORT_PATH = "${config.home.homeDirectory}/.config/quickshell/donwaztok";
