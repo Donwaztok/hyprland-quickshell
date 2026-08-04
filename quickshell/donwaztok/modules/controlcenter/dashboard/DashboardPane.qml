@@ -21,6 +21,7 @@ Item {
     // General Settings (not named `enabled` — that shadows `Item.enabled` and triggers Qt warnings)
     property bool dashboardEnabled: Config.dashboard.enabled ?? true
     property bool showOnHover: Config.dashboard.showOnHover ?? true
+    property string position: Config.dashboard.position ?? "top"
     property int mediaUpdateInterval: Config.dashboard.mediaUpdateInterval ?? 1000
     property int resourceUpdateInterval: Config.dashboard.resourceUpdateInterval ?? 1000
     property int dragThreshold: Config.dashboard.dragThreshold ?? 50
@@ -45,6 +46,7 @@ Item {
     function saveConfig() {
         Config.dashboard.enabled = root.dashboardEnabled;
         Config.dashboard.showOnHover = root.showOnHover;
+        Config.dashboard.position = root.position;
         Config.dashboard.mediaUpdateInterval = root.mediaUpdateInterval;
         Config.dashboard.resourceUpdateInterval = root.resourceUpdateInterval;
         Config.dashboard.dragThreshold = root.dragThreshold;
@@ -93,7 +95,7 @@ Item {
 
                     SettingsHeader {
                         title: qsTr("Dashboard")
-                        subtitle: qsTr("Which tabs appear, weather location, and performance meters.")
+                        subtitle: qsTr("Position, tabs, weather location, and performance meters.")
                         layoutBottomMargin: Appearance.spacing.smaller
                     }
 

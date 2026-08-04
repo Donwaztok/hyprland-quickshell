@@ -16,11 +16,30 @@ Item {
         reloadableId: "dashboardState"
     }
 
-    readonly property real nonAnimHeight: state === "visible" ? (content.item?.nonAnimHeight ?? 0) : 0
+    readonly property string edge: {
+        const p = Config.dashboard.position;
+        if (p === "follow-bar")
+            return Config.bar.position;
+        if (p === "bottom" || p === "left" || p === "right")
+            return p;
+        return "top";
+    }
+    readonly property bool isVertical: edge === "left" || edge === "right"
 
-    visible: height > 0
-    implicitHeight: (state === "visible" && content.item) ? content.item.nonAnimHeight : 0
-    implicitWidth: content.implicitWidth
+    readonly property real nonAnimHeight: content.item?.nonAnimHeight ?? 0
+    readonly property real nonAnimWidth: content.item?.nonAnimWidth ?? 0
+
+    visible: isVertical ? width > 0 : height > 0
+    implicitHeight: {
+        if (isVertical)
+            return nonAnimHeight;
+        return state === "visible" ? nonAnimHeight : 0;
+    }
+    implicitWidth: {
+        if (!isVertical)
+            return nonAnimWidth;
+        return state === "visible" ? nonAnimWidth : 0;
+    }
 
     onStateChanged: {
         if (state === "visible" && timer.running) {
@@ -41,7 +60,7 @@ Item {
 
             Anim {
                 target: root
-                property: "implicitHeight"
+                properties: "implicitHeight,implicitWidth"
                 duration: Appearance.anim.durations.expressiveDefaultSpatial
                 easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
             }
@@ -52,7 +71,7 @@ Item {
 
             Anim {
                 target: root
-                property: "implicitHeight"
+                properties: "implicitHeight,implicitWidth"
                 easing.bezierCurve: Appearance.anim.curves.emphasized
             }
         }
@@ -72,8 +91,23 @@ Item {
     Loader {
         id: content
 
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
+        x: {
+            if (root.edge === "left")
+                return root.width - width;
+            if (root.edge === "right")
+                return 0;
+            return (root.width - width) / 2;
+        }
+        y: {
+            if (root.edge === "top")
+                return root.height - height;
+            if (root.edge === "bottom")
+                return 0;
+            return (root.height - height) / 2;
+        }
+
+        width: item?.implicitWidth ?? 0
+        height: item?.implicitHeight ?? 0
 
         visible: false
         active: true

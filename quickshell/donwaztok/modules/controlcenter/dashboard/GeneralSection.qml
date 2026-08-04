@@ -22,7 +22,7 @@ ColumnLayout {
     PreferencesGroup {
         Layout.fillWidth: true
         title: qsTr("Panel")
-        description: qsTr("Turn the dashboard on and choose whether it appears when you hover the edge.")
+        description: qsTr("Turn the dashboard on, choose its edge, and whether it appears on hover.")
 
         SwitchRow {
             flatStyle: true
@@ -40,6 +40,38 @@ ColumnLayout {
             checked: root.rootItem.showOnHover
             onToggled: checked => {
                 root.rootItem.showOnHover = checked;
+                root.rootItem.saveConfig();
+            }
+        }
+
+        OptionSelectRow {
+            Layout.fillWidth: true
+            label: qsTr("Position")
+            currentValue: root.rootItem.position
+            options: [
+                {
+                    text: qsTr("Follow bar"),
+                    value: "follow-bar"
+                },
+                {
+                    text: qsTr("Top"),
+                    value: "top"
+                },
+                {
+                    text: qsTr("Bottom"),
+                    value: "bottom"
+                },
+                {
+                    text: qsTr("Left"),
+                    value: "left"
+                },
+                {
+                    text: qsTr("Right"),
+                    value: "right"
+                }
+            ]
+            onOptionChosen: v => {
+                root.rootItem.position = v;
                 root.rootItem.saveConfig();
             }
         }

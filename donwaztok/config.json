@@ -266,6 +266,7 @@
             "showNetwork": true,
             "showStorage": true
         },
+        "position": "follow-bar",
         "resourceUpdateInterval": 1000,
         "showDashboard": true,
         "showMedia": true,

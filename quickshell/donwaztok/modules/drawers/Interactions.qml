@@ -60,6 +60,19 @@ CustomMouseArea {
         return y > root.height - Config.border.thickness - ph - Config.border.rounding && withinPanelWidth(panel, x, y);
     }
 
+    function inDashboardPanel(panel: Item, x: real, y: real): bool {
+        const edge = panel.edge;
+        if (edge === "bottom")
+            return inBottomPanel(panel, x, y);
+        if (edge === "left")
+            return x < contentLeft() + panel.x + Math.max(panel.width, Config.border.thickness) && withinPanelHeight(panel, x, y);
+        if (edge === "right") {
+            const pw = Math.max(panel.width, Config.border.thickness);
+            return x > contentLeft() + panel.x + panel.width - pw && withinPanelHeight(panel, x, y);
+        }
+        return inTopPanel(panel, x, y);
+    }
+
     function onWheel(event: WheelEvent): void {
         if (inBarArea(event.x, event.y)) {
             bar.handleWheel(barCoord(event.x, event.y), event.angleDelta);
@@ -138,7 +151,7 @@ CustomMouseArea {
                 visibilities.sidebar = false;
         }
 
-        const showDashboard = Config.dashboard.showOnHover && inTopPanel(panels.dashboard, x, y);
+        const showDashboard = Config.dashboard.showOnHover && inDashboardPanel(panels.dashboard, x, y);
 
         if (!dashboardShortcutActive) {
             visibilities.dashboard = showDashboard;
@@ -146,11 +159,36 @@ CustomMouseArea {
             dashboardShortcutActive = false;
         }
 
-        if (pressed && inTopPanel(panels.dashboard, dragStart.x, dragStart.y) && withinPanelWidth(panels.dashboard, x, y)) {
-            if (dragY > Config.dashboard.dragThreshold)
-                visibilities.dashboard = true;
-            else if (dragY < -Config.dashboard.dragThreshold)
-                visibilities.dashboard = false;
+        if (pressed && inDashboardPanel(panels.dashboard, dragStart.x, dragStart.y)) {
+            const edge = panels.dashboard.edge;
+            const threshold = Config.dashboard.dragThreshold;
+            const inBounds = edge === "left" || edge === "right"
+                ? withinPanelHeight(panels.dashboard, x, y)
+                : withinPanelWidth(panels.dashboard, x, y);
+
+            if (inBounds) {
+                if (edge === "bottom") {
+                    if (dragY < -threshold)
+                        visibilities.dashboard = true;
+                    else if (dragY > threshold)
+                        visibilities.dashboard = false;
+                } else if (edge === "left") {
+                    if (dragX > threshold)
+                        visibilities.dashboard = true;
+                    else if (dragX < -threshold)
+                        visibilities.dashboard = false;
+                } else if (edge === "right") {
+                    if (dragX < -threshold)
+                        visibilities.dashboard = true;
+                    else if (dragX > threshold)
+                        visibilities.dashboard = false;
+                } else {
+                    if (dragY > threshold)
+                        visibilities.dashboard = true;
+                    else if (dragY < -threshold)
+                        visibilities.dashboard = false;
+                }
+            }
         }
 
         const showUtilities = inBottomPanel(panels.utilities, x, y);
@@ -179,14 +217,14 @@ CustomMouseArea {
             root.dashboardShortcutActive = false;
             root.utilitiesShortcutActive = false;
 
-            if (!root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY)) {
+            if (!root.inDashboardPanel(root.panels.dashboard, root.mouseX, root.mouseY)) {
                 root.visibilities.dashboard = false;
             }
         }
 
         function onDashboardChanged() {
             if (root.visibilities.dashboard) {
-                const inDashboardArea = root.inTopPanel(root.panels.dashboard, root.mouseX, root.mouseY);
+                const inDashboardArea = root.inDashboardPanel(root.panels.dashboard, root.mouseX, root.mouseY);
                 if (!inDashboardArea)
                     root.dashboardShortcutActive = true;
             } else {

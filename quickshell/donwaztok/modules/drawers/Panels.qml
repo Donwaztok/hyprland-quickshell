@@ -69,8 +69,20 @@ Item {
 
         visibilities: root.visibilities
 
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
+        x: {
+            if (edge === "left")
+                return 0;
+            if (edge === "right")
+                return parent.width - width;
+            return (parent.width - width) / 2;
+        }
+        y: {
+            if (edge === "top")
+                return 0;
+            if (edge === "bottom")
+                return parent.height - height;
+            return (parent.height - height) / 2;
+        }
     }
 
     BarPopouts.Wrapper {
