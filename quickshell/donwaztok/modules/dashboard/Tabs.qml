@@ -30,6 +30,24 @@ Item {
         currentIndex: root.state.currentTab
         background: null
 
+        // Material style paints a default accent underline (Material.Pink) via
+        // ListView.highlight. After reboot that style can win the race against
+        // QT_QUICK_CONTROLS_STYLE=Basic, so the contentItem is replaced here.
+        contentItem: ListView {
+            model: bar.contentModel
+            currentIndex: bar.currentIndex
+
+            implicitHeight: contentHeight
+            spacing: bar.spacing
+            orientation: ListView.Horizontal
+            boundsBehavior: Flickable.StopAtBounds
+            flickableDirection: Flickable.AutoFlickIfNeeded
+            snapMode: ListView.SnapToItem
+            highlightFollowsCurrentItem: false
+            highlightMoveDuration: 0
+            highlight: Item {}
+        }
+
         onCurrentIndexChanged: root.state.currentTab = currentIndex
 
         Repeater {
@@ -107,6 +125,8 @@ Item {
         readonly property bool current: TabBar.tabBar.currentItem === this
 
         background: null
+        indicator: Item {}
+        focusPolicy: Qt.NoFocus
 
         contentItem: CustomMouseArea {
             id: mouse

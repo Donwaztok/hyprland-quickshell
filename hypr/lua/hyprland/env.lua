@@ -16,6 +16,7 @@ hl.env(
 -- Themes
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
+hl.env("QT_QUICK_CONTROLS_STYLE", "Basic")
 hl.env("XDG_MENU_PREFIX", "gnome-")
 
 -- Virtual environment
