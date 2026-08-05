@@ -15,9 +15,12 @@ Singleton {
     id: root
 
     property var rawBinds: []
+    property var sections: []
     property var keybinds: ({
         children: []
     })
+
+    readonly property var categoryOrder: ["Shell", "Apps", "Window", "Utilities", "Media", "Session"]
 
     function modMaskToMods(modMask) {
         const mods = [];
@@ -144,9 +147,21 @@ Singleton {
         }
 
         const sections = [];
-        for (let i = 0; i < sectionOrder.length; i++)
-            sections.push(sectionsByName[sectionOrder[i]]);
+        const seen = {};
+        for (let i = 0; i < root.categoryOrder.length; i++) {
+            const name = root.categoryOrder[i];
+            if (sectionsByName[name]) {
+                sections.push(sectionsByName[name]);
+                seen[name] = true;
+            }
+        }
+        for (let i = 0; i < sectionOrder.length; i++) {
+            const name = sectionOrder[i];
+            if (!seen[name])
+                sections.push(sectionsByName[name]);
+        }
 
+        root.sections = sections;
         return root.groupIntoColumns(sections, 3);
     }
 
@@ -173,6 +188,7 @@ Singleton {
                 } catch (e) {
                     console.error("[CheatsheetKeybinds] Error parsing keybinds:", e);
                     root.rawBinds = [];
+                    root.sections = [];
                     root.keybinds = {
                         children: []
                     };
