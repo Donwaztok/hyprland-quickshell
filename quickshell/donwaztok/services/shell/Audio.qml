@@ -20,8 +20,12 @@ Singleton {
     property var monitors: []
     property var restoreProfiles: ({})
     property var disabledMonitors: []
+    property var disabledCards: []
+    property var appliedMonitorMutes: ({})
     property bool stateLoaded: false
     property bool preferredApplied: false
+    property bool profileSwitching: false
+    property string cardsFingerprint: ""
 
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property PwNode source: Pipewire.defaultAudioSource
@@ -51,6 +55,7 @@ Singleton {
                 enabled: true,
                 selected: sink?.id === node.id,
                 nodeId: node.id,
+                nodeName: node.name || "",
                 cardName,
                 sinkName: "",
                 sinkId: -1,
@@ -69,6 +74,7 @@ Singleton {
                 enabled: false,
                 selected: false,
                 nodeId: -1,
+                nodeName: "",
                 cardName: card.name,
                 sinkName: "",
                 sinkId: -1,
@@ -99,6 +105,7 @@ Singleton {
                 enabled: true,
                 selected: source?.id === node.id,
                 nodeId: node.id,
+                nodeName: node.name || "",
                 cardName,
                 sinkName: "",
                 sinkId: -1,
@@ -117,6 +124,7 @@ Singleton {
                 enabled: false,
                 selected: false,
                 nodeId: -1,
+                nodeName: "",
                 cardName: card.name,
                 sinkName: "",
                 sinkId: -1,
@@ -177,10 +185,14 @@ Singleton {
 
     function setAudioSink(newSink: PwNode): void {
         Pipewire.preferredDefaultAudioSink = newSink;
+        if (newSink?.name)
+            Quickshell.execDetached(["pactl", "set-default-sink", newSink.name]);
     }
 
     function setAudioSource(newSource: PwNode): void {
         Pipewire.preferredDefaultAudioSource = newSource;
+        if (newSource?.name)
+            Quickshell.execDetached(["pactl", "set-default-source", newSource.name]);
     }
 
     function setStreamVolume(stream: PwNode, newVolume: real): void {
@@ -251,47 +263,149 @@ Singleton {
     function saveAudioState(): void {
         profileStorage.setText(JSON.stringify({
                 profiles: restoreProfiles,
-                disabledMonitors: disabledMonitors
+                disabledMonitors: disabledMonitors,
+                disabledCards: disabledCards
             }));
+    }
+
+    function isRestorableProfile(profile: string): bool {
+        if (!profile || profile === "off" || profile === "pro-audio")
+            return false;
+        if (profile.startsWith("input:") && !profile.includes("output:"))
+            return false;
+        return true;
+    }
+
+    function beginProfileSwitch(): void {
+        profileSwitching = true;
+        profileSettleTimer.restart();
+    }
+
+    function applyCardProfile(cardName: string, profile: string): void {
+        if (!cardName || !profile)
+            return;
+
+        const active = cardByName(cardName)?.activeProfile || "";
+        if (active === profile)
+            return;
+
+        if (active === "off" && profile !== "off" && profile !== "pro-audio") {
+            Quickshell.execDetached(["bash", "-lc", `pactl set-card-profile '${cardName}' pro-audio && sleep 0.45 && pactl set-card-profile '${cardName}' '${profile}'`]);
+            return;
+        }
+
+        Quickshell.execDetached(["pactl", "set-card-profile", cardName, profile]);
     }
 
     function setCardProfile(cardName: string, profile: string, remember: bool): void {
         if (!cardName || !profile)
             return;
 
-        if (remember && profile !== "off") {
+        if (remember && isRestorableProfile(profile)) {
             restoreProfiles = Object.assign({}, restoreProfiles, {
                 [cardName]: profile
             });
             saveAudioState();
         }
 
-        Quickshell.execDetached(["pactl", "set-card-profile", cardName, profile]);
-        cardsRefreshTimer.restart();
+        const nextCards = [];
+        for (const card of cards) {
+            if (card.name !== cardName) {
+                nextCards.push(card);
+                continue;
+            }
+            const match = (card.profiles || []).find(p => p.name === profile);
+            nextCards.push(Object.assign({}, card, {
+                activeProfile: profile,
+                activeProfileLabel: match?.label || profile,
+                enabled: profile !== "off"
+            }));
+        }
+        cards = nextCards;
+        cardsFingerprint = "";
+
+        applyCardProfile(cardName, profile);
+        beginProfileSwitch();
+    }
+
+    function rememberActiveProfiles(): void {
+        if (profileSwitching || !stateLoaded)
+            return;
+
+        let changed = false;
+        const next = Object.assign({}, restoreProfiles);
+        for (const card of cards) {
+            if (!card?.name || !card.enabled || disabledCards.includes(card.name))
+                continue;
+            if (!isRestorableProfile(card.activeProfile) || next[card.name] === card.activeProfile)
+                continue;
+            next[card.name] = card.activeProfile;
+            changed = true;
+        }
+        if (!changed)
+            return;
+
+        restoreProfiles = next;
+        saveAudioState();
     }
 
     function applyPreferredProfiles(): void {
-        if (preferredApplied || !stateLoaded || cards.length === 0)
+        if (!stateLoaded || cards.length === 0)
             return;
 
-        preferredApplied = true;
-
+        let switched = false;
         for (const card of cards) {
-            if (!card.enabled)
+            if (!card?.name || disabledCards.includes(card.name))
                 continue;
 
-            const preferred = restoreProfiles[card.name];
-            if (preferred && preferred !== "off" && preferred !== card.activeProfile)
-                Quickshell.execDetached(["pactl", "set-card-profile", card.name, preferred]);
+            let preferred = restoreProfiles[card.name];
+            if (!isRestorableProfile(preferred)) {
+                if (!card.enabled)
+                    continue;
+                if (card.activeProfile === "pro-audio")
+                    preferred = card.preferredProfile || card.preferredSinkProfile || card.preferredSourceProfile;
+            }
+
+            if (!isRestorableProfile(preferred) || preferred === card.activeProfile)
+                continue;
+
+            if (!card.enabled && preferredApplied)
+                continue;
+
+            applyCardProfile(card.name, preferred);
+            switched = true;
         }
 
-        cardsRefreshTimer.restart();
+        const firstApply = !preferredApplied;
+        preferredApplied = true;
+        if (switched)
+            beginProfileSwitch();
+        else if (firstApply)
+            cardsRefreshTimer.restart();
     }
 
     function applyMonitorMute(sinkId: int, muted: bool): void {
         if (sinkId < 0)
             return;
         Quickshell.execDetached(["pw-cli", "s", String(sinkId), "Props", `{ monitorMute: ${muted ? "true" : "false"} }`]);
+    }
+
+    function syncMonitorMutes(): void {
+        const next = Object.assign({}, appliedMonitorMutes);
+
+        for (const mon of monitors) {
+            if (!mon?.sinkName || mon.sinkId < 0)
+                continue;
+
+            const shouldMute = disabledMonitors.includes(mon.sinkName);
+            if (next[mon.sinkName] === shouldMute)
+                continue;
+
+            applyMonitorMute(mon.sinkId, shouldMute);
+            next[mon.sinkName] = shouldMute;
+        }
+
+        appliedMonitorMutes = next;
     }
 
     function setMonitorEnabled(sinkName: string, sinkId: int, enabled: bool): void {
@@ -306,9 +420,11 @@ Singleton {
             next.splice(idx, 1);
 
         disabledMonitors = next;
+        appliedMonitorMutes = Object.assign({}, appliedMonitorMutes, {
+            [sinkName]: !enabled
+        });
         saveAudioState();
         applyMonitorMute(sinkId, !enabled);
-        cardsRefreshTimer.restart();
     }
 
     function setCardEnabled(cardName: string, enabled: bool): void {
@@ -320,22 +436,29 @@ Singleton {
             return;
 
         if (!enabled) {
-            if (card.activeProfile && card.activeProfile !== "off") {
+            if (isRestorableProfile(card.activeProfile)) {
                 restoreProfiles = Object.assign({}, restoreProfiles, {
                     [cardName]: card.activeProfile
                 });
-                saveAudioState();
             }
-            Quickshell.execDetached(["pactl", "set-card-profile", cardName, "off"]);
-        } else {
-            const profile = restoreProfiles[cardName] || card.preferredProfile || card.preferredSinkProfile || card.preferredSourceProfile;
-            if (!profile || profile === "off")
-                return;
-            setCardProfile(cardName, profile, false);
+            if (!disabledCards.includes(cardName)) {
+                disabledCards = disabledCards.concat([cardName]);
+            }
+            saveAudioState();
+            applyCardProfile(cardName, "off");
+            beginProfileSwitch();
             return;
         }
 
-        cardsRefreshTimer.restart();
+        if (disabledCards.includes(cardName)) {
+            disabledCards = disabledCards.filter(name => name !== cardName);
+            saveAudioState();
+        }
+
+        const profile = restoreProfiles[cardName] || card.preferredProfile || card.preferredSinkProfile || card.preferredSourceProfile;
+        if (!isRestorableProfile(profile))
+            return;
+        setCardProfile(cardName, profile, false);
     }
 
     function toggleEntryEnabled(entry: var): void {
@@ -372,41 +495,80 @@ Singleton {
         }
 
         const node = nodeById(entry.nodeId);
-        if (!node)
+        if (entry.isSink) {
+            if (node)
+                setAudioSink(node);
+            else if (entry.nodeName)
+                Quickshell.execDetached(["pactl", "set-default-sink", entry.nodeName]);
             return;
+        }
 
-        if (entry.isSink)
-            setAudioSink(node);
-        else
+        if (node)
             setAudioSource(node);
+        else if (entry.nodeName)
+            Quickshell.execDetached(["pactl", "set-default-source", entry.nodeName]);
     }
 
     property bool scanning: false
+
+    function nodeKey(nodes: var): string {
+        let key = "";
+        for (let i = 0; i < nodes.length; i++)
+            key += `${nodes[i].id},`;
+        return key;
+    }
 
     function syncDevices(): void {
         const newSinks = [];
         const newSources = [];
         const newStreams = [];
 
-        for (const node of Pipewire.nodes.values) {
-            if (!node.isStream) {
-                if (node.isSink)
-                    newSinks.push(node);
-                else if (node.audio)
-                    newSources.push(node);
-            } else if (node.audio) {
-                newStreams.push(node);
+        try {
+            for (const node of Pipewire.nodes.values) {
+                if (!node)
+                    continue;
+                if (!node.isStream) {
+                    if (node.isSink)
+                        newSinks.push(node);
+                    else if (node.audio)
+                        newSources.push(node);
+                } else if (node.audio) {
+                    newStreams.push(node);
+                }
             }
+        } catch (e) {
+            console.warn("[Audio] syncDevices:", e);
+            return;
         }
 
-        root.sinks = newSinks;
-        root.sources = newSources;
-        root.streams = newStreams;
+        let sinksChanged = true;
+        let sourcesChanged = true;
+        let streamsChanged = true;
+        try {
+            sinksChanged = nodeKey(newSinks) !== nodeKey(root.sinks);
+            sourcesChanged = nodeKey(newSources) !== nodeKey(root.sources);
+            streamsChanged = nodeKey(newStreams) !== nodeKey(root.streams);
+        } catch (e) {
+        }
+
+        if (sinksChanged)
+            root.sinks = newSinks;
+        if (sourcesChanged)
+            root.sources = newSources;
+        if (streamsChanged)
+            root.streams = newStreams;
+
+        if ((sinksChanged || sourcesChanged) && !root.profileSwitching)
+            root.cardsRefreshTimer.restart();
     }
 
     function refreshCards(): void {
-        if (!cardsProc.running)
-            cardsProc.running = true;
+        if (cardsProc.running) {
+            cardsProc.running = false;
+            cardsWatchdog.stop();
+        }
+        cardsProc.running = true;
+        cardsWatchdog.restart();
     }
 
     function rescanDevices(): void {
@@ -414,6 +576,7 @@ Singleton {
             return;
 
         scanning = true;
+        preferredApplied = false;
         syncDevices();
         refreshCards();
         scanTimer.restart();
@@ -435,6 +598,27 @@ Singleton {
 
         interval: 350
         onTriggered: root.refreshCards()
+    }
+
+    Timer {
+        id: cardsWatchdog
+
+        interval: 12000
+        onTriggered: {
+            if (cardsProc.running)
+                cardsProc.running = false;
+        }
+    }
+
+    Timer {
+        id: profileSettleTimer
+
+        interval: 1200
+        onTriggered: {
+            root.profileSwitching = false;
+            root.syncDevices();
+            root.refreshCards();
+        }
     }
 
     onSinkChanged: {
@@ -473,7 +657,6 @@ Singleton {
 
         function onValuesChanged(): void {
             root.syncDevices();
-            root.cardsRefreshTimer.restart();
         }
     }
 
@@ -487,26 +670,35 @@ Singleton {
             })
         stdout: StdioCollector {
             onStreamFinished: {
+                cardsWatchdog.stop();
                 try {
                     const parsed = JSON.parse(text.trim() || "{}");
-                    if (Array.isArray(parsed)) {
-                        root.cards = parsed;
-                        root.monitors = [];
-                    } else {
-                        root.cards = Array.isArray(parsed.cards) ? parsed.cards : [];
-                        root.monitors = Array.isArray(parsed.monitors) ? parsed.monitors : [];
+                    const nextCards = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.cards) ? parsed.cards : []);
+                    const nextMonitors = Array.isArray(parsed) ? [] : (Array.isArray(parsed.monitors) ? parsed.monitors : []);
+                    const fingerprint = JSON.stringify({
+                        cards: nextCards,
+                        monitors: nextMonitors
+                    });
+
+                    if (fingerprint !== root.cardsFingerprint) {
+                        root.cardsFingerprint = fingerprint;
+                        root.cards = nextCards;
+                        root.monitors = nextMonitors;
                     }
 
-                    for (const mon of root.monitors) {
-                        const shouldMute = root.disabledMonitors.includes(mon.sinkName);
-                        if (shouldMute !== !!mon.muted && mon.sinkId >= 0)
-                            root.applyMonitorMute(mon.sinkId, shouldMute);
-                    }
-
+                    root.syncMonitorMutes();
+                    root.rememberActiveProfiles();
                     root.applyPreferredProfiles();
                 } catch (e) {
                     console.warn("[Audio] Failed to parse cards:", e);
                 }
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const err = text.trim();
+                if (err)
+                    console.warn("[Audio] list-cards:", err);
             }
         }
     }
@@ -518,16 +710,29 @@ Singleton {
         onLoaded: {
             try {
                 const data = JSON.parse(text() || "{}");
-                if (data && typeof data === "object" && (data.profiles || data.disabledMonitors)) {
-                    root.restoreProfiles = data.profiles && typeof data.profiles === "object" ? data.profiles : {};
-                    root.disabledMonitors = Array.isArray(data.disabledMonitors) ? data.disabledMonitors : [];
-                } else {
-                    root.restoreProfiles = data && typeof data === "object" ? data : {};
-                    root.disabledMonitors = [];
+                let profiles = {};
+                if (data && typeof data === "object" && (data.profiles || data.disabledMonitors))
+                    profiles = data.profiles && typeof data.profiles === "object" ? Object.assign({}, data.profiles) : {};
+                else if (data && typeof data === "object")
+                    profiles = Object.assign({}, data);
+
+                let sanitized = false;
+                for (const name of Object.keys(profiles)) {
+                    if (!root.isRestorableProfile(profiles[name])) {
+                        delete profiles[name];
+                        sanitized = true;
+                    }
                 }
+
+                root.restoreProfiles = profiles;
+                root.disabledMonitors = data && typeof data === "object" && Array.isArray(data.disabledMonitors) ? data.disabledMonitors : [];
+                root.disabledCards = data && typeof data === "object" && Array.isArray(data.disabledCards) ? data.disabledCards : [];
+                if (sanitized)
+                    root.saveAudioState();
             } catch (e) {
                 root.restoreProfiles = {};
                 root.disabledMonitors = [];
+                root.disabledCards = [];
             }
             root.stateLoaded = true;
             root.applyPreferredProfiles();
@@ -536,9 +741,11 @@ Singleton {
             if (err === FileViewError.FileNotFound) {
                 root.restoreProfiles = {};
                 root.disabledMonitors = [];
+                root.disabledCards = [];
                 setText(JSON.stringify({
                         profiles: {},
-                        disabledMonitors: []
+                        disabledMonitors: [],
+                        disabledCards: []
                     }));
             }
             root.stateLoaded = true;

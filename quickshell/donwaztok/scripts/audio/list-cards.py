@@ -5,12 +5,33 @@ import sys
 
 
 def load_json_array(command: list[str]) -> list:
-    proc = subprocess.run(command, capture_output=True)
+    try:
+        proc = subprocess.run(command, capture_output=True, timeout=3)
+    except (subprocess.TimeoutExpired, OSError):
+        return []
+
     text = proc.stdout.decode("utf-8", errors="replace")
     start = text.find("[")
     if start < 0:
         return []
-    return json.loads(text[start:])
+    try:
+        data = json.loads(text[start:])
+    except json.JSONDecodeError:
+        return []
+    return data if isinstance(data, list) else []
+
+
+def profile_available(info: dict) -> bool:
+    value = info.get("available", "unknown")
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return True
+
+    text = str(value).strip().lower()
+    if text in {"no", "false", "0", "unavailable"}:
+        return False
+    return True
 
 
 def profile_label(name: str, info: dict) -> str:
@@ -57,7 +78,7 @@ def list_cards() -> list[dict]:
             sinks = int(info.get("sinks") or 0)
             sources = int(info.get("sources") or 0)
             priority = int(info.get("priority") or 0)
-            available = bool(info.get("available", True))
+            available = profile_available(info if isinstance(info, dict) else {})
 
             profile_list.append(
                 {
@@ -70,7 +91,7 @@ def list_cards() -> list[dict]:
                 }
             )
 
-            if name == "off" or not available:
+            if name in ("off", "pro-audio") or not available:
                 continue
             if sinks > 0:
                 has_sink = True
@@ -84,7 +105,7 @@ def list_cards() -> list[dict]:
                     best_source = name
 
         profile_list.sort(key=lambda p: (0 if p["name"] == "off" else 1, -p["priority"], p["name"]))
-        preferred = active if active != "off" else (best_sink or best_source or "off")
+        preferred = active if active != "off" and active != "pro-audio" else (best_sink or best_source or "off")
         active_label = next((p["label"] for p in profile_list if p["name"] == active), active)
 
         result.append(
@@ -111,7 +132,34 @@ def list_cards() -> list[dict]:
     return result
 
 
+def sink_object_id(sink: dict) -> int:
+    props = sink.get("properties") or {}
+    for key in ("object.id", "node.id"):
+        value = props.get(key)
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            continue
+    return -1
+
+
+def list_sink_ids() -> dict[str, int]:
+    ids: dict[str, int] = {}
+    for sink in load_json_array(["pactl", "-f", "json", "list", "sinks"]):
+        name = sink.get("name") or ""
+        sink_id = sink_object_id(sink if isinstance(sink, dict) else {})
+        if name:
+            ids[name] = sink_id
+        index = sink.get("index")
+        if index is not None:
+            ids[f"#index:{index}"] = sink_id
+    return ids
+
+
 def list_monitors() -> list[dict]:
+    sink_ids = list_sink_ids()
     sources = load_json_array(["pactl", "-f", "json", "list", "sources"])
     result = []
 
@@ -123,11 +171,11 @@ def list_monitors() -> list[dict]:
             continue
 
         sink_name = source.get("monitor_of_sink") or name.removesuffix(".monitor")
-        sink_id = props.get("object.id")
-        try:
-            sink_id = int(sink_id) if sink_id is not None else -1
-        except (TypeError, ValueError):
-            sink_id = -1
+        sink_id = sink_ids.get(sink_name, -1)
+        if sink_id < 0:
+            sink_index = source.get("monitor_of_sink_index")
+            if sink_index is not None:
+                sink_id = sink_ids.get(f"#index:{sink_index}", -1)
 
         raw_description = (
             props.get("device.description")
@@ -159,8 +207,12 @@ def list_monitors() -> list[dict]:
 def main() -> int:
     payload = {
         "cards": list_cards(),
-        "monitors": list_monitors(),
+        "monitors": [],
     }
+    try:
+        payload["monitors"] = list_monitors()
+    except Exception:
+        payload["monitors"] = []
     json.dump(payload, sys.stdout, ensure_ascii=False)
     return 0
 

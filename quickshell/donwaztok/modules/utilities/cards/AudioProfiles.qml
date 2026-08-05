@@ -13,7 +13,12 @@ StyledRect {
 
     property bool showDisabled: false
 
-    readonly property var visibleCards: Audio.cards.filter(c => c.enabled || root.showDisabled)
+    readonly property var visibleCards: {
+        const cards = Audio.cards;
+        if (!cards || !cards.length)
+            return [];
+        return cards.filter(c => c && (c.enabled || root.showDisabled));
+    }
 
     Layout.fillWidth: true
     Layout.fillHeight: true

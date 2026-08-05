@@ -74,7 +74,11 @@ StyledRect {
                 type: IconButton.Tonal
                 icon: "tune"
                 checked: root.profilesOpen
-                onClicked: root.profilesOpen = !root.profilesOpen
+                onClicked: {
+                    root.profilesOpen = !root.profilesOpen;
+                    if (root.profilesOpen && (!Audio.cards || Audio.cards.length === 0))
+                        Audio.rescanDevices();
+                }
             }
 
             Item {
