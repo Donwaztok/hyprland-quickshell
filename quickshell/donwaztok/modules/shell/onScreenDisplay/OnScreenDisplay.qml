@@ -28,8 +28,9 @@ Scope {
         },
     ]
 
-    function triggerOsd() {
+    function triggerOsd(timeout) {
         GlobalStates.osdVolumeOpen = true;
+        osdTimeout.interval = timeout > 0 ? timeout : Config.options.osd.timeout;
         osdTimeout.restart();
     }
 
@@ -71,12 +72,18 @@ Scope {
     }
 
     Connections {
-        // Listen to protection triggers
         target: Audio
         function onSinkProtectionTriggered(reason) {
             root.protectionMessage = reason;
             root.currentIndicator = "volume";
             root.triggerOsd();
+        }
+        function onSinkChanged() {
+            if (!Audio.ready)
+                return;
+            root.protectionMessage = "";
+            root.currentIndicator = "volume";
+            root.triggerOsd(2000);
         }
     }
 

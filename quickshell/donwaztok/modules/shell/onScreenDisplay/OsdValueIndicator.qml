@@ -82,6 +82,7 @@ Item {
                         color: Colours.palette.m3onSurface
                         font.pixelSize: Appearance.font.pixelSize.small
                         Layout.fillWidth: true
+                        elide: Text.ElideRight
                         text: root.name
                     }
 

@@ -1,2 +1,5 @@
 -- Custom keybinds
 -- https://wiki.hypr.land/Configuring/Basics/Binds/
+--
+-- Cheatsheet (Super+/): use { description = "Category: what it does" }
+-- Omit description (or leave it empty) to hide a bind from the list.

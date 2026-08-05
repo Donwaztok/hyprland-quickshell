@@ -299,7 +299,7 @@ Singleton {
         property real fabShadowRadius: 5
         property real fabHoveredShadowRadius: 7
         property real hyprlandGapsOut: 5
-        property real osdWidth: 180
+        property real osdWidth: 260
         property real searchWidthCollapsed: 210
         property real searchWidth: 360
         property real sidebarWidth: 460
