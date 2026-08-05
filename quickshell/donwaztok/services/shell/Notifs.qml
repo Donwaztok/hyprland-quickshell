@@ -85,15 +85,36 @@ Singleton {
     }
 
     FileView {
+        id: uptimeFile
+
+        path: "/proc/uptime"
+    }
+
+    FileView {
         id: storage
 
         path: `${Paths.state}/notifs.json`
         onLoaded: {
-            const data = JSON.parse(text());
-            for (const notif of data)
+            // Drop history from previous boots; keep only this session
+            uptimeFile.reload();
+            const uptimeSecs = Number((uptimeFile.text() || "0").split(" ")[0] || 0);
+            const bootTime = Date.now() - uptimeSecs * 1000;
+
+            let data = [];
+            try {
+                data = JSON.parse(text() || "[]");
+            } catch (e) {
+                data = [];
+            }
+
+            const kept = data.filter(n => new Date(n.time).getTime() >= bootTime);
+            for (const notif of kept)
                 root.list.push(notifComp.createObject(root, notif));
             root.list.sort((a, b) => b.time - a.time);
             root.loaded = true;
+
+            if (kept.length !== data.length)
+                setText(JSON.stringify(kept));
         }
         onLoadFailed: err => {
             if (err === FileViewError.FileNotFound) {
@@ -103,21 +124,28 @@ Singleton {
         }
     }
 
+    function clearAll(): void {
+        const items = root.list.slice();
+        root.list = [];
+        for (const notif of items) {
+            notif.closed = true;
+            notif.notification?.dismiss();
+            notif.destroy();
+        }
+        storage.setText("[]");
+    }
+
     CustomShortcut {
         name: "clearNotifs"
         description: "Clear all notifications"
-        onPressed: {
-            for (const notif of root.list.slice())
-                notif.close();
-        }
+        onPressed: root.clearAll()
     }
 
     IpcHandler {
         target: "notifs"
 
         function clear(): void {
-            for (const notif of root.list.slice())
-                notif.close();
+            root.clearAll();
         }
 
         function isDndEnabled(): bool {
