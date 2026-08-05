@@ -11,6 +11,7 @@ Item {
     required property var visibilities
     required property Item sidebar
     required property Item popouts
+    required property var screen
 
     readonly property bool shouldBeActive: visibilities.sidebar || (visibilities.utilities && Config.utilities.enabled && !(visibilities.session && Config.session.enabled))
     readonly property real profilesExtraWidth: {
@@ -96,6 +97,7 @@ Item {
             implicitWidth: root.implicitWidth - Appearance.padding.large * 2
             visibilities: root.visibilities
             popouts: root.popouts
+            screen: root.screen
         }
     }
 }

@@ -124,6 +124,7 @@ Item {
         visibilities: root.visibilities
         sidebar: sidebar
         popouts: popouts
+        screen: root.screen
 
         anchors.bottom: parent.bottom
         anchors.right: parent.right

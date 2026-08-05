@@ -212,6 +212,14 @@ Singleton {
         return "mic_off";
     }
 
+    function getBrightnessIcon(brightness: real): string {
+        if (brightness >= 0.66)
+            return "brightness_7";
+        if (brightness >= 0.33)
+            return "brightness_6";
+        return "brightness_5";
+    }
+
     function getSpecialWsIcon(name: string): string {
         name = name.toLowerCase().slice("special:".length);
 

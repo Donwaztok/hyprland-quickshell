@@ -19,6 +19,8 @@ Singleton {
     }
     readonly property list<Monitor> monitors: variants.instances
     property bool appleDisplayPresent: false
+    property bool hasBacklight: false
+    readonly property bool available: appleDisplayPresent || ddcMonitors.length > 0 || hasBacklight
 
     function getMonitorForScreen(screen: ShellScreen): var {
         return monitors.find(m => m.modelData === screen);
@@ -49,14 +51,23 @@ Singleton {
 
     function increaseBrightness(): void {
         const monitor = getMonitor("active");
-        if (monitor)
+        if (monitor?.available)
             monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
     }
 
     function decreaseBrightness(): void {
         const monitor = getMonitor("active");
-        if (monitor)
+        if (monitor?.available)
             monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
+    }
+
+    onHasBacklightChanged: {
+        if (!hasBacklight)
+            return;
+        for (const m of monitors) {
+            if (!m.isDdc && !m.isAppleDisplay)
+                m.initBrightness();
+        }
     }
 
     onMonitorsChanged: {
@@ -70,6 +81,14 @@ Singleton {
         model: Quickshell.screens // Don't respect excluded screens cause ipc
 
         Monitor {}
+    }
+
+    Process {
+        running: true
+        command: ["sh", "-c", "ls /sys/class/backlight 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: root.hasBacklight = text.trim().length > 0
+        }
     }
 
     Process {
@@ -114,6 +133,7 @@ Singleton {
         readonly property bool isDdc: ddcInfo !== null
         readonly property string busNum: ddcInfo?.busNum ?? ""
         readonly property bool isAppleDisplay: root.appleDisplayPresent && modelData.model.startsWith("StudioDisplay")
+        readonly property bool available: isAppleDisplay || isDdc || root.hasBacklight
         property real brightness
         property real queuedBrightness: NaN
 
@@ -142,6 +162,9 @@ Singleton {
         }
 
         function setBrightness(value: real): void {
+            if (!available)
+                return;
+
             value = Math.max(0, Math.min(1, value));
             const rounded = Math.round(value * 100);
             if (Math.round(brightness * 100) === rounded)
@@ -158,7 +181,7 @@ Singleton {
                 Quickshell.execDetached(["asdbctl", "set", rounded]);
             else if (isDdc)
                 Quickshell.execDetached(["ddcutil", "-b", busNum, "setvcp", "10", rounded]);
-            else
+            else if (root.hasBacklight)
                 Quickshell.execDetached(["brightnessctl", "s", `${rounded}%`]);
 
             if (isDdc)
@@ -170,8 +193,10 @@ Singleton {
                 initProc.command = ["asdbctl", "get"];
             else if (isDdc)
                 initProc.command = ["ddcutil", "-b", busNum, "getvcp", "10", "--brief"];
-            else
+            else if (root.hasBacklight)
                 initProc.command = ["sh", "-c", "echo a b c $(brightnessctl g) $(brightnessctl m)"];
+            else
+                return;
 
             initProc.running = true;
         }

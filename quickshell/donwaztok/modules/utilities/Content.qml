@@ -9,6 +9,7 @@ Item {
 
     required property var visibilities
     required property Item popouts
+    required property var screen
 
     property alias audioProfilesOpen: audioDevices.profilesOpen
     readonly property real audioProfilesWidth: 280
@@ -56,6 +57,10 @@ Item {
             spacing: Appearance.spacing.normal
 
             IdleInhibit {}
+
+            Sliders {
+                screen: root.screen
+            }
 
             AudioDevices {
                 id: audioDevices

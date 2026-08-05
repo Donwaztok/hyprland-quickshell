@@ -39,7 +39,7 @@ Slider {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             height: root.trackHeight
-            width: Math.max(0, root.visualPosition * (trackGroove.width - root.handleSize) + root.handleSize / 2)
+            width: Math.max(0, root.visualPosition * (trackGroove.width - root.handleSize) + root.handleSize)
             radius: root.trackHeight / 2
             color: Colours.palette.m3primary
         }
@@ -49,8 +49,8 @@ Slider {
         width: root.handleSize
         height: root.handleSize
 
-        x: root.visualPosition * (root.availableWidth - width)
-        y: (root.implicitHeight - height) / 2
+        x: root.leftPadding + root.visualPosition * (root.availableWidth - width)
+        y: root.topPadding + (root.availableHeight - height) / 2
 
         StyledRect {
             anchors.fill: parent
