@@ -68,8 +68,10 @@ def list_cards() -> list[dict]:
 
         best_sink = None
         best_source = None
+        best_duplex = None
         best_sink_pri = -1
         best_source_pri = -1
+        best_duplex_pri = -1
         has_sink = False
         has_source = False
         profile_list = []
@@ -93,6 +95,10 @@ def list_cards() -> list[dict]:
 
             if name in ("off", "pro-audio") or not available:
                 continue
+            if sinks > 0 and sources > 0:
+                if priority > best_duplex_pri:
+                    best_duplex_pri = priority
+                    best_duplex = name
             if sinks > 0:
                 has_sink = True
                 if priority > best_sink_pri:
@@ -124,6 +130,7 @@ def list_cards() -> list[dict]:
                 "hasSource": has_source,
                 "preferredSinkProfile": best_sink or preferred,
                 "preferredSourceProfile": best_source or preferred,
+                "preferredDuplexProfile": best_duplex or "",
                 "preferredProfile": preferred,
                 "profiles": profile_list,
             }

@@ -13,6 +13,7 @@ Singleton {
     property string previousSourceName: ""
     property var recentOutputs: []
     property string pendingOutputName: ""
+    property string pendingDefaultSource: ""
 
     property list<PwNode> sinks: []
     property list<PwNode> sources: []
@@ -345,6 +346,119 @@ Singleton {
         return true;
     }
 
+    function profileIncludesSink(card: var, profileName: string): bool {
+        const match = (card?.profiles || []).find(p => p.name === profileName);
+        return !!match && match.sinks > 0;
+    }
+
+    function profileIncludesSource(card: var, profileName: string): bool {
+        const match = (card?.profiles || []).find(p => p.name === profileName);
+        return !!match && match.sources > 0;
+    }
+
+    function duplexProfileForCard(card: var): string {
+        if (!card?.hasSink || !card?.hasSource)
+            return "";
+
+        if (card.preferredDuplexProfile)
+            return card.preferredDuplexProfile;
+
+        let best = "";
+        let bestPri = -1;
+        for (const profile of (card.profiles || [])) {
+            if (profile.sinks <= 0 || profile.sources <= 0 || profile.available === false)
+                continue;
+            if (profile.priority > bestPri) {
+                bestPri = profile.priority;
+                best = profile.name;
+            }
+        }
+        return best;
+    }
+
+    function resolveStoredProfile(card: var): string {
+        let profile = restoreProfiles[card.name] || "";
+        if (!isRestorableProfile(profile))
+            profile = "";
+
+        const duplex = duplexProfileForCard(card);
+        if (!duplex)
+            return profile || card.preferredProfile || card.preferredSinkProfile || card.preferredSourceProfile || "";
+
+        if (!profile)
+            return duplex;
+
+        if (profileIncludesSink(card, profile) && profileIncludesSource(card, profile))
+            return profile;
+
+        return duplex;
+    }
+
+    function ensureDuplexForCard(cardName: string, nodeName: string, isSink: bool): bool {
+        const card = cardByName(cardName);
+        if (!card)
+            return false;
+
+        const duplex = duplexProfileForCard(card);
+        if (!duplex || card.activeProfile === duplex)
+            return false;
+
+        const active = card.activeProfile;
+        if (profileIncludesSink(card, active) && profileIncludesSource(card, active))
+            return false;
+
+        if (isSink)
+            pendingOutputName = nodeName || pendingOutputName;
+        else
+            pendingDefaultSource = nodeName || pendingDefaultSource;
+
+        setCardProfile(cardName, duplex, true);
+        return true;
+    }
+
+    function sourceByName(sourceName: string): PwNode {
+        for (const node of sources) {
+            if (node?.name === sourceName)
+                return node;
+        }
+        return null;
+    }
+
+    function cardForSourceName(sourceName: string): var {
+        for (const card of cards) {
+            const suffix = String(card.name || "").replace(/^alsa_card\./, "");
+            if (suffix && sourceName.includes(suffix))
+                return card;
+        }
+        return null;
+    }
+
+    function applySourceByName(sourceName: string): void {
+        if (!sourceName)
+            return;
+
+        const node = sourceByName(sourceName);
+        if (node) {
+            pendingDefaultSource = "";
+            if (node.audio)
+                node.audio.muted = false;
+            setAudioSource(node);
+            return;
+        }
+
+        const card = cardForSourceName(sourceName);
+        if (!card || pendingDefaultSource === sourceName) {
+            pendingDefaultSource = "";
+            return;
+        }
+
+        pendingDefaultSource = sourceName;
+        if (!card.enabled)
+            setCardEnabled(card.name, true);
+        else
+            beginProfileSwitch();
+    }
+
     function beginProfileSwitch(): void {
         profileSwitching = true;
         profileSettleTimer.restart();
@@ -408,7 +522,15 @@ Singleton {
                 continue;
             if (!isRestorableProfile(card.activeProfile) || next[card.name] === card.activeProfile)
                 continue;
-            next[card.name] = card.activeProfile;
+
+            let active = card.activeProfile;
+            const duplex = duplexProfileForCard(card);
+            if (duplex && !(profileIncludesSink(card, active) && profileIncludesSource(card, active)))
+                active = duplex;
+
+            if (next[card.name] === active)
+                continue;
+            next[card.name] = active;
             changed = true;
         }
         if (!changed)
@@ -455,7 +577,7 @@ Singleton {
             if (!card?.name || disabledCards.includes(card.name))
                 continue;
 
-            let preferred = restoreProfiles[card.name];
+            let preferred = resolveStoredProfile(card);
             if (!isRestorableProfile(preferred)) {
                 if (!card.enabled)
                     continue;
@@ -554,7 +676,7 @@ Singleton {
             syncDisabledCardsConfig();
         }
 
-        const profile = restoreProfiles[cardName] || card.preferredProfile || card.preferredSinkProfile || card.preferredSourceProfile;
+        const profile = resolveStoredProfile(card);
         if (!isRestorableProfile(profile))
             return;
         setCardProfile(cardName, profile, false);
@@ -595,17 +717,22 @@ Singleton {
 
         const node = nodeById(entry.nodeId);
         if (entry.isSink) {
+            if (entry.cardName && ensureDuplexForCard(entry.cardName, entry.nodeName, true))
+                return;
             if (node)
                 setAudioSink(node);
             else if (entry.nodeName)
-                Quickshell.execDetached(["pactl", "set-default-sink", entry.nodeName]);
+                applyOutputByName(entry.nodeName);
             return;
         }
+
+        if (entry.cardName && ensureDuplexForCard(entry.cardName, entry.nodeName, false))
+            return;
 
         if (node)
             setAudioSource(node);
         else if (entry.nodeName)
-            Quickshell.execDetached(["pactl", "set-default-source", entry.nodeName]);
+            applySourceByName(entry.nodeName);
     }
 
     property bool scanning: false
@@ -719,6 +846,8 @@ Singleton {
             root.refreshCards();
             if (root.pendingOutputName)
                 root.applyOutputByName(root.pendingOutputName);
+            if (root.pendingDefaultSource)
+                root.applySourceByName(root.pendingDefaultSource);
         }
     }
 

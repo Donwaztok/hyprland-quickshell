@@ -178,3 +178,4 @@ if [[ -d "$HOME/Android/Sdk" ]]; then
 fi
 
 export UNITY_PATH="$HOME/Unity/Hub/Editor/6000.4.8f1/Editor/Unity"
+export PATH="$PATH:$HOME/.maestro/bin"
