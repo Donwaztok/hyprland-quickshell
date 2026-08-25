@@ -92,7 +92,7 @@ hyprlock                          # Hyprland lock screen
 hyprpicker                        # Hyprland color picker
 imagemagick                       # image manipulation
 libqalculate                      # calculator library
-quickshell-git                    # Hyprland widget/bar
+quickshell                        # Hyprland widget/bar
 wlogout                           # Wayland logout screen
 
 # --------------------------------------------------- // Applications
