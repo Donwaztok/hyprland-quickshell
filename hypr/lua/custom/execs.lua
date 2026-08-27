@@ -13,7 +13,7 @@ hl.on("hyprland.start", function()
     -- Apps
     -- hl.exec_cmd("gtk-launch vesktop")
     hl.exec_cmd("gtk-launch zen")
-    hl.exec_cmd("gtk-launch com.rtosta.zapzap")
+    hl.exec_cmd("gtk-launch com.rtosta.zapzap.nogpu")
     -- hl.exec_cmd("QT_QPA_PLATFORM=wayland __GLX_VENDOR_LIBRARY_NAME=mesa zapzap --disable-gpu")
     hl.exec_cmd("gtk-launch org.mozilla.Thunderbird")
 end)
