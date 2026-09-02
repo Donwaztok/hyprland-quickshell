@@ -20,6 +20,7 @@ Scope {
     function dismiss() {
         if (GlobalStates.regionSelectorOpen)
             GlobalStates.regionSelectorOpen = false;
+        GlobalStates.regionSelectorCtrlHeld = false;
         // Always leave the cancel submap (close button / snip / Esc).
         Hyprland.dispatch('hl.dsp.submap("reset")');
     }
@@ -27,6 +28,7 @@ Scope {
     function openSelector(action, selectionMode) {
         root.action = action;
         root.selectionMode = selectionMode;
+        GlobalStates.regionSelectorCtrlHeld = false;
         GlobalStates.regionSelectorOpen = true;
         Hyprland.dispatch('hl.dsp.submap("regionSelector")');
     }
@@ -105,5 +107,20 @@ Scope {
         name: "regionDismiss"
         description: "Cancels the region selector"
         onPressed: root.dismiss()
+    }
+    GlobalShortcut {
+        appid: "donwaztok"
+        name: "regionCtrlDown"
+        description: "Hold Ctrl to pick a window while snipping"
+        onPressed: {
+            if (GlobalStates.regionSelectorOpen)
+                GlobalStates.regionSelectorCtrlHeld = true;
+        }
+    }
+    GlobalShortcut {
+        appid: "donwaztok"
+        name: "regionCtrlUp"
+        description: "Release Ctrl window pick while snipping"
+        onPressed: GlobalStates.regionSelectorCtrlHeld = false
     }
 }

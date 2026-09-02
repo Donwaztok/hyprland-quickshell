@@ -19,10 +19,11 @@ Rectangle {
     property color fillColor: "transparent"
     property string text: ""
     property real textPadding: 10
+    property int borderWidth: targeted ? 4 : 2
     z: 2
     color: fillColor
     border.color: borderColor
-    border.width: targeted ? 4 : 2
+    border.width: root.borderWidth
     radius: 4
 
     Behavior on color {

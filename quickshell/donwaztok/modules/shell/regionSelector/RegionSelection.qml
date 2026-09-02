@@ -1,4 +1,5 @@
 import qs.services.shell
+import qs
 import qs.modules.common
 import qs.modules.common.utils
 import qs.modules.common.functions
@@ -73,23 +74,40 @@ PanelWindow {
     property list<point> points: []
     property var mouseButton: null
     property var imageRegions: []
+    readonly property list<var> mappedWindowRegions: root.windows
+        .filter(w => w.workspace.id === root.activeWorkspaceId)
+        .map(window => {
+            return {
+                at: [window.at[0] - root.monitorOffsetX, window.at[1] - root.monitorOffsetY],
+                size: [window.size[0], window.size[1]],
+                class: window.class,
+                title: window.title,
+            };
+        })
+        .filter(w => w.size[0] > 1 && w.size[1] > 1
+            && w.at[0] < root.screen.width && w.at[1] < root.screen.height
+            && (w.at[0] + w.size[0]) > 0 && (w.at[1] + w.size[1]) > 0)
+
+    // Layer filter is only for normal hover chrome; Ctrl pick uses all mapped windows.
     readonly property list<var> windowRegions: RegionFunctions.filterWindowRegionsByLayers(
-        root.windows.filter(w => w.workspace.id === root.activeWorkspaceId),
+        root.mappedWindowRegions,
         root.layerRegions
-    ).map(window => {
-        return {
-            at: [window.at[0] - root.monitorOffsetX, window.at[1] - root.monitorOffsetY],
-            size: [window.size[0], window.size[1]],
-            class: window.class,
-            title: window.title,
-        }
-    })
+    )
     readonly property list<var> layerRegions: {
         const layersOfThisMonitor = root.layers[root.hyprlandMonitor.name]
         const topLayers = layersOfThisMonitor?.levels["2"]
         if (!topLayers) return [];
-        const nonBarTopLayers = topLayers
-            .filter(layer => !(layer.namespace.includes(":bar") || layer.namespace.includes(":verticalBar")))
+        // Ignore shell chrome (fullscreen drawers/overlays would hide every window).
+        const nonShellTopLayers = topLayers
+            .filter(layer => {
+                const ns = layer.namespace ?? "";
+                return !(ns.includes(":bar")
+                    || ns.includes(":verticalBar")
+                    || ns.includes(":dock")
+                    || ns.includes("drawers")
+                    || ns.includes("donwaztok-")
+                    || ns.startsWith("quickshell"));
+            })
             .map(layer => {
             return {
                 at: [layer.x, layer.y],
@@ -97,7 +115,7 @@ PanelWindow {
                 namespace: layer.namespace,
             }
         })
-        const offsetAdjustedLayers = nonBarTopLayers.map(layer => {
+        const offsetAdjustedLayers = nonShellTopLayers.map(layer => {
             return {
                 at: [layer.at[0] - root.monitorOffsetX, layer.at[1] - root.monitorOffsetY],
                 size: layer.size,
@@ -114,6 +132,22 @@ PanelWindow {
     property real targetRegionOpacity: Config.options.regionSelector.targetRegions.opacity
     property bool contentRegionOpacity: Config.options.regionSelector.targetRegions.contentRegionOpacity
 
+    // Hold Ctrl to pick a whole window. Synced via Keys + mouse modifiers into GlobalStates
+    // so both monitors stay in sync (Hyprland must not bind Ctrl in the snip submap).
+    readonly property bool ctrlHeld: GlobalStates.regionSelectorCtrlHeld
+    readonly property bool windowPickMode: ctrlHeld && !isCircleSelection
+
+    function setCtrlHeld(held) {
+        if (GlobalStates.regionSelectorCtrlHeld === held)
+            return;
+        GlobalStates.regionSelectorCtrlHeld = held;
+    }
+
+    onCtrlHeldChanged: {
+        if (mouseArea)
+            root.updateTargetedRegion(mouseArea.mouseX, mouseArea.mouseY);
+    }
+
     property real targetedRegionX: -1
     property real targetedRegionY: -1
     property real targetedRegionWidth: 0
@@ -121,55 +155,57 @@ PanelWindow {
     function targetedRegionValid() {
         return (root.targetedRegionX >= 0 && root.targetedRegionY >= 0)
     }
-    function setRegionToTargeted() {
-        const padding = Config.options.regionSelector.targetRegions.selectionPadding; // Make borders not cut off n stuff
-        root.regionX = root.targetedRegionX - padding;
-        root.regionY = root.targetedRegionY - padding;
-        root.regionWidth = root.targetedRegionWidth + padding * 2;
-        root.regionHeight = root.targetedRegionHeight + padding * 2;
+    function setRegionToTargeted(padding) {
+        const p = (padding === undefined || padding === null)
+            ? Config.options.regionSelector.targetRegions.selectionPadding
+            : padding;
+        root.regionX = root.targetedRegionX - p;
+        root.regionY = root.targetedRegionY - p;
+        root.regionWidth = root.targetedRegionWidth + p * 2;
+        root.regionHeight = root.targetedRegionHeight + p * 2;
+    }
+
+    function hitTestRegion(regions, x, y) {
+        // Prefer later entries (closer to top of floating-first list).
+        for (let i = regions.length - 1; i >= 0; --i) {
+            const region = regions[i];
+            if (region.at[0] <= x && x <= region.at[0] + region.size[0]
+                && region.at[1] <= y && y <= region.at[1] + region.size[1])
+                return region;
+        }
+        return undefined;
+    }
+
+    function applyTargetedRegion(region) {
+        if (!region) {
+            root.targetedRegionX = -1;
+            root.targetedRegionY = -1;
+            root.targetedRegionWidth = 0;
+            root.targetedRegionHeight = 0;
+            return false;
+        }
+        root.targetedRegionX = region.at[0];
+        root.targetedRegionY = region.at[1];
+        root.targetedRegionWidth = region.size[0];
+        root.targetedRegionHeight = region.size[1];
+        return true;
     }
 
     function updateTargetedRegion(x, y) {
-        // Image regions
-        const clickedRegion = root.imageRegions.find(region => {
-            return region.at[0] <= x && x <= region.at[0] + region.size[0] && region.at[1] <= y && y <= region.at[1] + region.size[1];
-        });
-        if (clickedRegion) {
-            root.targetedRegionX = clickedRegion.at[0];
-            root.targetedRegionY = clickedRegion.at[1];
-            root.targetedRegionWidth = clickedRegion.size[0];
-            root.targetedRegionHeight = clickedRegion.size[1];
+        // Ctrl = window pick: only windows, never content/layer regions.
+        if (root.windowPickMode) {
+            root.applyTargetedRegion(root.hitTestRegion(root.mappedWindowRegions, x, y));
             return;
         }
 
-        // Layer regions
-        const clickedLayer = root.layerRegions.find(region => {
-            return region.at[0] <= x && x <= region.at[0] + region.size[0] && region.at[1] <= y && y <= region.at[1] + region.size[1];
-        });
-        if (clickedLayer) {
-            root.targetedRegionX = clickedLayer.at[0];
-            root.targetedRegionY = clickedLayer.at[1];
-            root.targetedRegionWidth = clickedLayer.size[0];
-            root.targetedRegionHeight = clickedLayer.size[1];
+        if (root.applyTargetedRegion(root.hitTestRegion(root.imageRegions, x, y)))
             return;
-        }
-
-        // Window regions
-        const clickedWindow = root.windowRegions.find(region => {
-            return region.at[0] <= x && x <= region.at[0] + region.size[0] && region.at[1] <= y && y <= region.at[1] + region.size[1];
-        });
-        if (clickedWindow) {
-            root.targetedRegionX = clickedWindow.at[0];
-            root.targetedRegionY = clickedWindow.at[1];
-            root.targetedRegionWidth = clickedWindow.size[0];
-            root.targetedRegionHeight = clickedWindow.size[1];
+        if (root.enableLayerRegions && root.applyTargetedRegion(root.hitTestRegion(root.layerRegions, x, y)))
             return;
-        }
+        if (root.enableWindowRegions && root.applyTargetedRegion(root.hitTestRegion(root.windowRegions, x, y)))
+            return;
 
-        root.targetedRegionX = -1;
-        root.targetedRegionY = -1;
-        root.targetedRegionWidth = 0;
-        root.targetedRegionHeight = 0;
+        root.applyTargetedRegion(null);
     }
 
     property real regionWidth: Math.abs(draggingX - dragStartX)
@@ -239,11 +275,12 @@ PanelWindow {
         }
     }
 
-    function snip() {
+    function snip(cornerRadius = 0) {
         // Validity check
         if (root.regionWidth <= 0 || root.regionHeight <= 0) {
             console.warn("[Region Selector] Invalid region size, skipping snip.");
             root.dismiss();
+            return;
         }
 
         // Clamp region to screen bounds
@@ -267,7 +304,8 @@ PanelWindow {
             root.regionHeight * root.monitorScale, //
             root.screenshotPath, //
             screenshotAction, //
-            screenshotDir
+            screenshotDir,
+            Math.max(0, cornerRadius) * root.monitorScale
         )
         snipProc.command = command;
 
@@ -285,7 +323,23 @@ PanelWindow {
         anchors.fill: parent
         focus: root.visible
 
-        Keys.onEscapePressed: root.dismiss()
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Escape) {
+                event.accepted = true;
+                root.dismiss();
+                return;
+            }
+            if (event.key === Qt.Key_Control) {
+                event.accepted = true;
+                root.setCtrlHeld(true);
+            }
+        }
+        Keys.onReleased: (event) => {
+            if (event.key === Qt.Key_Control) {
+                event.accepted = true;
+                root.setCtrlHeld(false);
+            }
+        }
 
         Shortcut {
             sequence: "Escape"
@@ -305,20 +359,54 @@ PanelWindow {
         MouseArea {
             id: mouseArea
             anchors.fill: parent
-            cursorShape: Qt.CrossCursor
+            cursorShape: root.windowPickMode ? Qt.PointingHandCursor : Qt.CrossCursor
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             hoverEnabled: true
 
+            function syncCtrlFromMouse(mouse) {
+                // Only promote to held from mouse mods. Clearing is handled by
+                // Keys/Hyprland release so a stale pointer event cannot drop Ctrl.
+                if (mouse.modifiers & Qt.ControlModifier)
+                    root.setCtrlHeld(true);
+            }
+
+            function resetDragState() {
+                root.dragging = false;
+                root.dragDiffX = 0;
+                root.dragDiffY = 0;
+                root.points = [];
+                root.draggingX = root.dragStartX;
+                root.draggingY = root.dragStartY;
+            }
+
             // Controls
             onPressed: (mouse) => {
+                mouseArea.syncCtrlFromMouse(mouse);
                 root.dragStartX = mouse.x;
                 root.dragStartY = mouse.y;
                 root.draggingX = mouse.x;
                 root.draggingY = mouse.y;
                 root.dragging = true;
                 root.mouseButton = mouse.button;
+                root.points = [];
+                root.updateTargetedRegion(mouse.x, mouse.y);
             }
             onReleased: (mouse) => {
+                mouseArea.syncCtrlFromMouse(mouse);
+                root.updateTargetedRegion(mouse.x, mouse.y);
+
+                // Ctrl + click/drag: capture the highlighted window only.
+                if (root.windowPickMode) {
+                    if (root.targetedRegionValid()) {
+                        root.setRegionToTargeted(0);
+                        // Match Hyprland decoration:rounding so corners are transparent PNG.
+                        root.snip(Appearance.rounding.windowRounding);
+                    } else {
+                        mouseArea.resetDragState();
+                    }
+                    return;
+                }
+
                 // Detect if it was a click -> Try to select targeted region
                 if (root.draggingX === root.dragStartX && root.draggingY === root.dragStartY) {
                     if (root.targetedRegionValid()) {
@@ -341,8 +429,10 @@ PanelWindow {
                 root.snip();
             }
             onPositionChanged: (mouse) => {
+                mouseArea.syncCtrlFromMouse(mouse);
                 root.updateTargetedRegion(mouse.x, mouse.y);
-                if (!root.dragging) return;
+                if (!root.dragging || root.windowPickMode)
+                    return;
                 root.draggingX = mouse.x;
                 root.draggingY = mouse.y;
                 root.dragDiffX = mouse.x - root.dragStartX;
@@ -353,7 +443,7 @@ PanelWindow {
             Loader {
                 z: 2
                 anchors.fill: parent
-                active: root.selectionMode === RegionSelection.SelectionMode.RectCorners
+                active: root.selectionMode === RegionSelection.SelectionMode.RectCorners && !root.windowPickMode
                 sourceComponent: RectCornersSelectionDetails {
                     regionX: root.regionX
                     regionY: root.regionY
@@ -366,10 +456,28 @@ PanelWindow {
                 }
             }
 
+            // Dim the desktop while picking a window; hole follows the target.
+            Loader {
+                z: 1
+                anchors.fill: parent
+                active: root.windowPickMode
+                sourceComponent: RectCornersSelectionDetails {
+                    regionX: root.targetedRegionValid() ? root.targetedRegionX : mouseArea.mouseX
+                    regionY: root.targetedRegionValid() ? root.targetedRegionY : mouseArea.mouseY
+                    regionWidth: root.targetedRegionValid() ? root.targetedRegionWidth : 0
+                    regionHeight: root.targetedRegionValid() ? root.targetedRegionHeight : 0
+                    mouseX: mouseArea.mouseX
+                    mouseY: mouseArea.mouseY
+                    color: root.windowBorderColor
+                    overlayColor: root.overlayColor
+                    showAimLines: false
+                }
+            }
+
             Loader {
                 z: 2
                 anchors.fill: parent
-                active: root.selectionMode === RegionSelection.SelectionMode.Circle
+                active: root.selectionMode === RegionSelection.SelectionMode.Circle && !root.windowPickMode
                 sourceComponent: CircleSelectionDetails {
                     color: root.selectionBorderColor
                     overlayColor: root.overlayColor
@@ -379,31 +487,44 @@ PanelWindow {
 
             CursorGuide {
                 z: 9999
-                x: root.dragging ? root.regionX + root.regionWidth : mouseArea.mouseX
-                y: root.dragging ? root.regionY + root.regionHeight : mouseArea.mouseY
+                x: root.windowPickMode
+                    ? mouseArea.mouseX
+                    : (root.dragging ? root.regionX + root.regionWidth : mouseArea.mouseX)
+                y: root.windowPickMode
+                    ? mouseArea.mouseY
+                    : (root.dragging ? root.regionY + root.regionHeight : mouseArea.mouseY)
                 action: root.action
                 selectionMode: root.selectionMode
+                windowPickMode: root.windowPickMode
             }
 
             // Window regions
             Repeater {
                 model: ScriptModel {
-                    values: root.enableWindowRegions ? root.windowRegions : []
+                    values: root.windowPickMode
+                        ? root.mappedWindowRegions
+                        : (root.enableWindowRegions ? root.windowRegions : [])
                 }
                 delegate: TargetRegion {
                     z: 2
                     required property var modelData
                     clientDimensions: modelData
                     showIcon: true
+                    showLabel: root.windowPickMode || Config.options.regionSelector.targetRegions.showLabel
                     targeted: !root.draggedAway &&
                         (root.targetedRegionX === modelData.at[0]
                         && root.targetedRegionY === modelData.at[1]
                         && root.targetedRegionWidth === modelData.size[0]
                         && root.targetedRegionHeight === modelData.size[1])
 
-                    opacity: root.draggedAway ? 0 : root.targetRegionOpacity
+                    opacity: {
+                        if (root.windowPickMode)
+                            return targeted ? 1 : 0.45;
+                        return root.draggedAway ? 0 : root.targetRegionOpacity;
+                    }
                     borderColor: root.windowBorderColor
                     fillColor: targeted ? root.windowFillColor : "transparent"
+                    borderWidth: targeted ? (root.windowPickMode ? 5 : 4) : 2
                     text: `${modelData.class}`
                     radius: Appearance.rounding.windowRounding
                 }
@@ -412,7 +533,7 @@ PanelWindow {
             // Layer regions
             Repeater {
                 model: ScriptModel {
-                    values: root.enableLayerRegions ? root.layerRegions : []
+                    values: (!root.windowPickMode && root.enableLayerRegions) ? root.layerRegions : []
                 }
                 delegate: TargetRegion {
                     z: 3
@@ -435,7 +556,7 @@ PanelWindow {
             // Content regions
             Repeater {
                 model: ScriptModel {
-                    values: root.enableContentRegions ? root.imageRegions : []
+                    values: (!root.windowPickMode && root.enableContentRegions) ? root.imageRegions : []
                 }
                 delegate: TargetRegion {
                     z: 4

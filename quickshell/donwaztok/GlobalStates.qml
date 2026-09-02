@@ -10,6 +10,7 @@ Singleton {
     id: root
     property bool osdVolumeOpen: false
     property bool regionSelectorOpen: false
+    property bool regionSelectorCtrlHeld: false
     property bool searchOpen: false
     property bool screenLocked: false
     property bool screenLockContainsCharacters: false

@@ -6,26 +6,37 @@ Item {
     id: root
     property var action
     property var selectionMode
+    property bool windowPickMode: false
 
-    property string description: switch (root.action) {
-    case RegionSelection.SnipAction.Copy:
-    case RegionSelection.SnipAction.Edit:
-        return qsTr("Copy region (LMB) or annotate (RMB)");
-    case RegionSelection.SnipAction.Search:
-        return qsTr("Search with Google Lens");
-    case RegionSelection.SnipAction.CharRecognition:
-        return qsTr("Recognize text");
+    property string description: {
+        if (root.windowPickMode)
+            return qsTr("Click a window to capture (hold Ctrl)");
+        switch (root.action) {
+        case RegionSelection.SnipAction.Copy:
+        case RegionSelection.SnipAction.Edit:
+            return qsTr("Copy region (LMB) or annotate (RMB) · Ctrl: window");
+        case RegionSelection.SnipAction.Search:
+            return qsTr("Search with Google Lens · Ctrl: window");
+        case RegionSelection.SnipAction.CharRecognition:
+            return qsTr("Recognize text · Ctrl: window");
+        default:
+            return "";
+        }
     }
-    property string materialSymbol: switch (root.action) {
-    case RegionSelection.SnipAction.Copy:
-    case RegionSelection.SnipAction.Edit:
-        return "content_cut";
-    case RegionSelection.SnipAction.Search:
-        return "image_search";
-    case RegionSelection.SnipAction.CharRecognition:
-        return "document_scanner";
-    default:
-        return "";
+    property string materialSymbol: {
+        if (root.windowPickMode)
+            return "desktop_windows";
+        switch (root.action) {
+        case RegionSelection.SnipAction.Copy:
+        case RegionSelection.SnipAction.Edit:
+            return "content_cut";
+        case RegionSelection.SnipAction.Search:
+            return "image_search";
+        case RegionSelection.SnipAction.CharRecognition:
+            return "document_scanner";
+        default:
+            return "";
+        }
     }
 
     property bool showDescription: true
@@ -41,6 +52,10 @@ Item {
         }
     }
     onActionChanged: {
+        root.showDescription = true
+        descTimeout.restart()
+    }
+    onWindowPickModeChanged: {
         root.showDescription = true
         descTimeout.restart()
     }

@@ -23,17 +23,23 @@ Singleton {
     property string imageSearchEngineBaseUrl: Config.options.search.imageSearch.imageSearchEngineBaseUrl
     property string fileUploadApiEndpoint: "https://uguu.se/upload"
 
-    function getCommand(x, y, width, height, screenshotPath, action, saveDir = "") {
+    function getCommand(x, y, width, height, screenshotPath, action, saveDir = "", cornerRadius = 0) {
         // Set command for action
         const rx = Math.round(x);
         const ry = Math.round(y);
         const rw = Math.round(width);
         const rh = Math.round(height);
-        const cropBase = `magick ${StringUtils.shellSingleQuoteEscape(screenshotPath)} `
-            + `-crop ${rw}x${rh}+${rx}+${ry}`
-        const cropToStdout = `${cropBase} -`
-        const cropInPlace = `${cropBase} '${StringUtils.shellSingleQuoteEscape(screenshotPath)}'`
-        const cleanup = `rm '${StringUtils.shellSingleQuoteEscape(screenshotPath)}'`
+        const rr = Math.max(0, Math.round(cornerRadius));
+        const pathQ = StringUtils.shellSingleQuoteEscape(screenshotPath);
+        const cropBase = `magick '${pathQ}' -crop ${rw}x${rh}+${rx}+${ry} +repage`;
+        // Match Hyprland window rounding with a transparent PNG mask (corners become alpha=0).
+        const roundMask = rr > 0
+            ? ` \\( -size ${rw}x${rh} xc:none -draw 'fill white roundrectangle 0,0 ${rw - 1},${rh - 1} ${rr},${rr}' \\) -compose CopyOpacity -composite`
+            : "";
+        const cropToStdout = `${cropBase}${roundMask} PNG32:-`;
+        const cropInPlace = `${cropBase}${roundMask} PNG32:'${pathQ}'`;
+        const cleanup = `rm -f '${pathQ}'`;
+        const copyPng = `wl-copy --type image/png`;
         const uploadAndGetUrl = (filePath) => {
             return `curl -sF files[]=@'${StringUtils.shellSingleQuoteEscape(filePath)}' ${root.fileUploadApiEndpoint} | jq -r '.files[0].url'`
         }
@@ -42,28 +48,22 @@ Singleton {
             case ScreenshotAction.Action.Copy:
                 if (saveDir === "") {
                     // not saving the screenshot, just copy to clipboard
-                    return ["bash", "-c", `${cropToStdout} | wl-copy && ${cleanup}`]
-                    break;
+                    return ["bash", "-c", `${cropToStdout} | ${copyPng} && ${cleanup}`]
                 }
                 return [
                     "bash", "-c",
                     `mkdir -p '${StringUtils.shellSingleQuoteEscape(saveDir)}' && \
                     saveFileName="screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && \
                     savePath="${saveDir}/$saveFileName" && \
-                    ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
+                    ${cropToStdout} | tee >( ${copyPng} ) > "$savePath" && \
                     ${cleanup}`
                 ]
-
-                break;
             case ScreenshotAction.Action.Edit:
                 return ["bash", "-c", `${cropToStdout} | ${annotationCommand} && ${cleanup}`]
-                break;
             case ScreenshotAction.Action.Search:
                 return ["bash", "-c", `${cropInPlace} && xdg-open "${root.imageSearchEngineBaseUrl}$(${uploadAndGetUrl(screenshotPath)})" && ${cleanup}`]
-                break;
             case ScreenshotAction.Action.CharRecognition:
-                return ["bash", "-c", `${cropInPlace} && tesseract '${StringUtils.shellSingleQuoteEscape(screenshotPath)}' stdout -l $(tesseract --list-langs | awk 'NR>1{print $1}' | tr '\\n' '+' | sed 's/\\+$/\\n/') | wl-copy && ${cleanup}`]
-                break;
+                return ["bash", "-c", `${cropInPlace} && tesseract '${pathQ}' stdout -l $(tesseract --list-langs | awk 'NR>1{print $1}' | tr '\\n' '+' | sed 's/\\+$/\\n/') | wl-copy && ${cleanup}`]
             default:
                 console.warn("[Region Selector] Unknown snip action, skipping snip.");
                 return;
