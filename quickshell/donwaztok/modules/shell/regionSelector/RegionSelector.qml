@@ -18,7 +18,17 @@ Scope {
     id: root
 
     function dismiss() {
-        GlobalStates.regionSelectorOpen = false
+        if (GlobalStates.regionSelectorOpen)
+            GlobalStates.regionSelectorOpen = false;
+        // Always leave the cancel submap (close button / snip / Esc).
+        Hyprland.dispatch('hl.dsp.submap("reset")');
+    }
+
+    function openSelector(action, selectionMode) {
+        root.action = action;
+        root.selectionMode = selectionMode;
+        GlobalStates.regionSelectorOpen = true;
+        Hyprland.dispatch('hl.dsp.submap("regionSelector")');
     }
 
     property var action: RegionSelection.SnipAction.Copy
@@ -41,38 +51,34 @@ Scope {
     }
 
     function screenshot() {
-        root.action = RegionSelection.SnipAction.Copy
-        root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        GlobalStates.regionSelectorOpen = true
+        root.openSelector(RegionSelection.SnipAction.Copy, RegionSelection.SelectionMode.RectCorners);
     }
 
     function search() {
-        root.action = RegionSelection.SnipAction.Search
-        if (Config.options.search.imageSearch.useCircleSelection) {
-            root.selectionMode = RegionSelection.SelectionMode.Circle
-        } else {
-            root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        }
-        GlobalStates.regionSelectorOpen = true
+        const mode = Config.options.search.imageSearch.useCircleSelection
+            ? RegionSelection.SelectionMode.Circle
+            : RegionSelection.SelectionMode.RectCorners;
+        root.openSelector(RegionSelection.SnipAction.Search, mode);
     }
 
     function ocr() {
-        root.action = RegionSelection.SnipAction.CharRecognition
-        root.selectionMode = RegionSelection.SelectionMode.RectCorners
-        GlobalStates.regionSelectorOpen = true
+        root.openSelector(RegionSelection.SnipAction.CharRecognition, RegionSelection.SelectionMode.RectCorners);
     }
 
     IpcHandler {
         target: "region"
 
         function screenshot() {
-            root.screenshot()
+            root.screenshot();
         }
         function search() {
-            root.search()
+            root.search();
         }
         function ocr() {
-            root.ocr()
+            root.ocr();
+        }
+        function dismiss() {
+            root.dismiss();
         }
     }
 
@@ -93,5 +99,11 @@ Scope {
         name: "regionOcr"
         description: "Recognizes text in the selected region"
         onPressed: root.ocr()
+    }
+    GlobalShortcut {
+        appid: "donwaztok"
+        name: "regionDismiss"
+        description: "Cancels the region selector"
+        onPressed: root.dismiss()
     }
 }

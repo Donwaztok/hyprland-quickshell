@@ -18,7 +18,9 @@ PanelWindow {
     color: "transparent"
     WlrLayershell.namespace: "quickshell:regionSelector"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    // Esc is primarily handled via Hyprland submap regionSelector; Exclusive
+    // keeps an in-window fallback working when focus does arrive.
+    WlrLayershell.keyboardFocus: root.visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors {
         left: true
@@ -191,6 +193,10 @@ PanelWindow {
         if (!preparationDone) return;
         root.visible = true;
     }
+    onVisibleChanged: {
+        if (visible)
+            captureHost.forceActiveFocus();
+    }
 
     Process {
         id: imageDetectionProcess
@@ -279,6 +285,14 @@ PanelWindow {
         anchors.fill: parent
         focus: root.visible
 
+        Keys.onEscapePressed: root.dismiss()
+
+        Shortcut {
+            sequence: "Escape"
+            enabled: root.visible
+            onActivated: root.dismiss()
+        }
+
         Image {
             id: frozenCapture
             anchors.fill: parent
@@ -291,16 +305,9 @@ PanelWindow {
         MouseArea {
             id: mouseArea
             anchors.fill: parent
-            focus: root.visible
             cursorShape: Qt.CrossCursor
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             hoverEnabled: true
-
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    root.dismiss();
-                }
-            }
 
             // Controls
             onPressed: (mouse) => {

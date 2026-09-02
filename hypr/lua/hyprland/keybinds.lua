@@ -70,6 +70,12 @@ hl.bind("SUPER + SHIFT + A", hl.dsp.global("donwaztok:regionSearch"), { descript
 hl.bind("SUPER + SHIFT + X", hl.dsp.global("donwaztok:regionOcr"), { description = "Utilities: OCR region >> clipboard" })
 hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"), { description = "Utilities: Color picker" })
 
+-- Esc cancels the region selector at the compositor (Qt layershell focus is unreliable).
+-- Auto-resets to the default map after Escape; QML also resets on any dismiss path.
+hl.define_submap("regionSelector", "reset", function()
+    hl.bind("Escape", hl.dsp.global("donwaztok:regionDismiss"))
+end)
+
 hl.bind("Print", hl.dsp.exec_cmd("grim - | wl-copy"), { locked = true, description = "Utilities: Screenshot >> clipboard" })
 hl.bind(
     "CTRL + Print",
