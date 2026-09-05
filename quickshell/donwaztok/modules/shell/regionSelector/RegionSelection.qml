@@ -50,9 +50,13 @@ PanelWindow {
     property color imageFillColor: ColorUtils.transparentize(imageBorderColor, 0.85)
     property color onBorderColor: "#ff000000"
     readonly property var windows: [...HyprlandData.windowList].sort((a, b) => {
-        // Sort floating=true windows before others
-        if (a.floating === b.floating) return 0;
-        return a.floating ? -1 : 1;
+        // Bottom → top for painting + hit-test-from-end:
+        // tiled under floating; within the same type, more recently focused on top.
+        if (a.floating !== b.floating)
+            return a.floating ? 1 : -1;
+        const af = a.focusHistoryID ?? 9999;
+        const bf = b.focusHistoryID ?? 9999;
+        return bf - af;
     })
     readonly property var layers: HyprlandData.layers
     readonly property real falsePositivePreventionRatio: 0.5
@@ -62,6 +66,7 @@ PanelWindow {
     readonly property real monitorOffsetX: hyprlandMonitor.x
     readonly property real monitorOffsetY: hyprlandMonitor.y
     property int activeWorkspaceId: hyprlandMonitor.activeWorkspace?.id ?? 0
+    readonly property bool isFocusedMonitor: Hyprland.focusedMonitor?.id === root.hyprlandMonitor?.id
     property string screenshotPath: `${root.screenshotDir}/image-${screen.name}`
     property real dragStartX: 0
     property real dragStartY: 0
@@ -82,6 +87,8 @@ PanelWindow {
                 size: [window.size[0], window.size[1]],
                 class: window.class,
                 title: window.title,
+                floating: !!window.floating,
+                focusHistoryID: window.focusHistoryID ?? 9999,
             };
         })
         .filter(w => w.size[0] > 1 && w.size[1] > 1
@@ -166,7 +173,7 @@ PanelWindow {
     }
 
     function hitTestRegion(regions, x, y) {
-        // Prefer later entries (closer to top of floating-first list).
+        // List is bottom → top; last matching region is the topmost window.
         for (let i = regions.length - 1; i >= 0; --i) {
             const region = regions[i];
             if (region.at[0] <= x && x <= region.at[0] + region.size[0]
@@ -485,19 +492,6 @@ PanelWindow {
                 }
             }
 
-            CursorGuide {
-                z: 9999
-                x: root.windowPickMode
-                    ? mouseArea.mouseX
-                    : (root.dragging ? root.regionX + root.regionWidth : mouseArea.mouseX)
-                y: root.windowPickMode
-                    ? mouseArea.mouseY
-                    : (root.dragging ? root.regionY + root.regionHeight : mouseArea.mouseY)
-                action: root.action
-                selectionMode: root.selectionMode
-                windowPickMode: root.windowPickMode
-            }
-
             // Window regions
             Repeater {
                 model: ScriptModel {
@@ -575,10 +569,11 @@ PanelWindow {
                 }
             }
 
-            // Controls
+            // Controls (focused monitor only — avoids duplicating UI on every screen)
             Row {
                 id: regionSelectionControls
                 z: 10
+                visible: root.isFocusedMonitor
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     bottom: parent.bottom
@@ -588,7 +583,19 @@ PanelWindow {
                 Connections {
                     target: root
                     function onVisibleChanged() {
-                        if (!visible) return;
+                        if (!root.visible || !root.isFocusedMonitor)
+                            return;
+                        regionSelectionControls.anchors.bottomMargin = 8;
+                        regionSelectionControls.opacity = 1;
+                    }
+                    function onIsFocusedMonitorChanged() {
+                        if (!root.isFocusedMonitor) {
+                            regionSelectionControls.opacity = 0;
+                            regionSelectionControls.anchors.bottomMargin = -regionSelectionControls.height;
+                            return;
+                        }
+                        if (!root.visible)
+                            return;
                         regionSelectionControls.anchors.bottomMargin = 8;
                         regionSelectionControls.opacity = 1;
                     }
@@ -609,6 +616,13 @@ PanelWindow {
                         property alias source: root.selectionMode
                     }
                     onDismiss: root.dismiss();
+                }
+                CursorGuide {
+                    anchors.verticalCenter: parent.verticalCenter
+                    barMode: true
+                    action: root.action
+                    selectionMode: root.selectionMode
+                    windowPickMode: root.windowPickMode
                 }
                 Item {
                     anchors {

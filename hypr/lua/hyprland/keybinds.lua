@@ -75,9 +75,7 @@ hl.define_submap("regionSelector", function()
     hl.bind("Escape", function()
         hl.dispatch(hl.dsp.global("donwaztok:regionDismiss"))
         hl.dispatch(hl.dsp.submap("reset"))
-    end, {
-        description = "Utilities: Cancel screen snip",
-    })
+    end)
 
     hl.bind("Control_L", hl.dsp.global("donwaztok:regionCtrlDown"), { non_consuming = true })
     hl.bind("Control_L", hl.dsp.global("donwaztok:regionCtrlUp"), { release = true, non_consuming = true })

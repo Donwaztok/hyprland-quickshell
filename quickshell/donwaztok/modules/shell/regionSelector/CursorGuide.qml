@@ -7,6 +7,8 @@ Item {
     property var action
     property var selectionMode
     property bool windowPickMode: false
+    // Bottom-bar placement: larger pill, expand text on hover (no auto-hide timer).
+    property bool barMode: false
 
     property string description: {
         if (root.windowPickMode)
@@ -39,41 +41,59 @@ Item {
         }
     }
 
-    property bool showDescription: true
+    property bool showDescription: !root.barMode
     function hideDescription() {
-        root.showDescription = false
+        if (root.barMode)
+            return;
+        root.showDescription = false;
     }
     Timer {
         id: descTimeout
         interval: 1000
-        running: true
-        onTriggered: {
-            root.hideDescription()
-        }
+        running: !root.barMode
+        onTriggered: root.hideDescription()
     }
     onActionChanged: {
-        root.showDescription = true
-        descTimeout.restart()
+        if (root.barMode)
+            return;
+        root.showDescription = true;
+        descTimeout.restart();
     }
     onWindowPickModeChanged: {
-        root.showDescription = true
-        descTimeout.restart()
+        if (root.barMode)
+            return;
+        root.showDescription = true;
+        descTimeout.restart();
     }
 
-    property int margins: 8
+    readonly property bool expanded: root.barMode
+        ? (hoverArea.containsMouse || root.windowPickMode)
+        : root.showDescription
+
+    property int margins: root.barMode ? 0 : 8
+    property real pillHeight: root.barMode ? 48 : 38
+    property real iconPixelSize: root.barMode ? 26 : 22
+    property real pillPadding: root.barMode ? 12 : 8
+
     implicitWidth: content.implicitWidth + margins * 2
     implicitHeight: content.implicitHeight + margins * 2
+
+    MouseArea {
+        id: hoverArea
+        anchors.fill: parent
+        hoverEnabled: root.barMode
+        acceptedButtons: Qt.NoButton
+    }
 
     Rectangle {
         id: content
         anchors.centerIn: parent
 
-        property real padding: 8
-        implicitHeight: 38
-        implicitWidth: root.showDescription ? contentRow.implicitWidth + padding * 2 : implicitHeight
+        implicitHeight: root.pillHeight
+        implicitWidth: root.expanded ? contentRow.implicitWidth + root.pillPadding * 2 : implicitHeight
         clip: true
 
-        topLeftRadius: 6
+        topLeftRadius: root.barMode ? implicitHeight / 2 : 6
         bottomLeftRadius: implicitHeight - topLeftRadius
         bottomRightRadius: bottomLeftRadius
         topRightRadius: bottomLeftRadius
@@ -92,13 +112,13 @@ Item {
             anchors {
                 verticalCenter: parent.verticalCenter
                 left: parent.left
-                leftMargin: content.padding
+                leftMargin: root.pillPadding
             }
-            spacing: 12
+            spacing: root.barMode ? 14 : 12
 
             MaterialSymbol {
                 anchors.verticalCenter: parent.verticalCenter
-                iconSize: 22
+                iconSize: root.iconPixelSize
                 color: Appearance.colors.colOnPrimary
                 animateChange: true
                 text: root.materialSymbol
@@ -107,10 +127,13 @@ Item {
             FadeLoader {
                 id: descriptionLoader
                 anchors.verticalCenter: parent.verticalCenter
-                shown: root.showDescription
+                shown: root.expanded
                 sourceComponent: StyledText {
                     color: Appearance.colors.colOnPrimary
                     text: root.description
+                    font.pixelSize: root.barMode
+                        ? (Appearance.font.pixelSize.small ?? 13)
+                        : (Appearance.font.pixelSize.smaller ?? 12)
                     anchors.right: parent.right
                     anchors.rightMargin: 6
                 }
