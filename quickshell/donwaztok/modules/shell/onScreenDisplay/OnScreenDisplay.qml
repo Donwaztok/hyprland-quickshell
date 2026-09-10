@@ -60,11 +60,15 @@ Scope {
         function onVolumeChanged() {
             if (!Audio.ready)
                 return;
+            if (GlobalStates.audioOutputSwitcherOpen)
+                return;
             root.currentIndicator = "volume";
             root.triggerOsd();
         }
         function onMutedChanged() {
             if (!Audio.ready)
+                return;
+            if (GlobalStates.audioOutputSwitcherOpen)
                 return;
             root.currentIndicator = "volume";
             root.triggerOsd();
@@ -80,6 +84,8 @@ Scope {
         }
         function onSinkChanged() {
             if (!Audio.ready)
+                return;
+            if (GlobalStates.audioOutputSwitcherOpen)
                 return;
             root.protectionMessage = "";
             root.currentIndicator = "volume";

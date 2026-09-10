@@ -15,6 +15,11 @@ Singleton {
     property string pendingOutputName: ""
     property string pendingDefaultSource: ""
 
+    property bool outputSwitcherActive: false
+    property int outputSwitcherIndex: -1
+    property string outputSwitcherSelectedName: ""
+    property var outputSwitcherNames: []
+
     property list<PwNode> sinks: []
     property list<PwNode> sources: []
     property list<PwNode> streams: []
@@ -336,6 +341,73 @@ Singleton {
         if (!targetName)
             return;
         applyOutputByName(targetName);
+    }
+
+    function sinkNames(): var {
+        const names = [];
+        for (const node of sinks) {
+            if (node?.name)
+                names.push(node.name);
+        }
+        return names;
+    }
+
+    function cycleOutputSwitcher(): void {
+        const names = sinkNames();
+        if (names.length === 0)
+            return;
+
+        if (!outputSwitcherActive) {
+            outputSwitcherActive = true;
+            outputSwitcherNames = names;
+
+            const previousName = recentOutputs.length > 1 ? recentOutputs[1] : "";
+            let targetName = "";
+
+            if (previousName && names.includes(previousName)) {
+                targetName = previousName;
+            } else if (names.length > 1) {
+                const currentIdx = names.indexOf(sink?.name || "");
+                targetName = names[(Math.max(currentIdx, 0) + 1) % names.length];
+            } else {
+                targetName = names[0];
+            }
+
+            outputSwitcherIndex = names.indexOf(targetName);
+            outputSwitcherSelectedName = targetName;
+            applyOutputByName(targetName);
+            return;
+        }
+
+        const sessionNames = outputSwitcherNames.length > 0 ? outputSwitcherNames : names;
+        if (sessionNames.length < 2) {
+            outputSwitcherSelectedName = sessionNames[0] || sink?.name || "";
+            outputSwitcherIndex = 0;
+            return;
+        }
+
+        // Prefer live sink list order when devices appear/disappear mid-session.
+        const liveNames = names.length > 0 ? names : sessionNames;
+        outputSwitcherNames = liveNames;
+
+        let idx = liveNames.indexOf(outputSwitcherSelectedName);
+        if (idx < 0)
+            idx = liveNames.indexOf(sink?.name || "");
+        if (idx < 0)
+            idx = outputSwitcherIndex;
+
+        idx = (Math.max(idx, 0) + 1) % liveNames.length;
+        const targetName = liveNames[idx];
+        outputSwitcherIndex = idx;
+        outputSwitcherSelectedName = targetName;
+        applyOutputByName(targetName);
+    }
+
+    function closeOutputSwitcher(): void {
+        outputSwitcherActive = false;
+        outputSwitcherIndex = -1;
+        outputSwitcherSelectedName = "";
+        outputSwitcherNames = [];
     }
 
     function isRestorableProfile(profile: string): bool {
@@ -1002,6 +1074,14 @@ Singleton {
 
         function togglePreviousOutput(): void {
             root.togglePreviousOutput();
+        }
+
+        function cycleOutputSwitcher(): void {
+            root.cycleOutputSwitcher();
+        }
+
+        function closeOutputSwitcher(): void {
+            root.closeOutputSwitcher();
         }
     }
 

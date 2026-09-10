@@ -170,9 +170,48 @@ hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = tru
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind(
     "SUPER + R",
-    hl.dsp.exec_cmd(qs("ipc call audio togglePreviousOutput")),
-    { description = "Media: Switch to previous audio output" }
+    hl.dsp.global("donwaztok:audioOutputCycle"),
+    { description = "Media: Cycle audio output (hold Super)" }
 )
+
+-- Super release must be SUPER+Super_* (bindr with SUPER modmask).
+-- Bare Super_L release does not fire after Super+key chords.
+-- Do NOT wrap this in a submap: global release binds are inactive inside submaps,
+-- which left the audio switcher modal stuck open.
+hl.bind("SUPER + Super_L", hl.dsp.global("donwaztok:audioOutputClose"), {
+    release = true,
+    transparent = true,
+    submap_universal = true,
+})
+hl.bind("SUPER + Super_R", hl.dsp.global("donwaztok:audioOutputClose"), {
+    release = true,
+    transparent = true,
+    submap_universal = true,
+})
+
+-- Track Super held state for switcher close + workspace numbers.
+hl.bind("SUPER + Super_L", hl.dsp.global("donwaztok:workspaceNumber"), {
+    transparent = true,
+    non_consuming = true,
+    submap_universal = true,
+})
+hl.bind("SUPER + Super_L", hl.dsp.global("donwaztok:workspaceNumber"), {
+    release = true,
+    transparent = true,
+    non_consuming = true,
+    submap_universal = true,
+})
+hl.bind("SUPER + Super_R", hl.dsp.global("donwaztok:workspaceNumber"), {
+    transparent = true,
+    non_consuming = true,
+    submap_universal = true,
+})
+hl.bind("SUPER + Super_R", hl.dsp.global("donwaztok:workspaceNumber"), {
+    release = true,
+    transparent = true,
+    non_consuming = true,
+    submap_universal = true,
+})
 
 -- Apps
 hl.bind(
