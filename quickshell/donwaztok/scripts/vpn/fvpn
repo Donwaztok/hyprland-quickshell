@@ -1,0 +1,482 @@
+#!/usr/bin/env bash
+# FastestVPN helper (OpenVPN): credentials, default server, easy switch, latency rank.
+set -euo pipefail
+
+UDP_DIR="/etc/openvpn/udp_files"
+TCP_DIR="/etc/openvpn/tcp_files"
+REAL_HOME="${HOME}"
+if [[ -n "${PKEXEC_UID:-}" ]]; then
+  REAL_HOME="$(getent passwd "$PKEXEC_UID" | cut -d: -f6)"
+elif [[ -n "${SUDO_USER:-}" ]]; then
+  REAL_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+fi
+# Always the real user's paths (even when elevated via pkexec for one-time caps).
+STATE_DIR="$REAL_HOME/.config/fastestvpn"
+AUTH_FILE="$STATE_DIR/auth"
+DEFAULT_FILE="$STATE_DIR/default"
+CACHE_DIR="$REAL_HOME/.cache/donwaztok/fvpn-cache"
+RANK_FILE="$CACHE_DIR/rank.json"
+RANK_PID_FILE="$CACHE_DIR/rank.pid"
+LOG_FILE="$CACHE_DIR/openvpn.log"
+RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u 2>/dev/null || echo 0)}"
+if [[ -n "${PKEXEC_UID:-}" ]]; then
+  RUNTIME_DIR="/run/user/${PKEXEC_UID}"
+elif [[ -n "${SUDO_UID:-}" ]]; then
+  RUNTIME_DIR="/run/user/${SUDO_UID}"
+fi
+PID_FILE="$RUNTIME_DIR/fvpn.pid"
+SPEED_BYTES=5000000
+
+usage() {
+  cat <<'EOF'
+Usage: fvpn <command> [args]
+
+  ensure / setup / setup-stdin / ready / list / default / up / down / switch / status / log
+  ensure-caps           One-time: allow OpenVPN without password prompts (setcap)
+
+  rank-start <latency|speed> [udp|tcp]
+  rank-status / rank-stop
+EOF
+}
+
+need_root() {
+  if [[ "${EUID}" -ne 0 ]]; then
+    exec pkexec "$0" "$@"
+  fi
+}
+
+ensure_user_state() {
+  mkdir -p "$STATE_DIR" "$CACHE_DIR"
+  mkdir -p "$RUNTIME_DIR" 2>/dev/null || true
+  chmod 700 "$STATE_DIR" 2>/dev/null || true
+}
+
+has_openvpn_caps() {
+  local ovpn
+  ovpn="$(command -v openvpn || true)"
+  [[ -n "$ovpn" ]] || return 1
+  getcap "$ovpn" 2>/dev/null | grep -q 'cap_net_admin'
+}
+
+cmd_ensure_caps() {
+  local ovpn
+  ovpn="$(command -v openvpn)"
+  if [[ -z "$ovpn" ]]; then
+    echo '{"ok":false,"error":"openvpn not installed"}' >&2
+    exit 1
+  fi
+  if has_openvpn_caps; then
+    echo '{"ok":true,"caps":true,"path":"'"$ovpn"'"}'
+    return 0
+  fi
+  if [[ "${EUID}" -ne 0 ]]; then
+    exec pkexec "$0" ensure-caps
+  fi
+  setcap cap_net_admin,cap_net_raw+ep "$ovpn"
+  echo '{"ok":true,"caps":true,"path":"'"$ovpn"'"}'
+}
+
+cmd_ready() {
+  local has_openvpn=false has_configs=false has_auth=false has_caps=false
+  command -v openvpn >/dev/null 2>&1 && has_openvpn=true
+  if [[ -d "$UDP_DIR" ]] && find "$UDP_DIR" -maxdepth 1 -name '*.ovpn' -print -quit 2>/dev/null | grep -q .; then
+    has_configs=true
+  fi
+  [[ -f "$AUTH_FILE" ]] && has_auth=true
+  has_openvpn_caps && has_caps=true
+  local def
+  def="$(get_default)"
+  local connected=false
+  is_running && connected=true
+  printf '{"openvpn":%s,"configs":%s,"auth":%s,"caps":%s,"default":"%s","connected":%s}\n' \
+    "$has_openvpn" "$has_configs" "$has_auth" "$has_caps" "$def" "$connected"
+}
+
+ensure_dirs() {
+  ensure_user_state
+}
+
+resolve_config() {
+  local name="${1%.ovpn}"
+  name="${name%.conf}"
+
+  if [[ -f "$UDP_DIR/${name}.ovpn" ]]; then
+    echo "$UDP_DIR/${name}.ovpn"
+    return
+  fi
+  if [[ -f "$TCP_DIR/${name}.ovpn" ]]; then
+    echo "$TCP_DIR/${name}.ovpn"
+    return
+  fi
+  if [[ -f "$UDP_DIR/${name}-udp.ovpn" ]]; then
+    echo "$UDP_DIR/${name}-udp.ovpn"
+    return
+  fi
+  if [[ -f "$TCP_DIR/${name}-tcp.ovpn" ]]; then
+    echo "$TCP_DIR/${name}-tcp.ovpn"
+    return
+  fi
+
+  echo "Server config not found: $1" >&2
+  echo "Try: fvpn list" >&2
+  return 1
+}
+
+server_basename() {
+  basename "$1" .ovpn
+}
+
+get_default() {
+  if [[ -f "$DEFAULT_FILE" ]]; then
+    tr -d '[:space:]' <"$DEFAULT_FILE"
+    return
+  fi
+  # Legacy system path from older installs
+  if [[ -f /etc/openvpn/client/fastestvpn.default ]]; then
+    tr -d '[:space:]' </etc/openvpn/client/fastestvpn.default
+    return
+  fi
+  echo "brazil-udp"
+}
+
+set_default() {
+  local name="$1"
+  resolve_config "$name" >/dev/null
+  name="$(server_basename "$(resolve_config "$name")")"
+  ensure_user_state
+  printf '%s\n' "$name" >"$DEFAULT_FILE"
+  chmod 644 "$DEFAULT_FILE"
+  echo "Default server: $name"
+}
+
+save_auth() {
+  local user="$1"
+  local pass="$2"
+  if [[ -z "$user" || -z "$pass" ]]; then
+    echo "Username/password required." >&2
+    exit 1
+  fi
+  ensure_user_state
+  umask 077
+  printf '%s\n%s\n' "$user" "$pass" >"$AUTH_FILE"
+  chmod 600 "$AUTH_FILE"
+  if [[ ! -f "$DEFAULT_FILE" ]]; then
+    printf 'brazil-udp\n' >"$DEFAULT_FILE"
+    chmod 644 "$DEFAULT_FILE"
+  fi
+  echo "Credentials saved to $AUTH_FILE"
+}
+
+cmd_setup() {
+  local user pass
+  read -r -p "FastestVPN username: " user
+  read -r -s -p "FastestVPN password: " pass
+  echo
+  save_auth "$user" "$pass"
+}
+
+cmd_setup_stdin() {
+  local user pass
+  read -r user || true
+  read -r pass || true
+  if [[ -z "${user:-}" || -z "${pass:-}" ]]; then
+    echo "Username/password required on stdin." >&2
+    exit 1
+  fi
+  save_auth "$user" "$pass"
+}
+
+cmd_ensure() {
+  # One elevated setup: packages (if needed), OpenVPN caps, download configs.
+  ensure_dirs
+
+  if ! command -v openvpn >/dev/null 2>&1; then
+    if command -v pacman >/dev/null 2>&1; then
+      pacman -S --needed --noconfirm openvpn unzip wget
+    else
+      echo "openvpn is not installed." >&2
+      exit 1
+    fi
+  fi
+
+  local ovpn
+  ovpn="$(command -v openvpn)"
+  if [[ -n "$ovpn" ]] && command -v setcap >/dev/null 2>&1; then
+    setcap cap_net_admin,cap_net_raw+ep "$ovpn" || true
+  fi
+
+  local udp_count tcp_count
+  udp_count="$(find "$UDP_DIR" -maxdepth 1 -name '*.ovpn' 2>/dev/null | wc -l | tr -d ' ')"
+  tcp_count="$(find "$TCP_DIR" -maxdepth 1 -name '*.ovpn' 2>/dev/null | wc -l | tr -d ' ')"
+
+  if [[ "${udp_count}" -gt 0 || "${tcp_count}" -gt 0 ]]; then
+    echo "Configs OK (udp=$udp_count tcp=$tcp_count). Caps: $(has_openvpn_caps && echo yes || echo no)."
+    return 0
+  fi
+
+  echo "Downloading FastestVPN OpenVPN configs…"
+  local zip="/etc/openvpn/fastestvpn_ovpn.zip"
+  wget -q -O "$zip" "http://support.fastestvpn.com/download/fastestvpn_ovpn/" || {
+    echo "Download failed." >&2
+    exit 1
+  }
+
+  command -v unzip >/dev/null 2>&1 || pacman -S --needed --noconfirm unzip
+  mkdir -p /etc/openvpn
+  unzip -o "$zip" -d /etc/openvpn >/dev/null
+
+  # Archive may unpack as fastestvpn_ovpn/ or directly tcp_files/udp_files
+  if [[ -d /etc/openvpn/fastestvpn_ovpn/udp_files ]]; then
+    rm -rf "$UDP_DIR" "$TCP_DIR"
+    mv /etc/openvpn/fastestvpn_ovpn/udp_files "$UDP_DIR"
+    mv /etc/openvpn/fastestvpn_ovpn/tcp_files "$TCP_DIR"
+  fi
+
+  chmod -R a+rX "$UDP_DIR" "$TCP_DIR" 2>/dev/null || true
+  udp_count="$(find "$UDP_DIR" -maxdepth 1 -name '*.ovpn' 2>/dev/null | wc -l | tr -d ' ')"
+  echo "Installed $udp_count UDP configs. Caps: $(has_openvpn_caps && echo yes || echo no)."
+}
+
+cmd_list() {
+  local proto="${1:-all}"
+  case "$proto" in
+    udp)
+      find "$UDP_DIR" -maxdepth 1 -name '*.ovpn' -printf '%f\n' 2>/dev/null | sed 's/\.ovpn$//' | sort
+      ;;
+    tcp)
+      find "$TCP_DIR" -maxdepth 1 -name '*.ovpn' -printf '%f\n' 2>/dev/null | sed 's/\.ovpn$//' | sort
+      ;;
+    all|*)
+      {
+        find "$UDP_DIR" -maxdepth 1 -name '*.ovpn' -printf '%f\n' 2>/dev/null
+        find "$TCP_DIR" -maxdepth 1 -name '*.ovpn' -printf '%f\n' 2>/dev/null
+      } | sed 's/\.ovpn$//' | sort -u
+      ;;
+  esac
+}
+
+is_running() {
+  [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+}
+
+cmd_status() {
+  if is_running; then
+    local pid
+    pid="$(cat "$PID_FILE")"
+    echo "Connected (pid $pid), default would be: $(get_default)"
+    ip -brief link show tun0 2>/dev/null || ip -brief link show type tun 2>/dev/null || true
+    ip -4 addr show tun0 2>/dev/null | sed -n 's/.*inet /  inet /p' || true
+  else
+    echo "Disconnected (default server: $(get_default))"
+    exit 1
+  fi
+}
+
+cmd_down() {
+  # Also stop legacy root pid from older installs
+  if [[ -f /run/openvpn-fvpn.pid ]]; then
+    kill "$(cat /run/openvpn-fvpn.pid)" 2>/dev/null || true
+    rm -f /run/openvpn-fvpn.pid
+  fi
+  if ! is_running; then
+    pkill -f 'openvpn --config /etc/openvpn/udp_files/' 2>/dev/null || true
+    pkill -f 'openvpn --config /etc/openvpn/tcp_files/' 2>/dev/null || true
+    rm -f "$PID_FILE"
+    echo "Already disconnected."
+    return 0
+  fi
+  kill "$(cat "$PID_FILE")" 2>/dev/null || true
+  for _ in $(seq 1 20); do
+    is_running || break
+    sleep 0.2
+  done
+  if is_running; then
+    kill -9 "$(cat "$PID_FILE")" 2>/dev/null || true
+  fi
+  rm -f "$PID_FILE"
+  echo "Disconnected."
+}
+
+cmd_up() {
+  local name="${1:-}"
+  [[ -z "$name" ]] && name="$(get_default)"
+  local conf
+  conf="$(resolve_config "$name")"
+  name="$(server_basename "$conf")"
+
+  if [[ ! -f "$AUTH_FILE" ]]; then
+    echo "Credentials missing. Run: fvpn setup" >&2
+    exit 1
+  fi
+
+  if ! has_openvpn_caps; then
+    # One-time Polkit; after setcap, connect stays as the user (no more prompts).
+    if ! pkexec "$0" ensure-caps >/dev/null; then
+      echo "OpenVPN needs NET_ADMIN once. Approve the password dialog or run: fvpn ensure-caps" >&2
+      exit 1
+    fi
+    if ! has_openvpn_caps; then
+      echo "OpenVPN capabilities still missing after ensure-caps." >&2
+      exit 1
+    fi
+  fi
+
+  if is_running; then
+    echo "Already connected. Use: fvpn switch $name" >&2
+    exit 1
+  fi
+
+  # Clear stale pid
+  rm -f "$PID_FILE"
+  ensure_dirs
+  touch "$LOG_FILE"
+  chmod 644 "$LOG_FILE"
+
+  openvpn \
+    --config "$conf" \
+    --auth-user-pass "$AUTH_FILE" \
+    --daemon "openvpn-fvpn" \
+    --writepid "$PID_FILE" \
+    --log-append "$LOG_FILE" \
+    --verb 3 \
+    --dns-updown disable \
+    --pull-filter ignore block-outside-dns \
+    --pull-filter ignore "dhcp-option DNS" \
+    --pull-filter ignore "dhcp-option DNS6" \
+    --script-security 1
+
+  # Wait briefly for init
+  for _ in $(seq 1 40); do
+    if is_running && ip link show tun0 >/dev/null 2>&1; then
+      echo "Connected to $name (tun0)."
+      return 0
+    fi
+    if is_running; then
+      sleep 0.25
+      continue
+    fi
+    echo "Failed to start OpenVPN. Check: fvpn log" >&2
+    tail -n 30 "$LOG_FILE" 2>/dev/null || true
+    exit 1
+  done
+
+  if is_running; then
+    echo "OpenVPN started for $name (interface may still be coming up). Check: fvpn status / fvpn log"
+    return 0
+  fi
+  echo "Connection failed. Check: fvpn log" >&2
+  exit 1
+}
+
+cmd_switch() {
+  local name="${1:?server required}"
+  resolve_config "$name" >/dev/null
+  if is_running; then
+    cmd_down
+    sleep 0.5
+  fi
+  cmd_up "$name"
+}
+
+RANK_PY="$(cd "$(dirname "$0")" && pwd)/fvpn_rank.py"
+
+cmd_rank_status() {
+  python3 "$RANK_PY" status
+}
+
+cmd_rank_stop() {
+  python3 "$RANK_PY" stop
+}
+
+cmd_rank_start() {
+  local mode="${1:?latency|speed}"
+  local proto="${2:-udp}"
+  case "$mode" in
+    latency|speed) ;;
+    *) echo '{"ok":false,"error":"mode must be latency|speed"}' >&2; exit 1 ;;
+  esac
+  if [[ "$mode" == "speed" && ! -f "$AUTH_FILE" ]]; then
+    echo '{"ok":false,"error":"credentials missing"}' >&2
+    exit 1
+  fi
+  ensure_user_state
+  # Start immediately as the user so job.json is live even if settings close.
+  # Speed phase may ask Polkit once from the worker if caps are missing.
+  python3 "$RANK_PY" start "$mode" "$proto"
+}
+
+cmd_log() {
+  if [[ ! -f "$LOG_FILE" ]]; then
+    echo "No log yet at $LOG_FILE"
+    exit 1
+  fi
+  tail -n "${1:-50}" -f "$LOG_FILE"
+}
+
+main() {
+  local cmd="${1:-}"
+  shift || true
+
+  case "$cmd" in
+    ensure)
+      need_root ensure "$@"
+      cmd_ensure
+      ;;
+    setup)
+      cmd_setup
+      ;;
+    setup-stdin)
+      cmd_setup_stdin
+      ;;
+    ready)
+      cmd_ready
+      ;;
+    list)
+      cmd_list "${1:-all}"
+      ;;
+    default)
+      if [[ $# -eq 0 ]]; then
+        echo "$(get_default)"
+      else
+        set_default "$1"
+      fi
+      ;;
+    up)
+      cmd_up "${1:-}"
+      ;;
+    down)
+      cmd_down
+      ;;
+    switch)
+      cmd_switch "${1:?server required}"
+      ;;
+    ensure-caps)
+      cmd_ensure_caps
+      ;;
+    status)
+      cmd_status || true
+      ;;
+    rank-start)
+      cmd_rank_start "${1:?latency|speed}" "${2:-udp}"
+      ;;
+    rank-status)
+      cmd_rank_status
+      ;;
+    rank-stop)
+      cmd_rank_stop
+      ;;
+    log)
+      cmd_log "$@"
+      ;;
+    -h|--help|help|"")
+      usage
+      ;;
+    *)
+      echo "Unknown command: $cmd" >&2
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

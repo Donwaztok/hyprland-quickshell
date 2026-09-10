@@ -20,6 +20,24 @@ ColumnLayout {
 
     spacing: Appearance.spacing.normal
 
+    function closeForPolkit() {
+        if (root.session && root.session.root)
+            root.session.root.close();
+    }
+
+    function toggleVpnMaybeClose(provider) {
+        // FastestVPN may open a one-time Polkit dialog; close CC so it is not behind settings.
+        const name = provider && provider.name;
+        if (name === "fastestvpn" && !VPN.connected) {
+            root.closeForPolkit();
+            Qt.callLater(function () {
+                VPN.toggle();
+            });
+            return;
+        }
+        VPN.toggle();
+    }
+
     Connections {
         target: VPN
         function onConnectedChanged() {
@@ -46,7 +64,8 @@ ColumnLayout {
                 Config.save();
 
                 Qt.callLater(function () {
-                    VPN.toggle();
+                    const target = Config.utilities.vpn.provider[targetIndex];
+                    root.toggleVpnMaybeClose(target);
                 });
             }
         }
@@ -188,7 +207,7 @@ ColumnLayout {
                                 const clickedIndex = modelData.index;
 
                                 if (modelData.enabled) {
-                                    VPN.toggle();
+                                    root.toggleVpnMaybeClose(modelData);
                                 } else {
                                     if (VPN.connected) {
                                         root.pendingSwitchIndex = clickedIndex;
@@ -213,7 +232,7 @@ ColumnLayout {
                                         Config.save();
 
                                         Qt.callLater(function () {
-                                            VPN.toggle();
+                                            root.toggleVpnMaybeClose(modelData);
                                         });
                                     }
                                 }
@@ -513,6 +532,27 @@ ColumnLayout {
                             name: "warp",
                             displayName: "Cloudflare WARP",
                             interface: "CloudflareWARP"
+                        });
+                        Config.utilities.vpn.provider = providers;
+                        Config.save();
+                        vpnDialog.closeWithAnimation();
+                    }
+                }
+
+                TextButton {
+                    Layout.fillWidth: true
+                    text: qsTr("FastestVPN")
+                    inactiveColour: Colours.tPalette.m3surfaceContainerHigh
+                    inactiveOnColour: Colours.palette.m3onSurface
+                    onClicked: {
+                        const providers = [];
+                        for (let i = 0; i < Config.utilities.vpn.provider.length; i++) {
+                            providers.push(Config.utilities.vpn.provider[i]);
+                        }
+                        providers.push({
+                            name: "fastestvpn",
+                            displayName: "FastestVPN",
+                            interface: "tun0"
                         });
                         Config.utilities.vpn.provider = providers;
                         Config.save();

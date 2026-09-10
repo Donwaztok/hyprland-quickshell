@@ -9,7 +9,7 @@ JsonObject {
     property Anim anim: Anim {}
 
     component Rounding: JsonObject {
-        property real scale: 1
+        property real scale: 1.048521056149733
         property int small: 12 * scale
         property int normal: 17 * scale
         property int large: 25 * scale
@@ -26,7 +26,7 @@ JsonObject {
     }
 
     component Padding: JsonObject {
-        property real scale: 1
+        property real scale: 0.7450404786631419
         property int small: 5 * scale
         property int smaller: 7 * scale
         property int normal: 10 * scale
@@ -69,7 +69,7 @@ JsonObject {
     }
 
     component AnimDurations: JsonObject {
-        property real scale: 1
+        property real scale: 0.5
         property int small: 200 * scale
         property int normal: 400 * scale
         property int large: 600 * scale

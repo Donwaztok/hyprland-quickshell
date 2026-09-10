@@ -6,9 +6,9 @@ JsonObject {
     property DesktopClock desktopClock: DesktopClock {}
 
     component DesktopClock: JsonObject {
-        property bool enabled: false
+        property bool enabled: true
         property real scale: 1.0
-        property string position: "bottom-right"
+        property string position: "top-right"
         property bool invertColors: false
         property DesktopClockBackground background: DesktopClockBackground {}
         property DesktopClockShadow shadow: DesktopClockShadow {}

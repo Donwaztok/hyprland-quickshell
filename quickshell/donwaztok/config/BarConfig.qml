@@ -46,9 +46,9 @@ JsonObject {
     component Tray: JsonObject {
         property bool background: false
         property bool recolour: false
-        property bool compact: false
+        property bool compact: true
         property list<var> iconSubs: []
-        property list<string> hiddenIcons: []
+        property list<string> hiddenIcons: ["nm-applet"]
     }
 
     component Status: JsonObject {
@@ -58,11 +58,11 @@ JsonObject {
         property bool showNetwork: true
         property bool showBluetooth: true
         property bool showBattery: true
-        property bool showLockStatus: true
+        property bool showLockStatus: false
     }
 
     component Clock: JsonObject {
-        property bool showIcon: true
+        property bool showIcon: false
     }
 
     component Sizes: JsonObject {

@@ -48,20 +48,10 @@ Item {
 
         visibilities: root.visibilities
         panels: root
+        // Above detached control center so session menu stays usable.
+        z: root.visibilities.session ? 20 : 0
 
         anchors.centerIn: parent
-    }
-
-    Launcher.Wrapper {
-        id: launcher
-
-        screen: root.screen
-        visibilities: root.visibilities
-        panels: root
-
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: Math.round(root.screen.height * 0.38 - Config.launcher.sizes.searchBarHeight / 2)
     }
 
     Dashboard.Wrapper {
@@ -89,6 +79,9 @@ Item {
         id: popouts
 
         screen: root.screen
+        visibilities: root.visibilities
+        // Below launcher/session while they are open.
+        z: isDetached ? 5 : 0
 
         x: {
             if (isDetached)
@@ -116,6 +109,20 @@ Item {
                 return off + diff;
             return Math.max(off, 0);
         }
+    }
+
+    // After popouts so clipboard/launcher stack above detached settings.
+    Launcher.Wrapper {
+        id: launcher
+
+        screen: root.screen
+        visibilities: root.visibilities
+        panels: root
+        z: root.visibilities.launcher ? 10 : 0
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Math.round(root.screen.height * 0.38 - Config.launcher.sizes.searchBarHeight / 2)
     }
 
     Utilities.Wrapper {

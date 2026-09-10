@@ -4,7 +4,7 @@ JsonObject {
     property bool enabled: true
     property bool showOnHover: true
     // Edge attachment: "follow-bar" | "top" | "bottom" | "left" | "right"
-    property string position: "top"
+    property string position: "follow-bar"
     property int mediaUpdateInterval: 500
     property int resourceUpdateInterval: 1000
     property int dragThreshold: 50

@@ -53,7 +53,11 @@ blueman                           # blueman-applet (bar tray; donwaztok status b
 gnome-keyring                     # password and key storage
 gnome-control-center              # Settings (donwaztok utilities, replaces KDE kcm_*)
 gnome-system-monitor              # task manager (donwaztok apps.taskManager)
+# --------------------------------------------------- // Network / VPN
 networkmanager                    # network management
+openvpn                           # OpenVPN client (FastestVPN via fvpn)
+unzip                             # extract FastestVPN .ovpn package
+wget                              # download FastestVPN configs
 polkit-gnome                      # Polkit authentication agent (hypr exec-once)
 sddm                              # display manager (login; independent of KDE apps)
 qt6-5compat                       # Qt5Compat.GraphicalEffects (SDDM Sugar Candy Qt6 / eucalyptus-based theme)

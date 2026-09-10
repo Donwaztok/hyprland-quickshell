@@ -228,5 +228,23 @@ ColumnLayout {
                 Config.save();
             }
         }
+
+        TextButton {
+            Layout.fillWidth: true
+            text: qsTr("+ Add FastestVPN")
+            inactiveColour: Colours.tPalette.m3surfaceContainerHigh
+            inactiveOnColour: Colours.palette.m3onSurface
+
+            onClicked: {
+                const providers = [...Config.utilities.vpn.provider];
+                providers.push({
+                    name: "fastestvpn",
+                    displayName: "FastestVPN",
+                    interface: "tun0"
+                });
+                Config.utilities.vpn.provider = providers;
+                Config.save();
+            }
+        }
     }
 }

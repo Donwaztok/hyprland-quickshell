@@ -4,13 +4,16 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import qs.config
+import qs.utils
 
 Singleton {
     id: root
 
     property bool connected: false
+    property string fvpnPendingAction: "" // "" | "connect"
+    property bool fvpnSystemReady: false
 
-    readonly property bool connecting: connectProc.running || disconnectProc.running
+    readonly property bool connecting: connectProc.running || disconnectProc.running || fvpnEnsureProc.running
     readonly property bool enabled: Config.utilities.vpn.provider.some(p => typeof p === "object" ? (p.enabled === true) : false)
     readonly property var providerInput: {
         const enabledProvider = Config.utilities.vpn.provider.find(p => typeof p === "object" ? (p.enabled === true) : false);
@@ -37,6 +40,8 @@ Singleton {
         return defaults;
     }
 
+    readonly property string fvpnPath: Quickshell.shellPath("scripts/vpn/fvpn")
+
     function getBuiltinDefaults(name, iface) {
         const builtins = {
             "wireguard": {
@@ -62,6 +67,12 @@ Singleton {
                 disconnectCmd: ["tailscale", "down"],
                 interface: "tailscale0",
                 displayName: "Tailscale"
+            },
+            "fastestvpn": {
+                connectCmd: [root.fvpnPath, "up"],
+                disconnectCmd: [root.fvpnPath, "down"],
+                interface: iface || "tun0",
+                displayName: "FastestVPN"
             }
         };
 
@@ -91,6 +102,18 @@ Singleton {
         } else {
             connect();
         }
+    }
+
+    // Survives Control Center close: one-time admin setup, then connect.
+    function ensureSystemThenConnect(closeSettingsFn): void {
+        root.fvpnPendingAction = "connect";
+        if (typeof closeSettingsFn === "function")
+            closeSettingsFn();
+        fvpnEnsureDelay.restart();
+    }
+
+    function startFvpnRank(mode): void {
+        fvpnRankStartProc.exec([root.fvpnPath, "rank-start", mode, "udp"]);
     }
 
     function checkStatus(): void {
@@ -174,5 +197,41 @@ Singleton {
 
         interval: 500
         onTriggered: root.checkStatus()
+    }
+
+    Timer {
+        id: fvpnEnsureDelay
+        interval: 400
+        repeat: false
+        onTriggered: fvpnEnsureProc.exec([root.fvpnPath, "ensure"])
+    }
+
+    Process {
+        id: fvpnEnsureProc
+        onExited: code => {
+            const action = root.fvpnPendingAction;
+            root.fvpnPendingAction = "";
+            if (code === 0) {
+                root.fvpnSystemReady = true;
+                Toaster.toast(qsTr("VPN ready"), qsTr("OpenVPN permission saved — no more admin for Connect."), "vpn_key");
+                if (action === "connect")
+                    root.connect();
+            } else {
+                Toaster.toast(qsTr("Setup cancelled"), qsTr("Approve the password dialog to finish VPN setup."), "error");
+            }
+        }
+    }
+
+    Process {
+        id: fvpnRankStartProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const res = JSON.parse(text.trim());
+                    if (res && res.ok === false)
+                        Toaster.toast(qsTr("Could not start scan"), res.error || "", "error");
+                } catch (e) {}
+            }
+        }
     }
 }

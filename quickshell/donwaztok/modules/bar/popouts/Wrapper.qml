@@ -14,6 +14,7 @@ Item {
     id: root
 
     required property ShellScreen screen
+    property var visibilities
 
     // Keep geometry while a loader is still active (e.g. fade-out transition),
     // but collapse completely when no popout is active anymore.
@@ -44,6 +45,7 @@ Item {
     property string detachedMode
     property string queuedMode
     readonly property bool isDetached: detachedMode.length > 0
+    readonly property bool overlayAboveDetached: !!(visibilities && (visibilities.launcher || visibilities.session))
 
     property int animLength: Appearance.anim.durations.normal
     property list<real> animCurve: Appearance.anim.curves.emphasized
@@ -118,18 +120,39 @@ Item {
         }
     }
 
+    Connections {
+        target: root.visibilities
+
+        function onLauncherChanged(): void {
+            if (root.visibilities?.launcher && root.isDetached) {
+                root.suppressDetachedGrabClear = true;
+                detachedGrabClearTimer.restart();
+            }
+        }
+
+        function onSessionChanged(): void {
+            if (root.visibilities?.session && root.isDetached) {
+                root.suppressDetachedGrabClear = true;
+                detachedGrabClearTimer.restart();
+            }
+        }
+    }
+
     HyprlandFocusGrab {
-        active: root.isDetached
+        // Yield keyboard grab to launcher/session while settings stay open underneath.
+        active: root.isDetached && !root.overlayAboveDetached
         windows: [QsWindow.window]
         onCleared: {
             if (root.suppressDetachedGrabClear)
+                return;
+            if (root.overlayAboveDetached)
                 return;
             root.close();
         }
     }
 
     Binding {
-        when: root.isDetached
+        when: root.isDetached && !root.overlayAboveDetached
 
         target: QsWindow.window
         property: "WlrLayershell.keyboardFocus"

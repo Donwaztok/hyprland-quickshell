@@ -28,6 +28,7 @@
 !mpv/**
 !donwaztok/
 !donwaztok/**
+donwaztok/config.json
 
 # Arquivos soltos em .config (end-4)
 !starship.toml

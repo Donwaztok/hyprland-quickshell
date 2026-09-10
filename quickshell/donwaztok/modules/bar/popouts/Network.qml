@@ -20,10 +20,58 @@ ColumnLayout {
 
     readonly property bool summaryIsWifi: !Nmcli.activeEthernet && Nmcli.active
     readonly property var activeDetails: Nmcli.activeEthernet ? Nmcli.ethernetDeviceDetails : Nmcli.wirelessDeviceDetails
-    readonly property bool showActiveSummary: Nmcli.activeEthernet || Nmcli.active
+    readonly property bool showActiveSummary: Nmcli.activeEthernet || Nmcli.active || VPN.connected || VPN.connecting
+    property int pendingVpnSwitchIndex: -1
 
     spacing: Appearance.spacing.small
     width: Config.bar.sizes.networkWidth
+
+    function enableVpnProvider(index) {
+        const providers = [];
+        for (let i = 0; i < Config.utilities.vpn.provider.length; i++) {
+            const p = Config.utilities.vpn.provider[i];
+            if (typeof p === "object") {
+                providers.push({
+                    name: p.name,
+                    displayName: p.displayName,
+                    interface: p.interface,
+                    enabled: i === index
+                });
+            } else {
+                providers.push(p);
+            }
+        }
+        Config.utilities.vpn.provider = providers;
+        Config.save();
+    }
+
+    function toggleVpnProvider(provider) {
+        if (!provider)
+            return;
+        if (provider.enabled) {
+            VPN.toggle();
+            return;
+        }
+        if (VPN.connected) {
+            root.pendingVpnSwitchIndex = provider.index;
+            VPN.disconnect();
+            return;
+        }
+        root.enableVpnProvider(provider.index);
+        Qt.callLater(() => VPN.connect());
+    }
+
+    Connections {
+        target: VPN
+        function onConnectedChanged() {
+            if (!VPN.connected && root.pendingVpnSwitchIndex >= 0) {
+                const idx = root.pendingVpnSwitchIndex;
+                root.pendingVpnSwitchIndex = -1;
+                root.enableVpnProvider(idx);
+                Qt.callLater(() => VPN.connect());
+            }
+        }
+    }
 
     Connections {
         target: root.wrapper
@@ -171,6 +219,33 @@ ColumnLayout {
             }
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: Appearance.font.size.small
+        }
+
+        RowLayout {
+            visible: VPN.connected || VPN.connecting
+            Layout.fillWidth: true
+            Layout.topMargin: Appearance.spacing.small / 2
+            spacing: Appearance.spacing.small
+
+            MaterialIcon {
+                text: VPN.connected ? "vpn_key" : "vpn_key_off"
+                color: Colours.palette.m3primary
+                fill: VPN.connected ? 1 : 0
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: {
+                    const name = VPN.currentConfig ? (VPN.currentConfig.displayName || "VPN") : "VPN";
+                    if (VPN.connecting)
+                        return qsTr("VPN: connecting… (%1)").arg(name);
+                    return qsTr("VPN: %1").arg(name);
+                }
+                color: Colours.palette.m3primary
+                font.pointSize: Appearance.font.size.small
+                font.weight: 500
+            }
         }
     }
 
@@ -473,6 +548,133 @@ ColumnLayout {
                     color: ethernetItem.modelData.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
 
                     opacity: ethernetItem.loading ? 0 : 1
+
+                    Behavior on opacity {
+                        Anim {}
+                    }
+                }
+            }
+        }
+    }
+
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 1
+        Layout.topMargin: Appearance.spacing.normal
+        color: Colours.palette.m3outlineVariant
+        visible: Config.utilities.vpn.provider.length > 0
+    }
+
+    // VPN section
+    StyledText {
+        visible: Config.utilities.vpn.provider.length > 0
+        Layout.topMargin: Appearance.spacing.small
+        Layout.rightMargin: Appearance.padding.small
+        text: qsTr("VPN")
+        font.weight: 500
+    }
+
+    StyledText {
+        visible: Config.utilities.vpn.provider.length > 0
+        Layout.topMargin: Appearance.spacing.small
+        Layout.rightMargin: Appearance.padding.small
+        text: qsTr("%1 configured").arg(Config.utilities.vpn.provider.length)
+        color: Colours.palette.m3onSurfaceVariant
+        font.pointSize: Appearance.font.size.small
+    }
+
+    Repeater {
+        model: ScriptModel {
+            values: Config.utilities.vpn.provider.map((provider, index) => {
+                const isObject = typeof provider === "object";
+                const name = isObject ? (provider.name || "custom") : String(provider);
+                const displayName = isObject ? (provider.displayName || name) : name;
+                const iface = isObject ? (provider.interface || "") : "";
+                const enabled = isObject ? (provider.enabled === true) : false;
+                return {
+                    index: index,
+                    name: name,
+                    displayName: displayName,
+                    interface: iface,
+                    enabled: enabled
+                };
+            })
+        }
+
+        RowLayout {
+            id: vpnItem
+
+            required property var modelData
+
+            readonly property bool isActiveProvider: modelData.enabled
+            readonly property bool isConnected: isActiveProvider && VPN.connected
+            readonly property bool isBusy: VPN.connecting && isActiveProvider
+
+            Layout.fillWidth: true
+            Layout.rightMargin: Appearance.padding.small
+            spacing: Appearance.spacing.small
+
+            opacity: 0
+            scale: 0.7
+
+            Component.onCompleted: {
+                opacity = 1;
+                scale = 1;
+            }
+
+            Behavior on opacity {
+                Anim {}
+            }
+
+            Behavior on scale {
+                Anim {}
+            }
+
+            MaterialIcon {
+                text: vpnItem.isConnected ? "vpn_key" : "vpn_key_off"
+                fill: vpnItem.isConnected ? 1 : 0
+                color: vpnItem.isConnected ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+            }
+
+            StyledText {
+                Layout.leftMargin: Appearance.spacing.small / 2
+                Layout.rightMargin: Appearance.spacing.small / 2
+                Layout.fillWidth: true
+                text: vpnItem.modelData.displayName
+                elide: Text.ElideRight
+                font.weight: vpnItem.isConnected ? 500 : 400
+                color: vpnItem.isConnected ? Colours.palette.m3primary : Colours.palette.m3onSurface
+            }
+
+            StyledRect {
+                implicitWidth: implicitHeight
+                implicitHeight: vpnConnectIcon.implicitHeight + Appearance.padding.small
+
+                radius: Appearance.rounding.full
+                color: Qt.alpha(Colours.palette.m3primary, vpnItem.isConnected ? 1 : 0)
+
+                CircularIndicator {
+                    anchors.fill: parent
+                    running: vpnItem.isBusy
+                }
+
+                StateLayer {
+                    color: vpnItem.isConnected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    disabled: vpnItem.isBusy
+
+                    function onClicked(): void {
+                        root.toggleVpnProvider(vpnItem.modelData);
+                    }
+                }
+
+                MaterialIcon {
+                    id: vpnConnectIcon
+
+                    anchors.centerIn: parent
+                    animate: true
+                    text: vpnItem.isConnected ? "link_off" : "link"
+                    color: vpnItem.isConnected ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
+                    opacity: vpnItem.isBusy ? 0 : 1
 
                     Behavior on opacity {
                         Anim {}

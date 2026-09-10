@@ -89,7 +89,7 @@ Singleton {
             property JsonObject shell: JsonObject {
 
             property JsonObject policies: JsonObject {
-                property int weeb: 1 // 0: No | 1: Open | 2: Closet
+                property int weeb: 0 // 0: No | 1: Open | 2: Closet
             }
 
             property JsonObject appearance: JsonObject {
@@ -116,14 +116,14 @@ Singleton {
             }
 
             property JsonObject apps: JsonObject {
-                property string bluetooth: "gnome-control-center bluetooth"
-                property string changePassword: "kitty -1 --hold=yes zsh -ic 'passwd'"
-                property string network: "gnome-control-center wifi"
-                property string manageUser: "gnome-control-center user-accounts"
-                property string networkEthernet: "gnome-control-center network"
-                property string taskManager: "gnome-system-monitor"
+                property string bluetooth: "kcmshell6 kcm_bluetooth"
+                property string changePassword: "kitty -1 --hold=yes zsh -i -c 'passwd'"
+                property string network: "kcmshell6 kcm_networkmanagement"
+                property string manageUser: "kcmshell6 kcm_users"
+                property string networkEthernet: "kcmshell6 kcm_networkmanagement"
+                property string taskManager: "plasma-systemmonitor --page-name Processes"
                 property string terminal: "kitty -1" // This is only for shell actions
-                property string update: "kitty -1 --hold=yes zsh -ic 'pkexec pacman -Syu'"
+                property string update: "kitty -1 --hold=yes zsh -i -c 'pkexec pacman -Syu'"
                 property string volumeMixer: `~/.config/hypr/hyprland/scripts/launch_first_available.sh "pavucontrol-qt" "pavucontrol"`
             }
 
@@ -131,12 +131,12 @@ Singleton {
                 property real size: 0.8 // Bar scale (height when horizontal, width when vertical)
                 property bool bottom: false // Instead of top
                 property int cornerStyle: 0 // 0: Hug | 1: Float | 2: Plain rectangle
-                property bool borderless: false // legacy: no grouping (kept for compat)
-                property int groupStyle: 0 // 0: Pills | 1: Line-separated | 2: Empty (no divider)
+                property bool borderless: true // legacy: no grouping (kept for compat)
+                property int groupStyle: 2 // 0: Pills | 1: Line-separated | 2: Empty (no divider)
                 property bool verbose: true
                 property bool vertical: false
                 property JsonObject weather: JsonObject {
-                    property bool enable: false
+                    property bool enable: true
                     property bool enableGPS: true // gps based location
                     property string city: "" // When 'enableGPS' is false
                     property bool useUSCS: false // Instead of metric (SI) units
@@ -164,8 +164,8 @@ Singleton {
                 // 10:  | 11:  | 12:  | 13:  | 14: 󱄛
                 property string superKey: ""
                 property bool useMacSymbol: false
-                property bool useMouseSymbol: false
-                property bool useFnSymbol: false
+                property bool useMouseSymbol: true
+                property bool useFnSymbol: true
                 property JsonObject fontSize: JsonObject {
                     property int key: 12
                     property int comment: 12
@@ -274,7 +274,7 @@ Singleton {
             }
 
             property JsonObject sounds: JsonObject {
-                property bool battery: false
+                property bool battery: true
                 property bool pomodoro: false
                 property string theme: "freedesktop"
             }

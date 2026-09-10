@@ -12,7 +12,7 @@ JsonObject {
     property bool enableDangerousActions: false // Show launcher actions marked dangerous (add your own via donwaztok config)
     property int dragThreshold: 50
     property bool vimKeybinds: false
-    property real cardOpacity: 0.88
+    property real cardOpacity: 0.98
     property real verticalAnchor: 0.38
     property list<string> favouriteApps: []
     property list<string> hiddenApps: []
@@ -38,11 +38,35 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Scheme",
+            icon: "palette",
+            description: "Change the current colour scheme",
+            command: ["autocomplete", "scheme"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Wallpaper",
             icon: "image",
             description: "Change the current wallpaper",
             command: ["autocomplete", "wallpaper"],
             enabled: true,
+            dangerous: false
+        },
+        {
+            name: "Variant",
+            icon: "colors",
+            description: "Change the current scheme variant",
+            command: ["autocomplete", "variant"],
+            enabled: true,
+            dangerous: false
+        },
+        {
+            name: "Transparency",
+            icon: "opacity",
+            description: "Change shell transparency",
+            command: ["autocomplete", "transparency"],
+            enabled: false,
             dangerous: false
         },
         {
@@ -70,10 +94,34 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Shutdown",
+            icon: "power_settings_new",
+            description: "Shutdown the system",
+            command: ["systemctl", "poweroff"],
+            enabled: true,
+            dangerous: true
+        },
+        {
+            name: "Reboot",
+            icon: "cached",
+            description: "Reboot the system",
+            command: ["systemctl", "reboot"],
+            enabled: true,
+            dangerous: true
+        },
+        {
+            name: "Logout",
+            icon: "exit_to_app",
+            description: "Log out of the current session",
+            command: ["loginctl", "terminate-user", ""],
+            enabled: true,
+            dangerous: true
+        },
+        {
             name: "Lock",
             icon: "lock",
             description: "Lock the current session",
-            command: ["bash", "-c", "hyprctl dispatch global donwaztok:lock 2>/dev/null || loginctl lock-session"],
+            command: ["loginctl", "lock-session"],
             enabled: true,
             dangerous: false
         },

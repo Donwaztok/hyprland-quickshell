@@ -175,6 +175,10 @@ Item {
                     pointSizeScale: Config.barThicknessScale
                     animate: true
                     text: {
+                        if (VPN.connected)
+                            return "vpn_key";
+                        if (VPN.connecting)
+                            return "vpn_key_off";
                         if (Nmcli.activeEthernet)
                             return "computer";
                         if (!Nmcli.wifiEnabled)
@@ -183,6 +187,7 @@ Item {
                             return Icons.getNetworkIcon(Nmcli.active.strength ?? 0, Nmcli.active.isSecure);
                         return "wifi_off";
                     }
+                    fill: VPN.connected ? 1 : 0
                     color: root.colour
                 }
 
