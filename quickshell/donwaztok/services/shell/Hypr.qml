@@ -2,6 +2,7 @@ pragma Singleton
 
 import qs.components.misc
 import qs.config
+import qs.utils
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
@@ -85,7 +86,13 @@ Singleton {
     }
 
     function reloadDynamicConfs(): void {
-        extras.batchMessage(["keyword bindlni ,Caps_Lock,global,donwaztok:refreshDevices", "keyword bindlni ,Num_Lock,global,donwaztok:refreshDevices"]);
+        // Hyprland Lua config rejects `keyword`; use `eval` + hl.bind (works while locked).
+        extras.batchMessage([
+            'eval hl.bind("Caps_Lock", hl.dsp.global("donwaztok:refreshDevices"), { locked = true, non_consuming = true, ignore_mods = true })',
+            'eval hl.bind("Caps_Lock", hl.dsp.global("donwaztok:refreshDevices"), { locked = true, non_consuming = true, ignore_mods = true, release = true })',
+            'eval hl.bind("Num_Lock", hl.dsp.global("donwaztok:refreshDevices"), { locked = true, non_consuming = true, ignore_mods = true })',
+            'eval hl.bind("Num_Lock", hl.dsp.global("donwaztok:refreshDevices"), { locked = true, non_consuming = true, ignore_mods = true, release = true })'
+        ]);
     }
 
     Component.onCompleted: reloadDynamicConfs()
@@ -208,6 +215,7 @@ Singleton {
     CustomShortcut {
         name: "refreshDevices"
         description: "Reload devices"
+        // Caps/Num LED state often settles just after the key event.
         onPressed: extras.refreshDevices()
         onReleased: extras.refreshDevices()
     }

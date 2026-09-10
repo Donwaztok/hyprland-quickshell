@@ -232,24 +232,18 @@ ColumnLayout {
             id: stateMessage
 
             readonly property string msg: {
-                if (Hypr.kbLayout !== Hypr.defaultKbLayout) {
-                    if (Hypr.capsLock && Hypr.numLock)
-                        return qsTr("Caps lock and Num lock are ON.\nKeyboard layout: %1").arg(Hypr.kbLayoutFull);
-                    if (Hypr.capsLock)
-                        return qsTr("Caps lock is ON. Kb layout: %1").arg(Hypr.kbLayoutFull);
-                    if (Hypr.numLock)
-                        return qsTr("Num lock is ON. Kb layout: %1").arg(Hypr.kbLayoutFull);
-                    return qsTr("Keyboard layout: %1").arg(Hypr.kbLayoutFull);
-                }
+                const parts = [];
+                const layout = Hypr.kbLayoutFull;
+                const layoutKnown = layout && layout !== "Unknown";
 
-                if (Hypr.capsLock && Hypr.numLock)
-                    return qsTr("Caps lock and Num lock are ON.");
+                if (layoutKnown)
+                    parts.push(Hypr.kbLayout !== "??" ? Hypr.kbLayout.toUpperCase() : layout);
                 if (Hypr.capsLock)
-                    return qsTr("Caps lock is ON.");
+                    parts.push("CAPS");
                 if (Hypr.numLock)
-                    return qsTr("Num lock is ON.");
+                    parts.push("NUM");
 
-                return "";
+                return parts.join(" · ");
             }
 
             property bool shouldBeVisible

@@ -47,8 +47,8 @@ QtObject {
             closeTimer.start();
     }
 
-    Timer {
-        id: closeTimer
+    // QtObject has no default property; Timer must be a named property.
+    property Timer closeTimer: Timer {
         interval: root.timeout
         repeat: false
         onTriggered: root.close()

@@ -1,17 +1,34 @@
 pragma ComponentBehavior: Bound
 
+import qs.services.shell
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
+import QtQuick
 
 Scope {
+    id: root
+
     property alias lock: lock
+
+    function activateLock(): void {
+        Hypr.extras.refreshDevices();
+        lock.locked = true;
+    }
 
     WlSessionLock {
         id: lock
 
         signal unlock
+
+        // While locked, global shortcuts can be flaky; keep Caps/Num/layout in sync.
+        Timer {
+            running: lock.locked
+            interval: 300
+            repeat: true
+            onTriggered: Hypr.extras.refreshDevices()
+        }
 
         LockSurface {
             id: lockSurface
@@ -31,7 +48,7 @@ Scope {
         appid: "donwaztok"
         name: "lock"
         description: "Lock the current session"
-        onPressed: lock.locked = true
+        onPressed: root.activateLock()
     }
 
     GlobalShortcut {
@@ -55,11 +72,11 @@ Scope {
         target: "lock"
 
         function activate(): void {
-            lock.locked = true;
+            root.activateLock();
         }
 
         function lock(): void {
-            lock.locked = true;
+            root.activateLock();
         }
 
         function unlock(): void {
