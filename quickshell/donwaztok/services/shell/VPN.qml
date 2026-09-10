@@ -5,6 +5,7 @@ import Quickshell.Io
 import QtQuick
 import qs.config
 import qs.utils
+import qs.modules.utilities.toasts
 
 Singleton {
     id: root
@@ -12,6 +13,15 @@ Singleton {
     property bool connected: false
     property string fvpnPendingAction: "" // "" | "connect"
     property bool fvpnSystemReady: false
+    property bool statusReady: false
+    property bool userDisconnecting: false
+    property bool userConnecting: false
+    property bool speedProbeQuiet: false
+
+    readonly property string fvpnCacheDir: {
+        const home = Quickshell.env("HOME") || "";
+        return `${home}/.cache/donwaztok/fvpn-cache`;
+    }
 
     readonly property bool connecting: connectProc.running || disconnectProc.running || fvpnEnsureProc.running
     readonly property bool enabled: Config.utilities.vpn.provider.some(p => typeof p === "object" ? (p.enabled === true) : false)
@@ -40,6 +50,7 @@ Singleton {
         return defaults;
     }
 
+    readonly property string displayName: root.currentConfig ? (root.currentConfig.displayName || "VPN") : "VPN"
     readonly property string fvpnPath: Quickshell.shellPath("scripts/vpn/fvpn")
 
     function getBuiltinDefaults(name, iface) {
@@ -86,12 +97,14 @@ Singleton {
 
     function connect(): void {
         if (!connected && !connecting && root.currentConfig && root.currentConfig.connectCmd) {
+            root.userConnecting = true;
             connectProc.exec(root.currentConfig.connectCmd);
         }
     }
 
     function disconnect(): void {
         if (connected && !connecting && root.currentConfig && root.currentConfig.disconnectCmd) {
+            root.userDisconnecting = true;
             disconnectProc.exec(root.currentConfig.disconnectCmd);
         }
     }
@@ -122,19 +135,62 @@ Singleton {
         }
     }
 
-    onConnectedChanged: {
+    function notifyConnected(): void {
         if (!Config.utilities.toasts.vpnChanged)
             return;
+        Toaster.toast(qsTr("VPN connected"), qsTr("Connected to %1").arg(root.displayName), "vpn_key", Toast.Success);
+    }
 
-        const displayName = root.currentConfig ? (root.currentConfig.displayName || "VPN") : "VPN";
-        if (connected) {
-            Toaster.toast(qsTr("VPN connected"), qsTr("Connected to %1").arg(displayName), "vpn_key");
+    function notifyDisconnected(unexpected): void {
+        if (!Config.utilities.toasts.vpnChanged)
+            return;
+        if (unexpected) {
+            Toaster.toast(
+                qsTr("VPN dropped"),
+                qsTr("%1 disconnected unexpectedly (network or server issue).").arg(root.displayName),
+                "vpn_key_off",
+                Toast.Warning
+            );
         } else {
-            Toaster.toast(qsTr("VPN disconnected"), qsTr("Disconnected from %1").arg(displayName), "vpn_key_off");
+            Toaster.toast(qsTr("VPN disconnected"), qsTr("Disconnected from %1").arg(root.displayName), "vpn_key_off", Toast.Info);
         }
     }
 
-    Component.onCompleted: root.enabled && statusCheckTimer.start()
+    onConnectedChanged: {
+        // Ignore initial status and speed-probe tun flaps (ranking reconnects).
+        if (!root.statusReady || root.speedProbeQuiet)
+            return;
+
+        if (connected) {
+            root.userConnecting = false;
+            root.userDisconnecting = false;
+            root.notifyConnected();
+            pollTimer.interval = 2000;
+            pollTimer.start();
+        } else {
+            const unexpected = !root.userDisconnecting;
+            root.userDisconnecting = false;
+            root.userConnecting = false;
+            root.notifyDisconnected(unexpected);
+            pollTimer.interval = 8000;
+        }
+    }
+
+    onEnabledChanged: {
+        if (root.enabled) {
+            pollTimer.start();
+            statusCheckTimer.start();
+        } else {
+            pollTimer.stop();
+        }
+    }
+
+    Component.onCompleted: {
+        if (root.enabled) {
+            statusCheckTimer.start();
+            pollTimer.start();
+        }
+    }
 
     Process {
         id: nmMonitor
@@ -157,7 +213,13 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 const iface = root.currentConfig ? root.currentConfig.interface : "";
-                root.connected = iface && text.includes(iface + ":");
+                const up = !!(iface && text.includes(iface + ":"));
+                if (!root.statusReady) {
+                    root.connected = up;
+                    root.statusReady = true;
+                    return;
+                }
+                root.connected = up;
             }
         }
     }
@@ -165,7 +227,20 @@ Singleton {
     Process {
         id: connectProc
 
-        onExited: statusCheckTimer.start()
+        onExited: code => {
+            statusCheckTimer.start();
+            if (code !== 0 && !root.connected) {
+                root.userConnecting = false;
+                if (Config.utilities.toasts.vpnChanged) {
+                    Toaster.toast(
+                        qsTr("VPN connection failed"),
+                        qsTr("Could not connect to %1.").arg(root.displayName),
+                        "error",
+                        Toast.Error
+                    );
+                }
+            }
+        }
         stderr: StdioCollector {
             onStreamFinished: {
                 const error = text.trim();
@@ -199,6 +274,15 @@ Singleton {
         onTriggered: root.checkStatus()
     }
 
+    // Detect unexpected drops (OpenVPN dying, server kick, network loss).
+    Timer {
+        id: pollTimer
+        interval: 8000
+        repeat: true
+        running: false
+        onTriggered: root.checkStatus()
+    }
+
     Timer {
         id: fvpnEnsureDelay
         interval: 400
@@ -213,11 +297,11 @@ Singleton {
             root.fvpnPendingAction = "";
             if (code === 0) {
                 root.fvpnSystemReady = true;
-                Toaster.toast(qsTr("VPN ready"), qsTr("OpenVPN permission saved — no more admin for Connect."), "vpn_key");
+                Toaster.toast(qsTr("VPN ready"), qsTr("OpenVPN permission saved — no more admin for Connect."), "vpn_key", Toast.Success);
                 if (action === "connect")
                     root.connect();
             } else {
-                Toaster.toast(qsTr("Setup cancelled"), qsTr("Approve the password dialog to finish VPN setup."), "error");
+                Toaster.toast(qsTr("Setup cancelled"), qsTr("Approve the password dialog to finish VPN setup."), "error", Toast.Error);
             }
         }
     }
@@ -229,8 +313,22 @@ Singleton {
                 try {
                     const res = JSON.parse(text.trim());
                     if (res && res.ok === false)
-                        Toaster.toast(qsTr("Could not start scan"), res.error || "", "error");
+                        Toaster.toast(qsTr("Could not start scan"), res.error || "", "error", Toast.Error);
                 } catch (e) {}
+            }
+        }
+    }
+
+    FileView {
+        path: `${root.fvpnCacheDir}/job.json`
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                const job = JSON.parse(text());
+                root.speedProbeQuiet = job.status === "running" && job.mode === "speed";
+            } catch (e) {
+                root.speedProbeQuiet = false;
             }
         }
     }

@@ -1,6 +1,8 @@
 import QtQuick
 
 QtObject {
+    id: root
+
     enum Type {
         Info = 0,
         Success = 1,
@@ -14,7 +16,41 @@ QtObject {
     property string icon: ""
     property int timeout: 5000
     property int type: Toast.Info
-    function close() { closed = true }
-    function lock(sender) {}
-    function unlock(sender) {}
+
+    signal finishedClose
+
+    property var _locks: []
+
+    function close() {
+        if (root.closed)
+            return;
+        root.closed = true;
+        if (root._locks.length === 0)
+            root.finishedClose();
+    }
+
+    function lock(sender) {
+        if (!sender)
+            return;
+        if (root._locks.indexOf(sender) < 0)
+            root._locks = root._locks.concat([sender]);
+    }
+
+    function unlock(sender) {
+        root._locks = root._locks.filter(s => s !== sender);
+        if (root.closed && root._locks.length === 0)
+            root.finishedClose();
+    }
+
+    Component.onCompleted: {
+        if (root.timeout > 0)
+            closeTimer.start();
+    }
+
+    Timer {
+        id: closeTimer
+        interval: root.timeout
+        repeat: false
+        onTriggered: root.close()
+    }
 }

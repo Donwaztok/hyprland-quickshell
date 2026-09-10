@@ -1,6 +1,8 @@
 import qs.components.misc
 import qs.config
 import qs.services.shell
+import qs.utils
+import qs.modules.utilities.toasts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
