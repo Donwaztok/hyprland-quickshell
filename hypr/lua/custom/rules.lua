@@ -41,7 +41,6 @@ local opacityRules = {
     { class = "^([Ss]team)$", opacity = "0.95 0.95" },
     { class = "^(steamwebhelper)$", opacity = "0.95 0.95" },
     { class = "^([Ss]potify)$", opacity = "0.95 0.95" },
-    { class = "^((.*)Nautilus(.*))$", opacity = "0.95 0.95" },
     { class = "^(polkit-gnome-authentication-agent-1)$", opacity = "0.95 0.95" },
     { class = "^(org.freedesktop.impl.portal.desktop.gtk)$", opacity = "0.95 0.95" },
     { class = "^(org.freedesktop.impl.portal.desktop.hyprland)$", opacity = "0.95 0.95" },

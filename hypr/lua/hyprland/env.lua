@@ -17,6 +17,8 @@ hl.env(
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
 hl.env("QT_QUICK_CONTROLS_STYLE", "Basic")
+-- Quiet MPRIS Position warnings when Firefox/Chromium buses disappear mid-update
+hl.env("QT_LOGGING_RULES", "quickshell.dbus.properties.warning=false")
 hl.env("XDG_MENU_PREFIX", "gnome-")
 
 -- Virtual environment

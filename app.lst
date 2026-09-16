@@ -103,7 +103,6 @@ wlogout                           # Wayland logout screen
 cursor-bin                        # Cursor IDE
 eog                               # Eye of GNOME (image viewer)
 kitty                             # GPU-accelerated terminal
-nautilus                          # GNOME file manager
 solaar                            # Logitech device manager (battery, etc.)
 thunderbird                       # email client
 zapzap                            # WhatsApp client

@@ -223,12 +223,46 @@ hl.bind("SUPER + T", hl.dsp.exec_cmd(launchScript .. " " .. terminalApps), hidde
 hl.bind("CTRL + ALT + T", hl.dsp.exec_cmd(launchScript .. " " .. terminalApps), hidden)
 hl.bind(
     "SUPER + E",
-    hl.dsp.exec_cmd(
-        launchScript
-            .. ' "nautilus" "nemo" "thunar" "${TERMINAL}" "kitty -1 zsh -c yazi"'
-    ),
-    { description = "Apps: File manager" }
+    hl.dsp.global("donwaztok:fileManagerToggle"),
+    { description = "Apps: Donwaztok Files" }
 )
+
+---------------------------------------------------------------------------
+-- Donwaztok Files (Quickshell FloatingWindow)
+--
+-- Hyprland registers these globally (no window-class filter). QML only
+-- runs the action when the Files window is focused (isFmFocused).
+-- non_consuming = true so other apps still receive the same key.
+-- Needed because Qt FloatingWindow often misses modifiers / nav keys /
+-- mouse back-forward; do not replace with hyprctl inside the bind.
+---------------------------------------------------------------------------
+local fm = { non_consuming = true }
+local fmMouse = { mouse = true, non_consuming = true }
+local fmRelease = { release = true, non_consuming = true }
+
+-- Navigation
+hl.bind("ALT + Left", hl.dsp.global("donwaztok:fileManagerBack"), fm)
+hl.bind("ALT + Right", hl.dsp.global("donwaztok:fileManagerForward"), fm)
+hl.bind("mouse:275", hl.dsp.global("donwaztok:fileManagerBack"), fmMouse)
+hl.bind("mouse:276", hl.dsp.global("donwaztok:fileManagerForward"), fmMouse)
+hl.bind("F5", hl.dsp.global("donwaztok:fileManagerRefresh"), fm)
+
+-- Edit (Cut / Undo / permanent delete — Shift+Delete is stolen by StandardKey.Cut in Qt)
+hl.bind("CTRL + X", hl.dsp.global("donwaztok:fileManagerCut"), fm)
+hl.bind("CTRL + Z", hl.dsp.global("donwaztok:fileManagerUndo"), fm)
+hl.bind("SHIFT + Delete", hl.dsp.global("donwaztok:fileManagerDeletePermanent"), fm)
+hl.bind("SHIFT + KP_Delete", hl.dsp.global("donwaztok:fileManagerDeletePermanent"), fm)
+
+-- Modifier tracking for Shift/Ctrl+click selection (pointer state rarely reaches FloatingWindow)
+hl.bind("Shift_L", hl.dsp.global("donwaztok:fileManagerShiftDown"), fm)
+hl.bind("Shift_L", hl.dsp.global("donwaztok:fileManagerShiftUp"), fmRelease)
+hl.bind("Shift_R", hl.dsp.global("donwaztok:fileManagerShiftDown"), fm)
+hl.bind("Shift_R", hl.dsp.global("donwaztok:fileManagerShiftUp"), fmRelease)
+hl.bind("Control_L", hl.dsp.global("donwaztok:fileManagerCtrlDown"), fm)
+hl.bind("Control_L", hl.dsp.global("donwaztok:fileManagerCtrlUp"), fmRelease)
+hl.bind("Control_R", hl.dsp.global("donwaztok:fileManagerCtrlDown"), fm)
+hl.bind("Control_R", hl.dsp.global("donwaztok:fileManagerCtrlUp"), fmRelease)
+
 hl.bind(
     "SUPER + F",
     hl.dsp.exec_cmd(

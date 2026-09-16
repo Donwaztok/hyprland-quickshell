@@ -24,11 +24,11 @@ Item {
     }
 
     Timer {
-        running: Players.active?.isPlaying ?? false
+        running: Players.canTrackPosition(Players.active)
         interval: Config.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
-        onTriggered: Players.active?.positionChanged()
+        onTriggered: Players.refreshActivePosition()
     }
 
     ServiceRef {

@@ -1,0 +1,6 @@
+module qs.modules.shell.fileManager
+FileManager 1.0 FileManager.qml
+FileManagerContent 1.0 FileManagerContent.qml
+FileManagerSession 1.0 FileManagerSession.qml
+FmThumb 1.0 FmThumb.qml
+FmToastHost 1.0 FmToastHost.qml

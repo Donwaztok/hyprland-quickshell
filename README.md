@@ -42,7 +42,7 @@ chmod +x install.sh
 
 `install.sh` sets mirrors, installs packages from `app.lst`, themes (cursor, SDDM, GTK, icons, GRUB), desktop files under `~/.local/share/applications/`, and services (sddm, NetworkManager, bluetooth, ydotool).
 
-**Handy shortcuts:** Super+/ — shortcut list; Super+Enter — terminal (Kitty).
+**Handy shortcuts:** Super+/ — shortcut list; Super+Enter — terminal (Kitty); Super+E — Donwaztok Files.
 
 **Packages:** see `app.lst`; typical install: `yay --removemake --cleanafter -S $(awk '!/^#/ {print $1}' app.lst)`. Quickshell usually comes from `quickshell-git` (AUR).
 
