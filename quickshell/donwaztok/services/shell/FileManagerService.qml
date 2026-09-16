@@ -9,10 +9,19 @@ import QtQuick
 Singleton {
     id: root
 
-    readonly property string script: Quickshell.shellPath("scripts/files/fm.py")
+    readonly property string binary: Quickshell.shellPath("bin/fm")
+    readonly property string script: Quickshell.shellPath("scripts/files/fm.py") // legacy; prefer binary
     readonly property string home: {
         const h = Paths.home || Quickshell.env("HOME") || "";
         return h.length ? h : "/";
+    }
+
+    /** Build argv for the Rust fm helper: fm <subcommand> … */
+    function fm(args: list<string>): list<string> {
+        const out = [root.binary];
+        for (let i = 0; i < args.length; ++i)
+            out.push(args[i]);
+        return out;
     }
 
     property string dirDownloads: `${home}/Downloads`
@@ -43,12 +52,161 @@ Singleton {
     property string clipboardMode: ""
     property var clipboardPaths: []
 
+    // Job queue (one process at a time; UI can show several stacked)
+    property var jobQueue: []
+    property int jobSeq: 0
+    property string currentJobId: ""
+
     property bool jobActive: false
     property bool jobSettled: false
     property real jobProgress: 0
     property string jobLabel: ""
     property string jobKind: ""
     property var jobOwner: null
+
+    function iconForKind(kind: string): string {
+        if (kind === "extract")
+            return "folder_zip";
+        if (kind === "compress")
+            return "archive";
+        if (kind === "move")
+            return "drive_file_move";
+        if (kind === "copy")
+            return "content_copy";
+        if (kind === "trash" || kind === "delete" || kind === "empty-trash")
+            return "delete";
+        if (kind === "restore" || kind === "undo-move")
+            return "undo";
+        if (kind === "mkdir")
+            return "create_new_folder";
+        return "progress_activity";
+    }
+
+    function startJob(kind: string, label: string, command: list<string>, owner: var, renameAfter: string): void {
+        root.jobSeq += 1;
+        const id = "job-" + root.jobSeq;
+        const item = {
+            id: id,
+            kind: kind,
+            label: label || qsTr("Working…"),
+            progress: 0,
+            status: "pending",
+            command: command,
+            owner: owner || null,
+            renameAfter: renameAfter || ""
+        };
+        root.jobQueue = root.jobQueue.concat([item]);
+        root.jobActive = true;
+        root.jobSettled = false;
+        if (!root.currentJobId)
+            root.pumpQueue();
+        else
+            root.syncLegacyJobProps();
+    }
+
+    function syncLegacyJobProps(): void {
+        const running = root.jobQueue.find(j => j.status === "running");
+        const pending = root.jobQueue.find(j => j.status === "pending");
+        const cur = running || pending || null;
+        if (!cur) {
+            root.jobActive = false;
+            root.jobKind = "";
+            root.jobLabel = "";
+            root.jobProgress = 0;
+            root.jobOwner = null;
+            return;
+        }
+        root.jobActive = true;
+        root.jobKind = cur.kind;
+        root.jobLabel = cur.label;
+        root.jobProgress = cur.progress || 0;
+        root.jobOwner = cur.owner;
+    }
+
+    function patchJob(id: string, fields: var): void {
+        if (!id)
+            return;
+        root.jobQueue = root.jobQueue.map(j => {
+            if (j.id !== id)
+                return j;
+            return Object.assign({}, j, fields);
+        });
+        if (id === root.currentJobId)
+            root.syncLegacyJobProps();
+    }
+
+    function pumpQueue(): void {
+        if (opProc.running)
+            return;
+        const next = root.jobQueue.find(j => j.status === "pending");
+        if (!next) {
+            root.currentJobId = "";
+            root.syncLegacyJobProps();
+            return;
+        }
+        root.jobQueue = root.jobQueue.map(j => j.id === next.id ? Object.assign({}, j, {
+            status: "running"
+        }) : j);
+        root.currentJobId = next.id;
+        root.jobSettled = false;
+        root.syncLegacyJobProps();
+        opProc.command = next.command;
+        opProc.kind = next.kind;
+        opProc.jobId = next.id;
+        opProc.renameAfter = next.renameAfter || "";
+        opProc.running = true;
+    }
+
+    function finishJob(): void {
+        const id = root.currentJobId || opProc.jobId;
+        root.jobSettled = true;
+        if (id)
+            root.jobQueue = root.jobQueue.filter(j => j.id !== id);
+        root.currentJobId = "";
+        opProc.jobId = "";
+        opProc.kind = "";
+        opProc.renameAfter = "";
+        root.syncLegacyJobProps();
+    }
+
+    property bool jobCancelRequested: false
+
+    /** Cancel a queued or running job by id. */
+    function cancelJob(id: string): void {
+        if (!id || id === "demo")
+            return;
+        const job = root.jobQueue.find(j => j.id === id);
+        if (!job)
+            return;
+
+        if (job.status === "pending") {
+            root.jobQueue = root.jobQueue.filter(j => j.id !== id);
+            root.syncLegacyJobProps();
+            return;
+        }
+
+        if (job.status === "running" && (root.currentJobId === id || opProc.jobId === id)) {
+            root.jobCancelRequested = true;
+            root.jobSettled = true;
+            if (opProc.running)
+                opProc.running = false;
+            else {
+                root.finishJob();
+                root.jobCancelRequested = false;
+                Qt.callLater(() => root.pumpQueue());
+            }
+            return;
+        }
+
+        root.jobQueue = root.jobQueue.filter(j => j.id !== id);
+        root.syncLegacyJobProps();
+    }
+
+    function cancelAllJobs(): void {
+        const ids = root.jobQueue.map(j => j.id);
+        for (let i = 0; i < ids.length; ++i)
+            root.cancelJob(ids[i]);
+    }
 
     function formatBytes(bytes: real): string {
         const kib = bytes / 1024;
@@ -152,44 +310,29 @@ Singleton {
         mountsProc.running = true;
     }
 
-    function startJob(kind: string, label: string, command: list<string>, owner: var): void {
-        if (jobActive)
-            return;
-        jobActive = true;
-        jobSettled = false;
-        jobKind = kind;
-        jobLabel = label;
-        jobProgress = 0;
-        jobOwner = owner || null;
-        opProc.command = command;
-        opProc.kind = kind;
-        opProc.renameAfter = "";
-        opProc.running = true;
-    }
-
-    function finishJob(): void {
-        jobSettled = true;
-        jobActive = false;
-        jobProgress = 0;
-        jobLabel = "";
-        jobKind = "";
-        jobOwner = null;
-    }
-
     function smartExtract(archivePath: string, destPath: string, owner: var): void {
-        if (!archivePath || !archivePath.length || jobActive)
+        if (!archivePath || !archivePath.length)
             return;
         const name = archivePath.split("/").pop() || qsTr("archive");
         const dest = destPath || home;
-        startJob("extract", qsTr("Extracting %1").arg(name), ["python3", "-u", script, "smart-extract", archivePath, "--dest", dest], owner);
+        startJob("extract", qsTr("Extracting %1").arg(name), fm(["smart-extract", archivePath, "--dest", dest]), owner, "");
+    }
+
+    function smartCompress(paths: var, destPath: string, format: string, owner: var): void {
+        if (!paths || !paths.length)
+            return;
+        const dest = destPath || home;
+        const fmt = (format && format.length) ? format : "zip";
+        const label = fmt === "7z" ? qsTr("Compressing (7z)…") : qsTr("Compressing (zip)…");
+        startJob("compress", label, fm(["smart-compress", dest, "--format", fmt].concat(paths)), owner, "");
     }
 
     function pasteClipboard(destPath: string, owner: var): void {
-        if (!clipboardPaths.length || !clipboardMode.length || jobActive)
+        if (!clipboardPaths.length || !clipboardMode.length)
             return;
         const kind = clipboardMode === "cut" ? "move" : "copy";
         const dest = destPath || home;
-        startJob(kind, kind === "cut" ? qsTr("Moving…") : qsTr("Copying…"), ["python3", "-u", script, kind, dest].concat(clipboardPaths), owner);
+        startJob(kind, kind === "cut" ? qsTr("Moving…") : qsTr("Copying…"), fm([kind, dest].concat(clipboardPaths)), owner, "");
         if (clipboardMode === "cut") {
             clipboardPaths = [];
             clipboardMode = "";
@@ -197,27 +340,25 @@ Singleton {
     }
 
     function trashSelection(paths: var, owner: var): void {
-        if (!paths || !paths.length || jobActive)
+        if (!paths || !paths.length)
             return;
-        startJob("trash", qsTr("Moving to Trash…"), ["python3", "-u", script, "trash"].concat(paths), owner);
+        startJob("trash", qsTr("Moving to Trash…"), fm(["trash"].concat(paths)), owner, "");
     }
 
     function deletePermanent(paths: var, owner: var): void {
-        if (!paths || !paths.length || jobActive)
+        if (!paths || !paths.length)
             return;
-        startJob("delete", qsTr("Deleting permanently…"), ["python3", "-u", script, "delete"].concat(paths), owner);
+        startJob("delete", qsTr("Deleting permanently…"), fm(["delete"].concat(paths)), owner, "");
     }
 
     function restoreTrash(uris: var, owner: var): void {
-        if (!uris || !uris.length || jobActive)
+        if (!uris || !uris.length)
             return;
-        startJob("restore", qsTr("Restoring…"), ["python3", "-u", script, "restore"].concat(uris), owner);
+        startJob("restore", qsTr("Restoring…"), fm(["restore"].concat(uris)), owner, "");
     }
 
     function emptyTrash(owner: var): void {
-        if (jobActive)
-            return;
-        startJob("empty-trash", qsTr("Emptying Trash…"), ["python3", "-u", script, "empty-trash"], owner);
+        startJob("empty-trash", qsTr("Emptying Trash…"), fm(["empty-trash"]), owner, "");
     }
 
     function notifyOwner(owner: var, title: string, message: string, icon: string): void {
@@ -237,22 +378,36 @@ Singleton {
     }
 
     function ejectVolume(mountPath: string, owner: var): void {
-        if (!mountPath || !mountPath.length || jobActive)
+        if (!mountPath || !mountPath.length)
             return;
-        startJob("eject", qsTr("Ejecting…"), ["python3", "-u", script, "eject", mountPath], owner);
+        startJob("eject", qsTr("Ejecting…"), fm(["eject", mountPath]), owner, "");
     }
 
     function mountVolume(devicePath: string, owner: var): void {
-        if (!devicePath || !devicePath.length || jobActive)
+        if (!devicePath || !devicePath.length)
             return;
-        startJob("mount", qsTr("Mounting…"), ["python3", "-u", script, "mount", devicePath], owner);
+        startJob("mount", qsTr("Mounting…"), fm(["mount", devicePath]), owner, "");
     }
 
     function openFile(path: string, owner: var): void {
         if (!path || !path.length)
             return;
+        openFiles([path], owner);
+    }
+
+    function openFiles(paths: var, owner: var): void {
+        if (!paths || !paths.length)
+            return;
+        const list = [];
+        for (let i = 0; i < paths.length; ++i) {
+            const p = String(paths[i] || "");
+            if (p.length)
+                list.push(p);
+        }
+        if (!list.length)
+            return;
         openProc.owner = owner || null;
-        openProc.command = ["python3", "-u", script, "open", path];
+        openProc.command = fm(["open"].concat(list));
         openProc.running = true;
     }
 
@@ -261,17 +416,17 @@ Singleton {
     }
 
     function transferPaths(paths: var, destPath: string, move: bool, owner: var): void {
-        if (!paths || !paths.length || jobActive)
+        if (!paths || !paths.length)
             return;
         const dest = destPath || home;
         const kind = move ? "move" : "copy";
-        startJob(kind, move ? qsTr("Moving…") : qsTr("Copying…"), ["python3", "-u", script, kind, dest].concat(paths), owner);
+        startJob(kind, move ? qsTr("Moving…") : qsTr("Copying…"), fm([kind, dest].concat(paths)), owner, "");
     }
 
     function undoMove(items: var, owner: var): void {
-        if (!items || !items.length || jobActive)
+        if (!items || !items.length)
             return;
-        const args = ["python3", "-u", script, "undo-move"];
+        const args = fm(["undo-move"]);
         for (let i = 0; i < items.length; ++i) {
             const it = items[i];
             if (!it || !it.to || !it.from)
@@ -279,16 +434,13 @@ Singleton {
             args.push(String(it.to));
             args.push(String(it.from));
         }
-        if (args.length <= 4)
+        if (args.length <= 2)
             return;
-        startJob("undo-move", qsTr("Undoing…"), args, owner);
+        startJob("undo-move", qsTr("Undoing…"), args, owner, "");
     }
 
     function runQuick(command: list<string>, kind: string, renameAfter: string, owner: var): void {
-        if (jobActive)
-            return;
-        startJob(kind, kind === "mkdir" ? qsTr("Creating folder…") : qsTr("Working…"), command, owner);
-        opProc.renameAfter = renameAfter || "";
+        startJob(kind, kind === "mkdir" ? qsTr("Creating folder…") : qsTr("Working…"), command, owner, renameAfter || "");
     }
 
     function fetchInfo(paths: var, owner: var): void {
@@ -296,7 +448,7 @@ Singleton {
             return;
         infoProc.running = false;
         infoProc.owner = owner || null;
-        infoProc.command = ["python3", "-u", script, "info"].concat(paths);
+        infoProc.command = fm(["info"].concat(paths));
         infoProc.running = true;
     }
 
@@ -340,7 +492,7 @@ Singleton {
 
     Process {
         id: xdgDirsProc
-        command: ["python3", "-u", root.script, "xdg-dirs"]
+        command: [root.binary, "xdg-dirs"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
@@ -378,7 +530,7 @@ Singleton {
 
     Process {
         id: mountsProc
-        command: ["python3", "-u", root.script, "mounts"]
+        command: [root.binary, "mounts"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -400,24 +552,34 @@ Singleton {
         id: opProc
         property string kind: ""
         property string renameAfter: ""
+        property string jobId: ""
 
         stdout: SplitParser {
             onRead: line => {
+                if (root.jobCancelRequested)
+                    return;
                 const raw = String(line || "").trim();
                 if (!raw.length)
                     return;
                 try {
                     const data = JSON.parse(raw);
                     if (data.type === "progress") {
-                        root.jobActive = true;
-                        root.jobProgress = data.progress ?? root.jobProgress;
+                        const id = root.currentJobId || opProc.jobId;
                         if (data.message)
-                            root.jobLabel = data.message;
+                            root.patchJob(id, {
+                                progress: data.progress ?? 0,
+                                label: data.message
+                            });
+                        else
+                            root.patchJob(id, {
+                                progress: data.progress ?? 0
+                            });
                         return;
                     }
 
                     const owner = root.jobOwner;
                     const kind = opProc.kind;
+                    const renameAfter = opProc.renameAfter;
 
                     if (data.ok === false || data.type === "error") {
                         root.notifyOwnerError(owner, data.error || qsTr("Operation failed"));
@@ -429,6 +591,8 @@ Singleton {
 
                     if (kind === "extract")
                         root.notifyOwner(owner, qsTr("Extracted"), data.result || "", "folder_zip");
+                    else if (kind === "compress")
+                        root.notifyOwner(owner, qsTr("Compressed"), data.result || "", "folder_zip");
                     else if (kind === "copy")
                         root.notifyOwner(owner, qsTr("Pasted"), qsTr("Done"), "check_circle");
                     else if (kind === "move") {
@@ -449,9 +613,8 @@ Singleton {
                     // trash: in-window undo toast handled by session
 
                     const payload = data || {};
-                    if (opProc.renameAfter.length)
-                        payload.renameAfter = opProc.renameAfter;
-                    opProc.renameAfter = "";
+                    if (renameAfter.length)
+                        payload.renameAfter = renameAfter;
 
                     root.finishJob();
                     if (owner && owner.onJobDone)
@@ -466,13 +629,26 @@ Singleton {
         onRunningChanged: {
             if (running)
                 return;
-            if (root.jobActive && !root.jobSettled) {
+
+            if (root.jobCancelRequested) {
+                const owner = root.jobOwner;
+                root.jobCancelRequested = false;
+                root.finishJob();
+                root.notifyOwner(owner, qsTr("Cancelled"), qsTr("Operation cancelled"), "cancel");
+                if (owner && owner.refresh)
+                    owner.refresh();
+                Qt.callLater(() => root.pumpQueue());
+                return;
+            }
+
+            if (root.currentJobId.length && !root.jobSettled && opProc.jobId.length && opProc.jobId === root.currentJobId) {
                 const owner = root.jobOwner;
                 root.notifyOwnerError(owner, qsTr("Operation interrupted"));
                 root.finishJob();
                 if (owner && owner.refresh)
                     owner.refresh();
             }
+            Qt.callLater(() => root.pumpQueue());
         }
     }
 

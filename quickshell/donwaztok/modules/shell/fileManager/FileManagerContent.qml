@@ -628,6 +628,20 @@ Item {
             root.confirmDeleteOpen = true;
     }
 
+    function shortcutToggleHidden(): void {
+        root.noteInput("toggleHidden");
+        if (root.dialogOpen || session.pathEditing || session.renameTarget.length > 0)
+            return;
+        root.interacted();
+        session.showHidden = !session.showHidden;
+        session.refresh();
+    }
+
+    function isHiddenEntry(f: var): bool {
+        const n = f && f.name ? String(f.name) : "";
+        return n.length > 0 && n.charAt(0) === ".";
+    }
+
     MouseArea {
         anchors.fill: parent
         z: 10000
@@ -736,6 +750,12 @@ Item {
         context: Qt.WindowShortcut
         enabled: !root.inputBlocked && !root.dialogOpen
         onActivated: root.openProperties(session.selectedPaths.length ? "file" : "folder")
+    }
+    Shortcut {
+        sequences: ["Ctrl+H", "Ctrl+h"]
+        context: Qt.WindowShortcut
+        enabled: !root.inputBlocked && !root.dialogOpen
+        onActivated: root.shortcutToggleHidden()
     }
 
     property string ctxMode: "file" // "file" | "folder" | "bar"
@@ -892,8 +912,6 @@ Item {
         return item.mimeType || qsTr("File");
     }
 
-    property int toastDemoStep: -1
-
     function statusToastTitle(): string {
         const n = session.filteredEntries.length;
         const s = session.selectedPaths.length;
@@ -913,8 +931,6 @@ Item {
     }
 
     function pushStatusToast(): void {
-        if (session.toastDemoRunning)
-            return;
         session.upsertToast({
             key: "status",
             lane: "info",
@@ -923,155 +939,6 @@ Item {
             type: 0,
             timeout: session.selectedPaths.length ? 0 : 2800
         });
-    }
-
-    function startToastDemo(): void {
-        session.toastDemoRunning = true;
-        session.toasts = [];
-        session.demoJobActive = false;
-        root.toastDemoStep = 0;
-        toastDemoTimer.restart();
-        root.advanceToastDemo();
-    }
-
-    function stopToastDemo(): void {
-        toastDemoTimer.stop();
-        session.demoJobActive = false;
-        session.demoJobProgress = 0;
-        session.demoJobLabel = "";
-        session.demoJobKind = "";
-        session.toastDemoRunning = false;
-        root.toastDemoStep = -1;
-    }
-
-    function advanceToastDemo(): void {
-        const step = root.toastDemoStep;
-        root.toastDemoStep = step + 1;
-        if (step === 0) {
-            session.upsertToast({
-                key: "status",
-                lane: "info",
-                title: qsTr("14 item(s)"),
-                icon: "folder",
-                type: 0,
-                timeout: 0
-            });
-            session.demoJobKind = "extract";
-            session.demoJobLabel = qsTr("Extracting archive.zip");
-            session.demoJobProgress = 0.18;
-            session.demoJobActive = true;
-        } else if (step === 1) {
-            session.upsertToast({
-                title: qsTr("Copied"),
-                message: qsTr("Copied 3 item(s)"),
-                icon: "content_copy",
-                type: 1,
-                lane: "timed",
-                timeout: 5000
-            });
-        } else if (step === 2) {
-            session.upsertToast({
-                title: qsTr("Cut"),
-                message: qsTr("Cut 2 item(s)"),
-                icon: "content_cut",
-                type: 1,
-                lane: "timed",
-                timeout: 5000
-            });
-            session.demoJobProgress = 0.42;
-        } else if (step === 3) {
-            session.showUndoToast("trash", [], 4);
-            session.upsertToast({
-                key: "status",
-                lane: "info",
-                title: qsTr("4 selected — 12.3 MiB"),
-                icon: "check_box",
-                timeout: 0
-            });
-        } else if (step === 4) {
-            session.demoJobProgress = 0.78;
-            session.upsertToast({
-                title: qsTr("Restored"),
-                message: qsTr("4 item(s)"),
-                icon: "undo",
-                type: 1,
-                lane: "timed",
-                timeout: 5000
-            });
-        } else if (step === 5) {
-            session.demoJobProgress = 1;
-        } else if (step === 6) {
-            session.demoJobActive = false;
-            session.upsertToast({
-                title: qsTr("Extracted"),
-                message: qsTr("archive"),
-                icon: "folder_zip",
-                type: 1,
-                lane: "timed",
-                timeout: 5000
-            });
-        } else if (step === 7) {
-            session.demoJobKind = "copy";
-            session.demoJobLabel = qsTr("Copying…");
-            session.demoJobProgress = 0.35;
-            session.demoJobActive = true;
-        } else if (step === 8) {
-            session.demoJobProgress = 1;
-        } else if (step === 9) {
-            session.demoJobActive = false;
-            session.upsertToast({
-                title: qsTr("Pasted"),
-                message: qsTr("Done"),
-                icon: "check_circle",
-                type: 1,
-                lane: "timed",
-                timeout: 5000
-            });
-        } else if (step === 10) {
-            session.demoJobKind = "move";
-            session.demoJobLabel = qsTr("Moving…");
-            session.demoJobProgress = 0.62;
-            session.demoJobActive = true;
-        } else if (step === 11) {
-            session.demoJobActive = false;
-            session.upsertToast({
-                title: qsTr("Moved"),
-                message: qsTr("Done"),
-                icon: "drive_file_move",
-                type: 1,
-                lane: "timed",
-                timeout: 5000
-            });
-        } else if (step === 12) {
-            session.upsertToast({
-                title: qsTr("Deleted"),
-                message: qsTr("2 item(s) permanently deleted"),
-                icon: "delete_forever",
-                type: 2,
-                lane: "timed",
-                timeout: 5000
-            });
-        } else if (step === 13) {
-            session.upsertToast({
-                title: qsTr("Trash emptied"),
-                message: "",
-                icon: "delete_sweep",
-                type: 2,
-                lane: "timed",
-                timeout: 5000
-            });
-        } else if (step === 14) {
-            session.upsertToast({
-                title: qsTr("Files"),
-                message: qsTr("Operation failed"),
-                icon: "error",
-                type: 3,
-                lane: "timed",
-                timeout: 6000
-            });
-        } else {
-            root.stopToastDemo();
-        }
     }
 
     function ctxContentHeight(): real {
@@ -1484,10 +1351,7 @@ Item {
             CtxBtn {
                 label: session.showHidden ? qsTr("Hide hidden files") : qsTr("Show hidden files")
                 iconName: session.showHidden ? "visibility_off" : "visibility"
-                onActivated: {
-                    session.showHidden = !session.showHidden;
-                    session.refresh();
-                }
+                onActivated: root.shortcutToggleHidden()
             }
             CtxBtn {
                 label: qsTr("Refresh")
@@ -1509,20 +1373,6 @@ Item {
                 label: qsTr("Places")
                 iconName: "menu"
                 onActivated: root.openPlacesFlyout()
-            }
-            Item {
-                width: 1
-                height: 4
-            }
-            CtxSep {}
-            Item {
-                width: 1
-                height: 4
-            }
-            CtxBtn {
-                label: qsTr("Test notifications")
-                iconName: "science"
-                onActivated: root.startToastDemo()
             }
         }
     }
@@ -1611,27 +1461,62 @@ Item {
             }
 
             CtxBtn {
-                label: qsTr("Open")
+                label: session.selectedPaths.length > 1 ? qsTr("Open all") : qsTr("Open")
                 iconName: "open_in_new"
-                rowEnabled: !session.isTrashView && session.selectedPaths.length === 1
+                rowEnabled: !session.isTrashView && session.selectedPaths.length > 0
+                onActivated: session.openSelection()
+            }
+            CtxBtn {
+                visible: {
+                    if (session.isTrashView || !session.selectedPaths.length)
+                        return false;
+                    for (let i = 0; i < session.selectedPaths.length; ++i) {
+                        const e = session.entries.find(x => x.path === session.selectedPaths[i]);
+                        if (e && e.isArchive)
+                            return true;
+                    }
+                    return false;
+                }
+                height: visible ? 36 : 0
+                label: {
+                    let n = 0;
+                    for (let i = 0; i < session.selectedPaths.length; ++i) {
+                        const e = session.entries.find(x => x.path === session.selectedPaths[i]);
+                        if (e && e.isArchive)
+                            n++;
+                    }
+                    return n > 1 ? qsTr("Extract all here") : qsTr("Extract here");
+                }
+                iconName: "unarchive"
+                rowEnabled: true
                 onActivated: {
-                    if (session.selectedPaths.length === 1) {
-                        const entry = session.entries.find(e => e.path === session.selectedPaths[0]);
-                        if (entry)
-                            session.openEntry(entry);
+                    for (let i = 0; i < session.selectedPaths.length; ++i) {
+                        const e = session.entries.find(x => x.path === session.selectedPaths[i]);
+                        if (e && e.isArchive)
+                            FileManagerService.smartExtract(e.path, session.currentPath, session);
                     }
                 }
             }
             CtxBtn {
-                visible: root.selectionIsArchive()
+                visible: session.selectedPaths.length > 0 && !session.isTrashView
                 height: visible ? 36 : 0
-                label: qsTr("Extract here")
-                iconName: "unarchive"
-                rowEnabled: true
+                label: qsTr("Compress to ZIP")
+                iconName: "folder_zip"
+                rowEnabled: session.selectedPaths.length > 0 && !session.isTrashView
                 onActivated: {
-                    const path = session.selectedPaths[0];
-                    if (path)
-                        FileManagerService.smartExtract(path, session.currentPath, session);
+                    if (session.selectedPaths.length)
+                        FileManagerService.smartCompress(session.selectedPaths.slice(), session.currentPath, "zip", session);
+                }
+            }
+            CtxBtn {
+                visible: session.selectedPaths.length > 0 && !session.isTrashView
+                height: visible ? 36 : 0
+                label: qsTr("Compress to 7z")
+                iconName: "archive"
+                rowEnabled: session.selectedPaths.length > 0 && !session.isTrashView
+                onActivated: {
+                    if (session.selectedPaths.length)
+                        FileManagerService.smartCompress(session.selectedPaths.slice(), session.currentPath, "7z", session);
                 }
             }
             Item {
@@ -2301,11 +2186,11 @@ Item {
         } else if (event.key === Qt.Key_L && (event.modifiers & Qt.ControlModifier)) {
             session.beginPathEdit();
             event.accepted = true;
-        } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && session.selectedPaths.length === 1) {
-            const path = session.selectedPaths[0];
-            const entry = session.entries.find(e => e.path === path);
-            if (entry)
-                session.openEntry(entry);
+        } else if (event.key === Qt.Key_H && (event.modifiers & Qt.ControlModifier)) {
+            root.shortcutToggleHidden();
+            event.accepted = true;
+        } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && session.selectedPaths.length > 0) {
+            session.openSelection();
             event.accepted = true;
         }
     }
@@ -2843,12 +2728,13 @@ Item {
                         required property int index
                         readonly property bool selected: session.isSelected(modelData.path)
                         readonly property bool markedCut: session.isMarkedCut(modelData.path)
+                        readonly property bool hidden: root.isHiddenEntry(modelData)
                         readonly property string glyph: root.fileGlyph(modelData)
 
                         width: fileList.width
                         implicitHeight: 44
                         radius: Theme.Appearance.rounding.small
-                        opacity: row.markedCut ? 0.45 : 1
+                        opacity: row.markedCut ? 0.45 : (row.hidden ? 0.55 : 1)
                         property bool dropTarget: false
                         color: dropTarget ? root.fmDropBg : (selected ? root.fmSelectBg : (rowHover.containsMouse ? root.fmHoverBg : "transparent"))
                         border.width: selected || dropTarget ? 1 : 0
@@ -2950,9 +2836,10 @@ Item {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: row.modelData.name
-                                color: row.selected || row.dropTarget ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                                color: row.selected || row.dropTarget ? Colours.palette.m3primary : (row.hidden ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface)
                                 elide: Text.ElideMiddle
                                 font.weight: row.selected ? Font.Medium : Font.Normal
+                                font.italic: row.hidden
 
                                 Behavior on color {
                                     CAnim {}
@@ -3001,12 +2888,13 @@ Item {
                         required property int index
                         readonly property bool selected: session.isSelected(modelData.path)
                         readonly property bool markedCut: session.isMarkedCut(modelData.path)
+                        readonly property bool hidden: root.isHiddenEntry(modelData)
                         readonly property bool canThumb: !!(modelData && modelData.canThumbnail)
                         readonly property string glyph: root.fileGlyph(modelData)
 
                         width: fileGrid.cellWidth
                         height: fileGrid.cellHeight
-                        opacity: tile.markedCut ? 0.45 : 1
+                        opacity: tile.markedCut ? 0.45 : (tile.hidden ? 0.55 : 1)
                         property bool dropTarget: false
                         scale: tileHover.containsMouse && !tile.selected ? 1.03 : 1
 
@@ -3126,13 +3014,14 @@ Item {
                             StyledText {
                                 width: parent.width
                                 text: tile.modelData.name
-                                color: tile.selected ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                                color: tile.selected ? Colours.palette.m3primary : (tile.hidden ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3onSurface)
                                 horizontalAlignment: Text.AlignHCenter
                                 elide: Text.ElideRight
                                 wrapMode: Text.WordWrap
                                 maximumLineCount: 2
                                 font.pointSize: Theme.Appearance.font.size.small
                                 font.weight: tile.selected ? Font.Medium : Font.Normal
+                                font.italic: tile.hidden
 
                                 Behavior on color {
                                     CAnim {}
@@ -3936,12 +3825,5 @@ Item {
         id: fmToasts
         session: session
         anchors.fill: parent
-    }
-
-    Timer {
-        id: toastDemoTimer
-        interval: 850
-        repeat: true
-        onTriggered: root.advanceToastDemo()
     }
 }

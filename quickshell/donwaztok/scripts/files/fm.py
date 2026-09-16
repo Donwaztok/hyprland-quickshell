@@ -31,7 +31,7 @@ THUMBNAIL_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".webp", ".av
 THUMBNAIL_CONVERT_EXTS = {".webp", ".avif", ".jxl", ".ico"}
 PE_ICON_EXTS = {".exe", ".dll"}
 LINUX_BIN_EXTS = {".run", ".bin", ".elf"}
-ARCHIVE_EXTS = {".zip", ".7z", ".7zip"}
+ARCHIVE_EXTS = {".zip", ".7z", ".7zip", ".rar", ".cbr"}
 SCRIPT_EXTS = {
     ".sh", ".bash", ".zsh", ".fish", ".py", ".pyw", ".rb", ".pl", ".lua",
     ".js", ".mjs", ".ts", ".ps1", ".bat", ".cmd",

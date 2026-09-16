@@ -147,6 +147,19 @@ if [ ! -d /boot/grub/themes/Particle-circle ] 2>/dev/null; then
 fi
 
 # -----------------------------------------------------------------------------
+# 6b. Donwaztok file-manager helper (Rust fm)
+# -----------------------------------------------------------------------------
+FM_RS="$REPO_ROOT/quickshell/donwaztok/scripts/files/fm-rs"
+if [ -f "$FM_RS/build.sh" ]; then
+  echo -e "\033[0;32m[FM]\033[0m Building donwaztok fm helper…"
+  if command -v cargo &>/dev/null; then
+    bash "$FM_RS/build.sh" || echo -e "\033[0;33m[FM]\033[0m Build failed — FM needs bin/fm."
+  else
+    echo -e "\033[0;33m[FM]\033[0m cargo missing; install 'rust' from app.lst and re-run build.sh"
+  fi
+fi
+
+# -----------------------------------------------------------------------------
 # 6. Desktop files (custom launchers)
 # -----------------------------------------------------------------------------
 mkdir -p "$HOME/.local/share/applications"

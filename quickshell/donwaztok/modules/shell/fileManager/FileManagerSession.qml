@@ -24,11 +24,6 @@ Item {
     property int toastSeq: 0
     property var undoItems: []
     property string undoKind: "" // "trash" | "move"
-    property bool demoJobActive: false
-    property real demoJobProgress: 0
-    property string demoJobLabel: ""
-    property string demoJobKind: ""
-    property bool toastDemoRunning: false
     property string pendingEjectMount: ""
     property var history: []
     property var forwardHistory: []
@@ -279,7 +274,7 @@ Item {
             currentPath = FileManagerService.home || Quickshell.env("HOME") || "/";
         currentPath = normalizePath(currentPath) || currentPath;
         busy = true;
-        const cmd = ["python3", "-u", FileManagerService.script, "list", currentPath].concat(showHidden ? ["--hidden"] : []);
+        const cmd = FileManagerService.fm(["list", currentPath].concat(showHidden ? ["--hidden"] : []));
         listProc.command = cmd;
         listProc.exec(cmd);
         startDirWatch();
@@ -292,7 +287,7 @@ Item {
         if (watchProc.watchTarget === target && watchProc.running)
             return;
         watchProc.watchTarget = target;
-        watchProc.exec(["python3", "-u", FileManagerService.script, "watch", target]);
+        watchProc.exec(FileManagerService.fm(["watch", target]));
     }
 
     function applyListOutput(raw: string): void {
@@ -555,6 +550,66 @@ Item {
             return;
         }
         FileManagerService.openFile(entry.path, root);
+    }
+
+    /** Open / extract / restore every selected item (Enter on multi-select). */
+    function openSelection(): void {
+        if (!selectedPaths.length)
+            return;
+
+        if (isTrashView) {
+            const uris = [];
+            for (let i = 0; i < selectedPaths.length; ++i) {
+                const e = entries.find(x => x.path === selectedPaths[i]);
+                if (e && e.trashUri)
+                    uris.push(e.trashUri);
+            }
+            if (uris.length)
+                FileManagerService.restoreTrash(uris, root);
+            return;
+        }
+
+        if (selectedPaths.length === 1) {
+            const only = entries.find(e => e.path === selectedPaths[0]);
+            if (only)
+                openEntry(only);
+            return;
+        }
+
+        const selected = [];
+        for (let i = 0; i < selectedPaths.length; ++i) {
+            const e = entries.find(x => x.path === selectedPaths[i]);
+            if (e)
+                selected.push(e);
+        }
+        if (!selected.length)
+            return;
+
+        const dirs = selected.filter(e => e.isDir);
+        const files = selected.filter(e => !e.isDir);
+
+        // Only folders selected → enter the first one
+        if (!files.length) {
+            if (dirs.length)
+                navigate(dirs[0].path);
+            return;
+        }
+
+        const archives = [];
+        const toOpen = [];
+        for (let i = 0; i < files.length; ++i) {
+            const f = files[i];
+            if (f.isArchive)
+                archives.push(f.path);
+            else
+                toOpen.push(f.path);
+        }
+
+        for (let i = 0; i < archives.length; ++i)
+            FileManagerService.smartExtract(archives[i], currentPath, root);
+
+        if (toOpen.length)
+            FileManagerService.openFiles(toOpen, root);
     }
 
     function uriListForDrag(primaryPath: string): string {
@@ -821,7 +876,7 @@ Item {
             name = qsTr("New Folder (%1)").arg(n);
             path = `${currentPath}/${name}`;
         }
-        FileManagerService.runQuick(["python3", "-u", FileManagerService.script, "mkdir", path], "mkdir", path, root);
+        FileManagerService.runQuick(FileManagerService.fm(["mkdir", path]), "mkdir", path, root);
     }
 
     function beginRename(path: string): void {
@@ -856,7 +911,7 @@ Item {
         const src = renameTarget;
         renameTarget = "";
         renameDraft = "";
-        FileManagerService.runQuick(["python3", "-u", FileManagerService.script, "rename", src, dst], "rename", "", root);
+        FileManagerService.runQuick(FileManagerService.fm(["rename", src, dst]), "rename", "", root);
     }
 
     function cancelRename(): void {
@@ -906,6 +961,10 @@ Item {
                 if (data && data.result)
                     selectOnly(data.result);
             }
+        } else if (kind === "compress") {
+            refresh();
+            if (data && data.result)
+                selectOnly(data.result);
         } else if (kind === "trash") {
             selectedPaths = [];
             refresh();

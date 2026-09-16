@@ -16,32 +16,45 @@ Item {
     readonly property int pad: Theme.Appearance.padding.large
     readonly property bool compact: width < 820
 
-    readonly property bool jobVisible: {
-        if (session.demoJobActive)
-            return true;
-        if (!FileManagerService.jobActive)
-            return false;
-        return !FileManagerService.jobOwner || FileManagerService.jobOwner === session;
+    readonly property var progressJobs: {
+        const out = [];
+        const src = FileManagerService.jobQueue || [];
+        for (let i = 0; i < src.length; ++i) {
+            const j = src[i];
+            if (!j)
+                continue;
+            if (j.owner && j.owner !== session)
+                continue;
+            out.push(j);
+        }
+        return out;
     }
-    readonly property real jobProgress: session.demoJobActive ? session.demoJobProgress : (FileManagerService.jobProgress || 0)
+    readonly property bool jobVisible: root.progressJobs.length > 0
+    readonly property real jobProgress: {
+        const jobs = root.progressJobs;
+        for (let i = 0; i < jobs.length; ++i) {
+            if (jobs[i].status === "running")
+                return jobs[i].progress || 0;
+        }
+        return jobs.length ? (jobs[0].progress || 0) : 0;
+    }
     readonly property string jobLabel: {
-        if (session.demoJobActive)
-            return session.demoJobLabel || qsTr("Working…");
-        return FileManagerService.jobLabel.length ? FileManagerService.jobLabel : qsTr("Working…");
+        const jobs = root.progressJobs;
+        for (let i = 0; i < jobs.length; ++i) {
+            if (jobs[i].status === "running")
+                return jobs[i].label || qsTr("Working…");
+        }
+        return jobs.length ? (jobs[0].label || qsTr("Working…")) : qsTr("Working…");
     }
-    readonly property string jobKind: session.demoJobActive ? session.demoJobKind : FileManagerService.jobKind
-    readonly property string jobIcon: {
-        const kind = root.jobKind;
-        if (kind === "extract")
-            return "folder_zip";
-        if (kind === "move")
-            return "drive_file_move";
-        if (kind === "trash" || kind === "delete" || kind === "empty-trash")
-            return "delete";
-        if (kind === "restore")
-            return "undo";
-        return "progress_activity";
+    readonly property string jobKind: {
+        const jobs = root.progressJobs;
+        for (let i = 0; i < jobs.length; ++i) {
+            if (jobs[i].status === "running")
+                return jobs[i].kind || "";
+        }
+        return jobs.length ? (jobs[0].kind || "") : "";
     }
+    readonly property string jobIcon: FileManagerService.iconForKind(root.jobKind)
 
     readonly property var timedToasts: {
         const src = session.toasts || [];
@@ -64,19 +77,28 @@ Item {
 
     z: 92
 
-    // Left — progress
-    ProgressLane {
-        id: progressLane
+    // Left — progress (original toast chrome; column expands on hover when queued)
+    Item {
+        id: progressHost
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         anchors.bottomMargin: root.pad
         anchors.leftMargin: root.jobVisible ? root.pad : root.pad - 24
         width: root.compact ? 240 : 300
+        height: progressCol.implicitHeight
         visible: root.jobVisible || opacity > 0.01
         enabled: root.jobVisible
         opacity: root.jobVisible ? 1 : 0
         scale: root.jobVisible ? 1 : 0.86
         transformOrigin: Item.BottomLeft
+
+        property bool expanded: progressHover.hovered && root.progressJobs.length > 1
+        readonly property var visibleJobs: {
+            const all = root.progressJobs;
+            if (progressHost.expanded || all.length <= 1)
+                return all;
+            return all.length ? [all[0]] : [];
+        }
 
         Behavior on opacity {
             Anim {
@@ -94,6 +116,33 @@ Item {
             Anim {
                 duration: Theme.Appearance.anim.durations.expressiveDefaultSpatial
                 easing.bezierCurve: Theme.Appearance.anim.curves.expressiveDefaultSpatial
+            }
+        }
+
+        MouseArea {
+            id: progressHover
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+        }
+
+        Column {
+            id: progressCol
+            width: parent.width
+            spacing: progressHost.expanded ? Theme.Appearance.spacing.small : 0
+
+            Repeater {
+                model: ScriptModel {
+                    values: progressHost.visibleJobs
+                }
+
+                delegate: ProgressLane {
+                    required property var modelData
+                    required property int index
+                    width: progressCol.width
+                    job: modelData
+                    queuedExtra: (!progressHost.expanded && index === 0) ? Math.max(0, root.progressJobs.length - 1) : 0
+                }
             }
         }
     }
@@ -150,7 +199,26 @@ Item {
     component ProgressLane: StyledRect {
         id: prog
 
-        // Same radius as other toasts; pad clears the curve so the track isn't clipped
+        property var job: ({})
+        property int queuedExtra: 0
+
+        readonly property string kind: String(prog.job && prog.job.kind) || ""
+        readonly property string labelText: {
+            const base = (prog.job && prog.job.label) ? String(prog.job.label) : qsTr("Working…");
+            if (prog.job && prog.job.status === "pending")
+                return qsTr("Queued · %1").arg(base);
+            if (prog.queuedExtra > 0)
+                return qsTr("%1 (+%2)").arg(base).arg(prog.queuedExtra);
+            return base;
+        }
+        readonly property real pct: Number(prog.job && prog.job.progress) || 0
+        readonly property bool queued: (prog.job && prog.job.status) === "pending"
+        readonly property string iconName: FileManagerService.iconForKind(prog.kind)
+        readonly property bool canCancel: {
+            const id = prog.job && prog.job.id ? String(prog.job.id) : "";
+            return id.length > 0;
+        }
+
         readonly property int edgePad: Math.max(Theme.Appearance.padding.larger, Math.ceil(radius * 0.55))
 
         implicitHeight: headerRow.implicitHeight + 6 + 4 + prog.edgePad * 2
@@ -166,11 +234,6 @@ Item {
             z: -1
             level: 4
             opacity: parent.opacity
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
         }
 
         RowLayout {
@@ -190,15 +253,14 @@ Item {
                 color: Qt.alpha(Colours.palette.m3primary, 0.18)
 
                 MaterialIcon {
-                    id: progIcon
                     anchors.centerIn: parent
-                    text: root.jobIcon
+                    text: prog.queued ? "schedule" : prog.iconName
                     color: Colours.palette.m3primary
                     font.pointSize: Theme.Appearance.font.size.normal
-                    fill: 1
+                    fill: prog.queued ? 0 : 1
 
                     SequentialAnimation on scale {
-                        running: root.jobVisible
+                        running: !prog.queued && root.jobVisible && prog.visible
                         loops: Animation.Infinite
                         Anim {
                             to: 1.08
@@ -216,17 +278,37 @@ Item {
 
             StyledText {
                 Layout.fillWidth: true
-                text: root.jobLabel
+                text: prog.labelText
                 color: Colours.palette.m3onSurface
                 font.weight: Font.DemiBold
                 elide: Text.ElideMiddle
             }
 
             StyledText {
-                text: qsTr("%1%").arg(Math.round(root.jobProgress * 100))
+                text: prog.queued ? "…" : qsTr("%1%").arg(Math.round(prog.pct * 100))
                 color: Colours.palette.m3primary
                 font.pointSize: Theme.Appearance.font.size.small
                 font.weight: Font.Bold
+            }
+
+            MaterialIcon {
+                visible: prog.canCancel
+                text: "close"
+                color: cancelMa.containsMouse ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+                font.pointSize: Theme.Appearance.font.size.normal
+
+                Behavior on color {
+                    CAnim {}
+                }
+
+                MouseArea {
+                    id: cancelMa
+                    anchors.fill: parent
+                    anchors.margins: -4
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: FileManagerService.cancelJob(String(prog.job.id))
+                }
             }
         }
 
@@ -246,11 +328,10 @@ Item {
             }
 
             Rectangle {
-                id: progFill
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: Math.max(root.jobProgress > 0.001 ? height : 0, parent.width * Math.min(1, Math.max(0, root.jobProgress)))
+                width: prog.queued ? 0 : Math.max(prog.pct > 0.001 ? height : 0, parent.width * Math.min(1, Math.max(0, prog.pct)))
                 radius: height / 2
                 color: Colours.palette.m3primary
                 visible: width > 0

@@ -23,6 +23,7 @@ go-yq                             # YAML processor (jq for YAML)
 jq                                # JSON processor
 ripgrep                           # fast recursive grep
 rsync                             # file sync over network
+rust                              # rustc + cargo (donwaztok fm helper)
 wget                              # download files
 xdg-user-dirs                     # user dirs (Desktop, Documents, etc.)
 

@@ -133,23 +133,14 @@ Item {
             return;
 
         const px = Math.max(32, Math.round(root.implicitSize * 2));
-        const src = root.filePath.replace(/'/g, "'\\''");
-        const dst = root.cachePath.replace(/'/g, "'\\''");
-        const script = String(FileManagerService.script).replace(/'/g, "'\\''");
-
-        if (root.useExtract) {
+        if (root.useExtract || root.useConvert) {
             thumbProc.command = [
-                "bash", "-lc",
-                `mkdir -p "$(dirname '${dst}')" && { [ -f '${dst}' ] || python3 -u '${script}' thumb '${src}' '${dst}' --size ${px}; } && [ -f '${dst}' ]`
-            ];
-            thumbProc.running = true;
-            return;
-        }
-
-        if (root.useConvert) {
-            thumbProc.command = [
-                "bash", "-lc",
-                `mkdir -p "$(dirname '${dst}')" && { [ -f '${dst}' ] || magick '${src}' -resize ${px}x${px} '${dst}'; } && [ -f '${dst}' ]`
+                FileManagerService.binary,
+                "thumb",
+                root.filePath,
+                root.cachePath,
+                "--size",
+                String(px)
             ];
             thumbProc.running = true;
         }

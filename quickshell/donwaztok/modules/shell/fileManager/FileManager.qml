@@ -77,6 +77,8 @@ Scope {
             c.shortcutDeletePermanent();
         else if (action === "undo")
             c.shortcutUndo();
+        else if (action === "toggleHidden")
+            c.shortcutToggleHidden();
         return root.statusJson();
     }
 
@@ -177,6 +179,13 @@ Scope {
         name: "fileManagerDeletePermanent"
         description: "File manager permanent delete"
         onPressed: root.runEdit("deletePermanent")
+    }
+
+    GlobalShortcut {
+        appid: "donwaztok"
+        name: "fileManagerToggleHidden"
+        description: "File manager toggle hidden files"
+        onPressed: root.runEdit("toggleHidden")
     }
 
     GlobalShortcut {

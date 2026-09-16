@@ -250,6 +250,7 @@ hl.bind("F5", hl.dsp.global("donwaztok:fileManagerRefresh"), fm)
 -- Edit (Cut / Undo / permanent delete — Shift+Delete is stolen by StandardKey.Cut in Qt)
 hl.bind("CTRL + X", hl.dsp.global("donwaztok:fileManagerCut"), fm)
 hl.bind("CTRL + Z", hl.dsp.global("donwaztok:fileManagerUndo"), fm)
+hl.bind("CTRL + H", hl.dsp.global("donwaztok:fileManagerToggleHidden"), fm)
 hl.bind("SHIFT + Delete", hl.dsp.global("donwaztok:fileManagerDeletePermanent"), fm)
 hl.bind("SHIFT + KP_Delete", hl.dsp.global("donwaztok:fileManagerDeletePermanent"), fm)
 
