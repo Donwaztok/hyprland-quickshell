@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Donwaztok Text
+GenericName=Text Editor
+Comment=Simple text editor
+Exec=qs -c donwaztok ipc call textEditor open %f
+Icon=accessories-text-editor
+Terminal=false
+StartupNotify=false
+Categories=Utility;TextEditor;
+MimeType=text/plain;text/markdown;text/x-markdown;text/csv;text/xml;text/css;text/javascript;text/x-python;text/x-shellscript;text/x-c;text/x-java;text/rust;text/x-go;text/x-lua;text/x-qml;text/yaml;text/x-yaml;application/json;application/xml;application/x-yaml;application/toml;application/javascript;application/x-desktop;application/x-shellscript;inode/x-empty;
+Keywords=text;editor;notes;plain;

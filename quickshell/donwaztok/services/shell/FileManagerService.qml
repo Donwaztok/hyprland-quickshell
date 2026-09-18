@@ -406,6 +406,24 @@ Singleton {
         }
         if (!list.length)
             return;
+
+        if (TextEditorService.isDefault) {
+            const rest = [];
+            for (let i = 0; i < list.length; ++i) {
+                const p = list[i];
+                if (TextEditorService.isTextFile(p))
+                    TextEditorService.open(p);
+                else
+                    rest.push(p);
+            }
+            if (!rest.length)
+                return;
+            openProc.owner = owner || null;
+            openProc.command = fm(["open"].concat(rest));
+            openProc.running = true;
+            return;
+        }
+
         openProc.owner = owner || null;
         openProc.command = fm(["open"].concat(list));
         openProc.running = true;
@@ -513,7 +531,12 @@ Singleton {
                     if (data.desktop)
                         root.dirDesktop = data.desktop;
                     if (data.places && data.places.length) {
-                        const list = data.places.slice();
+                        const homePath = root.normalizeFsPath(root.home);
+                        const list = data.places.filter(p => {
+                            if (!p || p.key === "home" || p.path === "trash://")
+                                return true;
+                            return root.normalizeFsPath(p.path) !== homePath;
+                        });
                         if (!list.some(p => p.key === "trash" || p.path === "trash://"))
                             list.push({
                                 key: "trash",

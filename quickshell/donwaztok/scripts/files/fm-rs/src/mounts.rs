@@ -624,13 +624,19 @@ pub fn xdg_dirs() {
     let mut result = serde_json::json!({ "ok": true, "home": home.to_string_lossy() });
     let mut places = Vec::new();
 
-    fn add_unique(paths: &mut Vec<PathBuf>, path: PathBuf) {
+    fn add_unique(paths: &mut Vec<PathBuf>, path: PathBuf, home: &Path) {
         if !path.is_dir() {
             return;
         }
         let Ok(resolved) = path.canonicalize() else {
             return;
         };
+        // XDG dirs disabled with "$HOME/" must not appear as extra Places.
+        if let Ok(home_resolved) = home.canonicalize() {
+            if resolved == home_resolved {
+                return;
+            }
+        }
         for existing in paths.iter() {
             if let Ok(e) = existing.canonicalize() {
                 if e == resolved {
@@ -653,13 +659,13 @@ pub fn xdg_dirs() {
                     if o.status.success() {
                         let p = String::from_utf8_lossy(&o.stdout).trim().to_string();
                         if !p.is_empty() {
-                            add_unique(&mut found, PathBuf::from(p));
+                            add_unique(&mut found, PathBuf::from(p), &home);
                         }
                     }
                 }
             }
             for name in names {
-                add_unique(&mut found, home.join(name));
+                add_unique(&mut found, home.join(name), &home);
             }
             if !names.is_empty() {
                 found.sort_by_key(|p| {

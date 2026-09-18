@@ -56,6 +56,13 @@ QtObject {
             readonly property string component: "dashboard/DashboardPane.qml"
         },
         QtObject {
+            readonly property string id: "apps"
+            readonly property string label: "apps"
+            readonly property string title: qsTr("Applications")
+            readonly property string icon: "apps"
+            readonly property string component: "apps/AppsPane.qml"
+        },
+        QtObject {
             readonly property string id: "hyprlandLayout"
             readonly property string label: "hyprlandLayout"
             readonly property string title: qsTr("Hyprland layout")

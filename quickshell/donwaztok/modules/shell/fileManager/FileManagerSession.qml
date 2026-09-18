@@ -549,6 +549,10 @@ Item {
             FileManagerService.smartExtract(entry.path, currentPath, root);
             return;
         }
+        if (TextEditorService.shouldOpenInternally(entry.path, entry.mimeType || "")) {
+            TextEditorService.open(entry.path);
+            return;
+        }
         FileManagerService.openFile(entry.path, root);
     }
 
@@ -610,6 +614,19 @@ Item {
 
         if (toOpen.length)
             FileManagerService.openFiles(toOpen, root);
+    }
+
+    function openWith(appId: string): void {
+        if (isTrashView || !selectedPaths.length)
+            return;
+        const paths = [];
+        for (let i = 0; i < selectedPaths.length; ++i) {
+            const e = entries.find(x => x.path === selectedPaths[i]);
+            if (e && !e.isDir)
+                paths.push(e.path);
+        }
+        if (paths.length)
+            TextEditorService.openWith(appId, paths);
     }
 
     function uriListForDrag(primaryPath: string): string {
@@ -938,7 +955,13 @@ Item {
     }
 
     function openTerminal(): void {
-        Quickshell.execDetached(["kitty", "--working-directory", currentPath]);
+        const cmd = DefaultApps.resolvedTerminal();
+        if (!cmd || !cmd.length)
+            return;
+        Quickshell.execDetached({
+            command: cmd,
+            workingDirectory: currentPath
+        });
     }
 
     function leaveMount(mountPath: string): void {

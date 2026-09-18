@@ -11,6 +11,7 @@ JsonObject {
         property list<string> audio: ["pavucontrol"]
         property list<string> playback: ["mpv"]
         property list<string> explorer: ["qs", "-c", "donwaztok", "ipc", "call", "fileManager", "open"]
+        property string editor: "donwaztok-text"
     }
 
     component Idle: JsonObject {

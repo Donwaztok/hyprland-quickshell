@@ -29,4 +29,6 @@ singleton Visibilities 1.0 Visibilities.qml
 singleton VPN 1.0 VPN.qml
 singleton Wallpapers 1.0 Wallpapers.qml
 singleton Weather 1.0 Weather.qml
+singleton DefaultApps 1.0 DefaultApps.qml
 singleton FileManagerService 1.0 FileManagerService.qml
+singleton TextEditorService 1.0 TextEditorService.qml

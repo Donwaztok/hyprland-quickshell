@@ -968,6 +968,27 @@ Item {
     }
 
     property string ctxMode: "file" // "file" | "folder" | "bar"
+    property var openWithRows: []
+    property string openWithQuery: ""
+    property var openWithPaths: []
+    property bool openWithFlyout: false
+
+    readonly property var openWithFiltered: {
+        const q = String(root.openWithQuery || "").trim().toLowerCase();
+        const src = root.openWithRows || [];
+        if (!q.length)
+            return src;
+        const out = [];
+        for (let i = 0; i < src.length; ++i) {
+            const a = src[i];
+            if (!a)
+                continue;
+            const name = String(a.name || "").toLowerCase();
+            if (name.indexOf(q) >= 0)
+                out.push(a);
+        }
+        return out;
+    }
 
     function displayPath(): string {
         if (session.isTrashView)
@@ -993,6 +1014,7 @@ Item {
         if (!btn)
             return;
         root.ctxMode = "bar";
+        root.openWithFlyout = false;
         fmCtxMenu.height = 80;
         const p = root.mapFromItem(btn, 0, btn.height + 4);
         fmCtxMenu.x = Math.max(8, Math.min(p.x, root.width - fmCtxMenu.width - 8));
@@ -1004,6 +1026,7 @@ Item {
 
     function openCtxMenu(anchor: var, mx: real, my: real, mode: string): void {
         root.ctxMode = mode || "file";
+        root.openWithFlyout = false;
         fmCtxMenu.height = 80;
         const p = root.mapFromItem(anchor, mx, my);
         fmCtxMenu.x = Math.max(8, Math.min(p.x, root.width - fmCtxMenu.width - 8));
@@ -1154,9 +1177,10 @@ Item {
         const it = ctxLoader.item;
         if (!it)
             return 80;
-        // Never use item.height: a previous tall menu (bar) stretches the loader
-        // and Math.max would keep that leftover size.
-        return Math.max(it.childrenRect.height, it.implicitHeight || 0, 1);
+        const base = Math.max(it.childrenRect.height, it.implicitHeight || 0, 1);
+        if (root.openWithFlyout && root.ctxMode === "file")
+            return Math.max(base, 320);
+        return base;
     }
 
     function syncCtxMenuGeometry(anchorPoint: var): void {
@@ -1182,6 +1206,15 @@ Item {
         for (let i = 0; i < session.selectedPaths.length; ++i) {
             const e = session.entries.find(x => x.path === session.selectedPaths[i]);
             if (e && e.isDir)
+                return true;
+        }
+        return false;
+    }
+
+    function selectionHasFile(): bool {
+        for (let i = 0; i < session.selectedPaths.length; ++i) {
+            const e = session.entries.find(x => x.path === session.selectedPaths[i]);
+            if (e && !e.isDir)
                 return true;
         }
         return false;
@@ -1378,6 +1411,7 @@ Item {
         property bool rowEnabled: true
         property bool destructive: false
         property bool hasSubmenu: false
+        property bool openOnHover: true
         property bool checked: false
 
         signal activated
@@ -1445,7 +1479,9 @@ Item {
             onEntered: {
                 if (btn.hasSubmenu) {
                     sortSubCloseTimer.stop();
-                    btn.activated();
+                    openWithCloseTimer.stop();
+                    if (btn.openOnHover)
+                        btn.activated();
                     return;
                 }
                 if (root.inSortSubMenu(btn))
@@ -1459,6 +1495,7 @@ Item {
                     return;
                 }
                 sortSubMenu.close();
+                root.openWithFlyout = false;
                 fmCtxMenu.close();
                 btn.activated();
             }
@@ -1688,6 +1725,17 @@ Item {
                 onActivated: session.openSelection()
             }
             CtxBtn {
+                id: openWithMenuBtn
+                visible: !session.isTrashView && root.selectionHasFile()
+                height: visible ? 36 : 0
+                label: qsTr("Open with")
+                iconName: "open_with"
+                hasSubmenu: true
+                openOnHover: true
+                rowEnabled: visible
+                onActivated: root.openOpenWithFlyout()
+            }
+            CtxBtn {
                 visible: {
                     if (session.isTrashView || !session.selectedPaths.length)
                         return false;
@@ -1874,7 +1922,7 @@ Item {
 
         parent: root
         padding: Theme.Appearance.padding.small
-        width: 232 + Theme.Appearance.padding.small * 2
+        width: 232 + Theme.Appearance.padding.small * 2 + (root.openWithFlyout && root.ctxMode === "file" ? 288 : 0)
         modal: false
         dim: false
         focus: true
@@ -1890,17 +1938,121 @@ Item {
         }
 
         onOpened: root.syncCtxMenuGeometry(Qt.point(fmCtxMenu.x, fmCtxMenu.y))
-        onClosed: sortSubMenu.close()
+        onClosed: {
+            sortSubMenu.close();
+            root.openWithFlyout = false;
+        }
 
-        contentItem: Loader {
-            id: ctxLoader
-            width: 232
-            sourceComponent: root.ctxMode === "bar" ? barCtxComp : (root.ctxMode === "folder" ? folderCtxComp : fileCtxComp)
-            onLoaded: {
-                root.syncCtxMenuGeometry(Qt.point(fmCtxMenu.x, fmCtxMenu.y));
-                Qt.callLater(() => root.syncCtxMenuGeometry(Qt.point(fmCtxMenu.x, fmCtxMenu.y)));
+        contentItem: Row {
+            id: ctxRow
+            spacing: 8
+
+            Loader {
+                id: ctxLoader
+                width: 232
+                sourceComponent: root.ctxMode === "bar" ? barCtxComp : (root.ctxMode === "folder" ? folderCtxComp : fileCtxComp)
+                onLoaded: {
+                    root.syncCtxMenuGeometry(Qt.point(fmCtxMenu.x, fmCtxMenu.y));
+                    Qt.callLater(() => root.syncCtxMenuGeometry(Qt.point(fmCtxMenu.x, fmCtxMenu.y)));
+                }
+                onItemChanged: root.syncCtxMenuGeometry(Qt.point(fmCtxMenu.x, fmCtxMenu.y))
             }
-            onItemChanged: root.syncCtxMenuGeometry(Qt.point(fmCtxMenu.x, fmCtxMenu.y))
+
+            Rectangle {
+                visible: root.openWithFlyout && root.ctxMode === "file"
+                width: visible ? 1 : 0
+                height: Math.max(ctxLoader.height, 300)
+                color: Colours.palette.m3outlineVariant
+                opacity: 0.45
+            }
+
+            Item {
+                id: openWithPane
+                visible: root.openWithFlyout && root.ctxMode === "file"
+                width: visible ? 272 : 0
+                height: Math.max(ctxLoader.height, 300)
+                clip: true
+
+                HoverHandler {
+                    onHoveredChanged: {
+                        if (hovered)
+                            openWithCloseTimer.stop();
+                    }
+                }
+
+                Column {
+                    anchors.fill: parent
+                    spacing: Theme.Appearance.spacing.small
+
+                    StyledTextField {
+                        id: openWithSearch
+                        width: parent.width
+                        placeholderText: qsTr("Search apps")
+                        text: root.openWithQuery
+                        onTextChanged: root.openWithQuery = text
+                    }
+
+                    ListView {
+                        id: openWithList
+                        width: parent.width
+                        height: parent.height - openWithSearch.height - Theme.Appearance.spacing.small
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        spacing: 2
+                        model: ScriptModel {
+                            values: root.openWithFiltered
+                        }
+
+                        delegate: Item {
+                            id: openWithRow
+                            required property var modelData
+                            width: openWithList.width
+                            height: 36
+
+                            StyledRect {
+                                anchors.fill: parent
+                                radius: Theme.Appearance.rounding.small
+                                color: openWithMa.containsMouse ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                            }
+
+                            MaterialIcon {
+                                id: openWithIcon
+                                anchors.left: parent.left
+                                anchors.leftMargin: Theme.Appearance.padding.normal
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: (openWithRow.modelData && openWithRow.modelData.id === TextEditorService.appId) ? "edit_note" : "apps"
+                                color: Colours.palette.m3onSurfaceVariant
+                                font.pointSize: Theme.Appearance.font.size.normal
+                            }
+
+                            StyledText {
+                                anchors.left: openWithIcon.right
+                                anchors.leftMargin: Theme.Appearance.spacing.normal
+                                anchors.right: parent.right
+                                anchors.rightMargin: Theme.Appearance.padding.normal
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: (openWithRow.modelData && openWithRow.modelData.name) ? openWithRow.modelData.name : ""
+                                color: Colours.palette.m3onSurface
+                                elide: Text.ElideRight
+                            }
+
+                            MouseArea {
+                                id: openWithMa
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    const id = openWithRow.modelData ? String(openWithRow.modelData.id || "") : "";
+                                    const paths = root.openWithPaths && root.openWithPaths.length ? root.openWithPaths : session.selectedPaths;
+                                    fmCtxMenu.close();
+                                    if (id.length)
+                                        TextEditorService.openWith(id, paths);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -2059,6 +2211,13 @@ Item {
         onTriggered: sortSubMenu.close()
     }
 
+    Timer {
+        id: openWithCloseTimer
+        interval: 180
+        repeat: false
+        onTriggered: root.openWithFlyout = false
+    }
+
     function inSortSubMenu(item: var): bool {
         let p = item;
         while (p) {
@@ -2082,6 +2241,54 @@ Item {
         sortSubMenu.y = Math.max(8, Math.min(p.y, root.height - h - 8));
         if (!sortSubMenu.opened)
             sortSubMenu.open();
+    }
+
+    function populateOpenWithRows(): void {
+        let rows = [];
+        try {
+            rows = TextEditorService.listOpenWithApps();
+        } catch (e) {
+            rows = [];
+        }
+        if (!rows || !rows.length) {
+            rows = [
+                {
+                    id: TextEditorService.appId,
+                    name: TextEditorService.appName
+                }
+            ];
+        }
+        const first = rows[0];
+        if (!first || first.id !== TextEditorService.appId) {
+            rows = [
+                {
+                    id: TextEditorService.appId,
+                    name: TextEditorService.appName
+                }
+            ].concat(rows);
+        }
+        root.openWithRows = rows;
+    }
+
+    function openOpenWithFlyout(): void {
+        const paths = [];
+        for (let i = 0; i < session.selectedPaths.length; ++i) {
+            const e = session.entries.find(x => x.path === session.selectedPaths[i]);
+            if (e && !e.isDir)
+                paths.push(e.path);
+        }
+        if (!paths.length)
+            return;
+
+        sortSubMenu.close();
+        openWithCloseTimer.stop();
+        root.openWithQuery = "";
+        if (openWithSearch)
+            openWithSearch.text = "";
+        root.openWithPaths = paths;
+        root.populateOpenWithRows();
+        root.openWithFlyout = true;
+        root.syncCtxMenuGeometry(Qt.point(fmCtxMenu.x, fmCtxMenu.y));
     }
 
     function pickerFilterLabel(f: var): string {

@@ -8,6 +8,7 @@ import "hyprland"
 import "taskbar"
 import "launcher"
 import "dashboard"
+import "apps"
 import qs.components
 import qs.services.shell
 import qs.config

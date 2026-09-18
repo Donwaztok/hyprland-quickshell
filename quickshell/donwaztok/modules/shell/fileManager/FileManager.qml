@@ -16,6 +16,7 @@ Scope {
 
     property int windowCount: 0
     property var latest: null
+    readonly property var defaultApps: DefaultApps
 
     function openWindow(path: string): void {
         const start = (path && String(path).length) ? String(path) : FileManagerService.home;
@@ -261,6 +262,14 @@ Scope {
 
         function open(): void {
             root.openWindow("");
+        }
+
+        function openPath(path: string): void {
+            const raw = String(path || "").trim();
+            if (!raw.length || raw === "%f" || raw === "%F" || raw === "undefined")
+                root.openWindow("");
+            else
+                root.openWindow(raw);
         }
 
         function toggle(): void {

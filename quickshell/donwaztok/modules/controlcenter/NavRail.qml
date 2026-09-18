@@ -49,15 +49,15 @@ Item {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.topMargin: index === 7 ? Appearance.spacing.normal : 0
-                    implicitHeight: index === 7 ? 1 : 0
-                    visible: index === 7
+                    Layout.topMargin: index === 8 ? Appearance.spacing.normal : 0
+                    implicitHeight: index === 8 ? 1 : 0
+                    visible: index === 8
                     color: Qt.alpha(Colours.palette.m3outlineVariant, 0.45)
                 }
 
                 SidebarRow {
                     Layout.fillWidth: true
-                    Layout.topMargin: (index === 3 || index === 7) ? Appearance.spacing.small : (index > 0 ? Appearance.spacing.smaller : 0)
+                    Layout.topMargin: (index === 3 || index === 8) ? Appearance.spacing.small : (index > 0 ? Appearance.spacing.smaller : 0)
 
                     iconName: PaneRegistry.getByIndex(index).icon
                     labelText: PaneRegistry.getByIndex(index).title

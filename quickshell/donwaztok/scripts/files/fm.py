@@ -910,7 +910,7 @@ def do_info(paths: list[str]) -> None:
 
 
 def xdg_dirs() -> None:
-    """Resolve Places from XDG + common EN/PT folder names; every existing dir is listed."""
+    """Resolve Places from XDG + common EN/PT folder names; skip dirs that resolve to $HOME."""
     home = Path.home()
     # (key, xdg-user-dir name or None, icon, candidate folder names under $HOME)
     specs: list[tuple[str, str | None, str, list[str]]] = [
@@ -961,6 +961,9 @@ def xdg_dirs() -> None:
             if not path.is_dir():
                 return
             resolved = str(path.resolve())
+            if resolved == str(home.resolve()):
+                # XDG dirs disabled with "$HOME/" must not appear as extra Places.
+                return
         except OSError:
             return
         for existing in paths:
