@@ -1,3 +1,4 @@
 module qs.modules.shell.textEditor
 TextEditor 1.0 TextEditor.qml
 TextEditorContent 1.0 TextEditorContent.qml
+MarkdownPreview 1.0 MarkdownPreview.qml

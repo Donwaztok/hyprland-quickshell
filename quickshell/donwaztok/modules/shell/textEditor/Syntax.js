@@ -465,5 +465,5 @@ function highlight(src, lang, colors) {
         body = highlightMarkdown(text, c, lang === "mdx");
     else
         body = highlightIni(text, c);
-    return `<pre style="margin:0;white-space:pre;">${body}</pre>`;
+    return `<div style="margin:0;padding:0;white-space:pre;line-height:1;">${body}</div>`;
 }

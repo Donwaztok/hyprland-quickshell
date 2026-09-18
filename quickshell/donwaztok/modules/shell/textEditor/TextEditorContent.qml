@@ -11,6 +11,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import "Syntax.js" as Syntax
+import "Markdown.js" as Markdown
 
 Item {
     id: root
@@ -34,7 +35,7 @@ Item {
     readonly property bool syntaxOn: root.language.length > 0
     readonly property bool isMarkdown: root.language === "md" || root.language === "mdx"
     property string mdView: "preview"
-    property string previewText: ""
+    property var previewBlocks: []
 
     readonly property bool sourceVisible: !root.isMarkdown || root.mdView === "source" || root.mdView === "split"
     readonly property bool previewVisible: root.isMarkdown && (root.mdView === "preview" || root.mdView === "split")
@@ -76,25 +77,36 @@ Item {
         } else {
             root.highlightedHtml = Syntax.highlight(editor.text, root.language, root.syntaxColors());
         }
-        root.previewText = root.isMarkdown ? root.buildPreview(editor.text) : "";
+        if (!root.isMarkdown) {
+            root.previewBlocks = [];
+            return;
+        }
+        const blocks = root.buildPreview(editor.text);
+        root.previewBlocks = blocks || [];
     }
 
-    function buildPreview(text: string): string {
-        let t = String(text || "");
-        const fm = t.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
-        if (fm)
-            t = "```\n" + fm[0].trim() + "\n```\n\n" + t.slice(fm[0].length);
-        if (root.language === "mdx")
-            t = t.replace(/^(import|export)\s+[^\n]+\n/gm, "```\n$&```\n");
+    function buildPreview(text: string): var {
         const dir = root.filePath.slice(0, Math.max(0, root.filePath.lastIndexOf("/")));
-        t = t.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (m, alt, url) => {
-            const u = String(url || "").trim();
-            if (!u.length || /^(https?:|file:|data:|qrc:)/i.test(u))
-                return m;
-            const abs = u.startsWith("/") ? u : `${dir}/${u.replace(/^\.\//, "")}`;
-            return `![${alt}](file://${abs})`;
-        });
-        return t;
+        const size = Math.max(13, Theme.Appearance.font.size.normal);
+        try {
+            return Markdown.mdToBlocks(text, {
+                fg: root.cssColor(Colours.palette.m3onSurface),
+                heading: root.cssColor(Colours.palette.m3onSurface),
+                muted: root.cssColor(Colours.palette.m3onSurfaceVariant),
+                codeBg: root.cssColor(Colours.palette.m3secondaryContainer),
+                codeFg: root.cssColor(Colours.palette.m3onSurfaceVariant),
+                link: root.cssColor(Colours.palette.m3primary),
+                quoteBar: root.cssColor(Colours.palette.m3primary),
+                mono: Theme.Appearance.font.family.mono,
+                sans: Theme.Appearance.font.family.sans,
+                size: size
+            }, {
+                dir: dir,
+                mdx: root.language === "mdx"
+            });
+        } catch (e) {
+            return [];
+        }
     }
 
     function detectIndent(text: string): string {
@@ -497,20 +509,28 @@ Item {
         }
 
         RowLayout {
+            id: editorRow
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: Theme.Appearance.spacing.small
 
+            Item {
+                visible: root.sourceVisible
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                Layout.minimumWidth: 0
+                implicitWidth: 0
+                implicitHeight: 0
+                clip: true
+
             Flickable {
                 id: flick
-                visible: root.sourceVisible
-                Layout.fillWidth: root.sourceVisible
-                Layout.fillHeight: true
-                Layout.preferredWidth: root.sourceVisible ? 1 : 0
+                anchors.fill: parent
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
-                flickableDirection: root.syntaxOn && !root.isMarkdown ? Flickable.HorizontalAndVerticalFlick : Flickable.VerticalFlick
-                contentWidth: root.syntaxOn && !root.isMarkdown ? Math.max(width, editor.width) : width
+                flickableDirection: root.syntaxOn ? Flickable.HorizontalAndVerticalFlick : Flickable.VerticalFlick
+                contentWidth: root.syntaxOn ? Math.max(width, editor.width) : width
                 contentHeight: Math.max(height, editor.height)
 
                 StyledScrollBar.vertical: StyledScrollBar {
@@ -521,32 +541,41 @@ Item {
                     id: colorLayer
                     x: editor.x
                     y: editor.y
-                    width: editor.width
-                    height: editor.height
+                    width: Math.max(editor.contentWidth, editor.width)
+                    height: Math.max(editor.contentHeight, editor.height)
                     visible: root.syntaxOn
                     textFormat: Text.RichText
-                    wrapMode: root.isMarkdown ? Text.Wrap : Text.NoWrap
+                    wrapMode: Text.NoWrap
                     text: root.highlightedHtml
                     color: Colours.palette.m3onSurface
                     renderType: Text.QtRendering
                     font.family: editor.font.family
                     font.pointSize: editor.font.pointSize
                     font.hintingPreference: Font.PreferFullHinting
+                    leftPadding: 0
+                    rightPadding: 0
+                    topPadding: 0
+                    bottomPadding: 0
                     z: 0
                 }
 
                 TextEdit {
                     id: editor
-                    width: root.syntaxOn && !root.isMarkdown ? Math.max(flick.width, implicitWidth) : flick.width
+                    width: root.syntaxOn ? Math.max(flick.width, contentWidth) : flick.width
                     height: Math.max(contentHeight, flick.height)
+                    padding: 0
+                    leftPadding: 0
+                    rightPadding: 0
+                    topPadding: 0
+                    bottomPadding: 0
                     textFormat: TextEdit.PlainText
-                    wrapMode: root.syntaxOn && !root.isMarkdown ? TextEdit.NoWrap : TextEdit.Wrap
+                    wrapMode: root.syntaxOn ? TextEdit.NoWrap : TextEdit.Wrap
                     selectByMouse: true
                     persistentSelection: true
                     activeFocusOnPress: true
                     color: root.syntaxOn ? "transparent" : Colours.palette.m3onSurface
-                    selectedTextColor: Colours.palette.m3onPrimary
-                    selectionColor: Qt.alpha(Colours.palette.m3primary, root.syntaxOn ? 0.35 : 1)
+                    selectedTextColor: root.syntaxOn ? "transparent" : Colours.palette.m3onPrimary
+                    selectionColor: root.syntaxOn ? Qt.alpha(Colours.palette.m3primary, 0.28) : Colours.palette.m3primary
                     renderType: Text.QtRendering
                     font.family: Theme.Appearance.font.family.mono
                     font.pointSize: Math.max(12, Theme.Appearance.font.size.smaller)
@@ -571,7 +600,7 @@ Item {
                             flick.contentY = Math.max(0, r.y);
                         else if (r.y + r.height > flick.contentY + flick.height)
                             flick.contentY = Math.max(0, r.y + r.height - flick.height);
-                        if (root.syntaxOn && !root.isMarkdown) {
+                        if (root.syntaxOn) {
                             if (r.x < flick.contentX)
                                 flick.contentX = Math.max(0, r.x);
                             else if (r.x + r.width > flick.contentX + flick.width)
@@ -596,47 +625,32 @@ Item {
                     }
                 }
             }
+            }
 
             Rectangle {
                 visible: root.sourceVisible && root.previewVisible
                 Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                Layout.maximumWidth: 1
                 width: 1
                 color: Colours.palette.m3outlineVariant
                 opacity: 0.45
             }
 
-            Flickable {
-                id: previewFlick
+            Item {
                 visible: root.previewVisible
-                Layout.fillWidth: root.previewVisible
+                Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.preferredWidth: root.previewVisible ? 1 : 0
+                Layout.preferredWidth: 1
+                Layout.minimumWidth: 0
+                implicitWidth: 0
+                implicitHeight: 0
                 clip: true
-                boundsBehavior: Flickable.StopAtBounds
-                flickableDirection: Flickable.VerticalFlick
-                contentWidth: width
-                contentHeight: Math.max(height, previewDoc.height)
 
-                StyledScrollBar.vertical: StyledScrollBar {
-                    flickable: previewFlick
-                }
-
-                Text {
-                    id: previewDoc
-                    width: previewFlick.width
-                    textFormat: Text.MarkdownText
-                    wrapMode: Text.Wrap
-                    text: root.previewText
-                    color: Colours.palette.m3onSurface
-                    linkColor: Colours.palette.m3primary
-                    renderType: Text.QtRendering
-                    font.family: Theme.Appearance.font.family.sans
-                    font.pointSize: Math.max(13, Theme.Appearance.font.size.normal)
-                    onLinkActivated: url => Qt.openUrlExternally(url)
-
-                    HoverHandler {
-                        cursorShape: previewDoc.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    }
+                MarkdownPreview {
+                    id: previewFlick
+                    anchors.fill: parent
+                    blocks: root.previewBlocks
                 }
             }
         }
