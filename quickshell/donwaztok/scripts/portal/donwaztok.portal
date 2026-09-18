@@ -1,0 +1,4 @@
+[portal]
+DBusName=org.freedesktop.impl.portal.desktop.donwaztok
+Interfaces=org.freedesktop.impl.portal.FileChooser;
+UseIn=hyprland;Hyprland;wayland;wlroots;sway

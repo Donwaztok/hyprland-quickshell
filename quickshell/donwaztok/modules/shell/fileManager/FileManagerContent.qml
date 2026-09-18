@@ -12,6 +12,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as QC
 import QtQuick.Window
 import Quickshell
+import Quickshell.Io
 
 Item {
     id: root
@@ -20,6 +21,17 @@ Item {
     signal interacted
 
     property string startPath: FileManagerService.home
+    property bool pickerMode: false
+    property string pickerRequestId: ""
+    property string pickerKind: "open" // open | save | saveFiles
+    property string pickerAcceptLabel: ""
+    property bool pickerMultiple: false
+    property bool pickerDirectory: false
+    property string pickerCurrentName: ""
+    property var pickerFilters: []
+    property int pickerFilterIndex: 0
+    property var pickerSaveFiles: []
+    property bool pickerResolved: false
     property bool confirmDeleteOpen: false
     property bool confirmEmptyTrashOpen: false
     property bool propertiesOpen: false
@@ -30,7 +42,7 @@ Item {
     readonly property bool dialogOpen: confirmDeleteOpen || confirmEmptyTrashOpen || propertiesOpen || root.renameOpen
     readonly property bool inputBlocked: session.pathEditing || root.renameOpen || searchField.activeFocus
     readonly property bool navBlocked: session.pathEditing || root.renameOpen
-    readonly property bool renameBlocked: session.pathEditing || root.renameOpen || session.isTrashView
+    readonly property bool renameBlocked: session.pathEditing || root.renameOpen || session.isTrashView || root.pickerMode
     readonly property bool isWindowActive: Window.active
     readonly property string currentPath: session.currentPath
     readonly property bool canGoBack: session.canGoBack
@@ -45,6 +57,72 @@ Item {
     readonly property color fmSelectBg: Qt.alpha(Colours.palette.m3primary, Colours.light ? 0.16 : 0.22)
     readonly property color fmHoverBg: Colours.tPalette.m3surfaceContainerHigh
     readonly property color fmDropBg: Qt.alpha(Colours.palette.m3primary, Colours.light ? 0.28 : 0.32)
+
+    readonly property string pickerWindowTitle: {
+        if (!root.pickerMode)
+            return qsTr("Files — Donwaztok");
+        if (root.pickerKind === "save" || root.pickerKind === "saveFiles")
+            return qsTr("Save As — Donwaztok");
+        if (root.pickerDirectory)
+            return qsTr("Select Folder — Donwaztok");
+        return qsTr("Open File — Donwaztok");
+    }
+
+    readonly property var pickerActiveFilter: {
+        const list = root.pickerFilters;
+        if (!list || !list.length)
+            return ({
+                name: qsTr("All files"),
+                patterns: ["*"]
+            });
+        const idx = Math.max(0, Math.min(root.pickerFilterIndex, list.length - 1));
+        return list[idx] || list[0];
+    }
+
+    readonly property var pickerVisibleEntries: {
+        const src = session.filteredEntries;
+        if (!root.pickerMode)
+            return src;
+        const patterns = (root.pickerActiveFilter && root.pickerActiveFilter.patterns) ? root.pickerActiveFilter.patterns : ["*"];
+        const allowAll = patterns.some(p => String(p) === "*");
+        if (root.pickerDirectory || allowAll)
+            return src;
+        return src.filter(e => {
+            if (!e)
+                return false;
+            if (e.isDir)
+                return true;
+            return root.pickerMatchesAny(e.name || "", patterns);
+        });
+    }
+
+    readonly property bool pickerSelectionValid: {
+        if (!root.pickerMode)
+            return false;
+        if (root.pickerKind === "save") {
+            const name = String(root.pickerCurrentName || "").trim();
+            return name.length > 0 && !name.includes("/");
+        }
+        if (root.pickerKind === "saveFiles" || root.pickerDirectory) {
+            if (session.selectedPaths.length === 1) {
+                const e = session.entries.find(x => x.path === session.selectedPaths[0]);
+                if (e && e.isDir)
+                    return true;
+            }
+            return !!session.currentPath && !session.isTrashView;
+        }
+        if (!session.selectedPaths.length)
+            return false;
+        if (root.pickerDirectory)
+            return session.selectedPaths.every(p => {
+                const e = session.entries.find(x => x.path === p);
+                return e && e.isDir;
+            });
+        return session.selectedPaths.every(p => {
+            const e = session.entries.find(x => x.path === p);
+            return e && !e.isDir;
+        });
+    }
 
     FileManagerSession {
         id: session
@@ -79,8 +157,139 @@ Item {
         Qt.callLater(() => root.claimFocus());
     }
 
+    function pickerMatchesAny(name: string, patterns: var): bool {
+        const n = String(name || "").toLowerCase();
+        for (let i = 0; i < patterns.length; ++i) {
+            const pat = String(patterns[i] || "").toLowerCase();
+            if (!pat.length || pat === "*")
+                return true;
+            if (pat.startsWith("*.")) {
+                const suf = pat.slice(1); // ".exe"
+                if (n.endsWith(suf))
+                    return true;
+                continue;
+            }
+            if (pat.startsWith("*") && pat.endsWith("*") && pat.length > 2) {
+                if (n.includes(pat.slice(1, -1)))
+                    return true;
+                continue;
+            }
+            if (n === pat)
+                return true;
+        }
+        return false;
+    }
+
+    function beginPicker(requestId: string): void {
+        root.pickerMode = true;
+        root.pickerRequestId = String(requestId || "");
+        root.pickerResolved = false;
+        pickerRequestView.path = `${Paths.runtime}/${root.pickerRequestId}/request.json`;
+        pickerRequestView.reload();
+    }
+
+    function applyPickerRequest(data: var): void {
+        root.pickerKind = String(data.mode || "open");
+        root.pickerMultiple = !!data.multiple;
+        root.pickerDirectory = !!data.directory || root.pickerKind === "saveFiles";
+        root.pickerAcceptLabel = String(data.acceptLabel || "");
+        root.pickerCurrentName = String(data.currentName || "");
+        root.pickerFilters = Array.isArray(data.filters) ? data.filters : [];
+        root.pickerFilterIndex = 0;
+        root.pickerSaveFiles = Array.isArray(data.files) ? data.files : [];
+        let start = String(data.currentFolder || "");
+        if (!start.length)
+            start = FileManagerService.home;
+        root.openAt(start);
+    }
+
+    function writePickerResult(response: int, uris: var): void {
+        if (root.pickerResolved)
+            return;
+        root.pickerResolved = true;
+        const body = JSON.stringify({
+            response: response,
+            uris: uris || []
+        });
+        pickerResultView.path = `${Paths.runtime}/${root.pickerRequestId}/result.json`;
+        pickerResultView.setText(body);
+    }
+
+    function pickerCancel(): void {
+        root.writePickerResult(1, []);
+        root.requestClose();
+    }
+
+    function uniqueSavePath(dir: string, name: string): string {
+        let stem = name;
+        let ext = "";
+        const dot = name.lastIndexOf(".");
+        if (dot > 0) {
+            stem = name.slice(0, dot);
+            ext = name.slice(dot);
+        }
+        let candidateName = name;
+        let n = 1;
+        const names = new Set((session.entries || []).map(e => e.name));
+        while (names.has(candidateName)) {
+            candidateName = `${stem} (${n})${ext}`;
+            n += 1;
+        }
+        return `${dir}/${candidateName}`;
+    }
+
+    function pickerAccept(): void {
+        if (!root.pickerSelectionValid)
+            return;
+        let uris = [];
+        if (root.pickerKind === "save") {
+            const name = String(root.pickerCurrentName || "").trim();
+            const path = root.uniqueSavePath(session.currentPath, name);
+            uris = [path];
+        } else if (root.pickerKind === "saveFiles") {
+            const dir = session.currentPath;
+            const files = root.pickerSaveFiles.length ? root.pickerSaveFiles : [root.pickerCurrentName || "file"];
+            uris = files.map(n => root.uniqueSavePath(dir, String(n)));
+        } else if (root.pickerDirectory) {
+            if (session.selectedPaths.length === 1) {
+                const e = session.entries.find(x => x.path === session.selectedPaths[0]);
+                uris = [e && e.isDir ? e.path : session.currentPath];
+            } else {
+                uris = [session.currentPath];
+            }
+        } else {
+            uris = session.selectedPaths.slice();
+            if (!root.pickerMultiple && uris.length > 1)
+                uris = [uris[0]];
+        }
+        root.writePickerResult(0, uris);
+        root.requestClose();
+    }
+
+    FileView {
+        id: pickerRequestView
+        onLoaded: {
+            try {
+                const data = JSON.parse(text() || "{}");
+                root.applyPickerRequest(data);
+            } catch (e) {
+                root.pickerCancel();
+            }
+        }
+        onLoadFailed: root.pickerCancel()
+    }
+
+    FileView {
+        id: pickerResultView
+    }
+
+    Component.onDestruction: {
+        if (root.pickerMode && !root.pickerResolved && root.pickerRequestId.length)
+            root.writePickerResult(1, []);
+    }
+
     Component.onCompleted: {
-        if (!session.currentPath.length)
+        if (!root.pickerMode && !session.currentPath.length)
             session.initAt(root.startPath);
         Qt.callLater(() => root.claimFocus());
     }
@@ -1769,6 +1978,80 @@ Item {
         }
     }
 
+    QC.Popup {
+        id: pickerFilterMenu
+
+        parent: root
+        padding: Theme.Appearance.padding.small
+        modal: false
+        dim: false
+        focus: true
+        clip: true
+        closePolicy: QC.Popup.CloseOnEscape | QC.Popup.CloseOnPressOutside
+        transformOrigin: Item.BottomLeft
+
+        background: StyledRect {
+            radius: Theme.Appearance.rounding.normal
+            color: Colours.palette.m3surfaceContainerHigh
+            border.width: 1
+            border.color: Qt.alpha(Colours.palette.m3outlineVariant, 0.5)
+        }
+
+        contentItem: ListView {
+            id: pickerFilterList
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            model: root.pickerFilters
+            spacing: 2
+            implicitHeight: contentHeight
+            delegate: Item {
+                id: filterRow
+                required property var modelData
+                required property int index
+                width: pickerFilterList.width
+                height: 36
+
+                StyledRect {
+                    anchors.fill: parent
+                    radius: Theme.Appearance.rounding.small
+                    color: filterMa.containsMouse || root.pickerFilterIndex === filterRow.index ? Colours.tPalette.m3surfaceContainerHighest : "transparent"
+                }
+
+                StyledText {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.Appearance.padding.normal
+                    anchors.rightMargin: Theme.Appearance.padding.normal + (root.pickerFilterIndex === filterRow.index ? 28 : 0)
+                    text: root.pickerFilterLabel(filterRow.modelData)
+                    elide: Text.ElideRight
+                    color: root.pickerFilterIndex === filterRow.index ? Colours.palette.m3primary : Colours.palette.m3onSurface
+                    font.weight: root.pickerFilterIndex === filterRow.index ? Font.Medium : Font.Normal
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                MaterialIcon {
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.Appearance.padding.normal
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.pickerFilterIndex === filterRow.index
+                    text: "check"
+                    color: Colours.palette.m3primary
+                    font.pointSize: Theme.Appearance.font.size.normal
+                }
+
+                MouseArea {
+                    id: filterMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.pickerFilterIndex = filterRow.index;
+                        pickerFilterMenu.close();
+                    }
+                }
+            }
+        }
+    }
+
     Timer {
         id: sortSubCloseTimer
         interval: 180
@@ -1799,6 +2082,36 @@ Item {
         sortSubMenu.y = Math.max(8, Math.min(p.y, root.height - h - 8));
         if (!sortSubMenu.opened)
             sortSubMenu.open();
+    }
+
+    function pickerFilterLabel(f: var): string {
+        if (!f)
+            return qsTr("Files");
+        const pats = (f.patterns && f.patterns.length) ? f.patterns.join(", ") : "*";
+        return `${f.name || qsTr("Files")} (${pats})`;
+    }
+
+    function openPickerFilterMenu(): void {
+        if (root.pickerFilters.length < 2)
+            return;
+        if (pickerFilterMenu.opened) {
+            pickerFilterMenu.close();
+            return;
+        }
+        const btn = pickerFilterBtn;
+        const gap = 6;
+        const w = Math.max(btn.width, 260);
+        pickerFilterMenu.width = w;
+        // Height from content; clamp so it fits above the button
+        const rowH = 36;
+        const pad = Theme.Appearance.padding.small * 2;
+        const contentH = root.pickerFilters.length * (rowH + 2) + pad;
+        const maxH = Math.max(120, btn.mapToItem(root, 0, 0).y - 16);
+        pickerFilterMenu.height = Math.min(contentH, maxH);
+        const p = root.mapFromItem(btn, 0, 0);
+        pickerFilterMenu.x = Math.max(8, Math.min(p.x, root.width - w - 8));
+        pickerFilterMenu.y = Math.max(8, p.y - pickerFilterMenu.height - gap);
+        pickerFilterMenu.open();
     }
 
     function openPlacesFlyout(): void {
@@ -2143,6 +2456,11 @@ Item {
             }
         }
         if (event.key === Qt.Key_Escape) {
+            if (root.pickerMode) {
+                root.pickerCancel();
+                event.accepted = true;
+                return;
+            }
             if (root.searchOpen) {
                 root.closeSearch();
                 event.accepted = true;
@@ -2207,9 +2525,20 @@ Item {
         } else if (event.key === Qt.Key_H && (event.modifiers & Qt.ControlModifier)) {
             root.shortcutToggleHidden();
             event.accepted = true;
-        } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && session.selectedPaths.length > 0) {
-            session.openSelection();
-            event.accepted = true;
+        } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
+            if (root.pickerMode) {
+                if (root.pickerSelectionValid) {
+                    root.pickerAccept();
+                } else if (session.selectedPaths.length === 1) {
+                    const e = session.entries.find(x => x.path === session.selectedPaths[0]);
+                    if (e && e.isDir)
+                        session.openSelection();
+                }
+                event.accepted = true;
+            } else if (session.selectedPaths.length > 0) {
+                session.openSelection();
+                event.accepted = true;
+            }
         }
     }
 
@@ -2701,7 +3030,7 @@ Item {
 
                 Loader {
                     anchors.centerIn: parent
-                    active: session.filteredEntries.length === 0
+                    active: root.pickerVisibleEntries.length === 0
                     sourceComponent: ColumnLayout {
                         MaterialIcon {
                             Layout.alignment: Qt.AlignHCenter
@@ -2728,7 +3057,7 @@ Item {
                     anchors.bottomMargin: Theme.Appearance.padding.small
                     clip: true
                     visible: session.listView
-                    model: session.filteredEntries
+                    model: root.pickerVisibleEntries
                     spacing: 2
                     focus: true
                     activeFocusOnTab: true
@@ -2887,7 +3216,7 @@ Item {
                     anchors.margins: Theme.Appearance.padding.normal
                     clip: true
                     visible: !session.listView
-                    model: session.filteredEntries
+                    model: root.pickerVisibleEntries
                     cellWidth: 120
                     cellHeight: 130
                     focus: true
@@ -3162,9 +3491,19 @@ Item {
                         const hit = root.hitFileAt(mouse.x, mouse.y);
                         if (!hit.length)
                             return;
-                        const entry = session.filteredEntries.find(e => e.path === hit);
-                        if (entry)
-                            session.openEntry(entry);
+                        const entry = root.pickerVisibleEntries.find(e => e.path === hit) || session.filteredEntries.find(e => e.path === hit);
+                        if (!entry)
+                            return;
+                        if (root.pickerMode) {
+                            if (entry.isDir) {
+                                session.openEntry(entry);
+                            } else if (!root.pickerDirectory) {
+                                session.selectOnly(entry.path);
+                                root.pickerAccept();
+                            }
+                            return;
+                        }
+                        session.openEntry(entry);
                     }
                 }
 
@@ -3223,6 +3562,146 @@ Item {
                         text: "progress_activity"
                         color: Colours.palette.m3primary
                         font.pointSize: Theme.Appearance.font.size.extraLarge
+                    }
+                }
+            }
+
+            // Portal / file-chooser accept bar
+            StyledRect {
+                id: pickerChrome
+                Layout.fillWidth: true
+                visible: root.pickerMode
+                implicitHeight: visible ? pickerBar.implicitHeight + Theme.Appearance.padding.normal * 2 : 0
+                color: Colours.tPalette.m3surfaceContainer
+
+                RowLayout {
+                    id: pickerBar
+                    anchors.fill: parent
+                    anchors.margins: Theme.Appearance.padding.normal
+                    spacing: Theme.Appearance.spacing.small
+
+                    StyledText {
+                        visible: root.pickerFilters.length > 1
+                        text: qsTr("Filter")
+                        color: Colours.palette.m3onSurfaceVariant
+                        font.pointSize: Theme.Appearance.font.size.small
+                    }
+
+                    StyledRect {
+                        id: pickerFilterBtn
+                        visible: root.pickerFilters.length > 0
+                        Layout.fillWidth: root.pickerKind !== "save"
+                        Layout.preferredWidth: root.pickerKind === "save" ? 180 : -1
+                        Layout.maximumWidth: root.pickerKind === "save" ? 220 : -1
+                        implicitHeight: 36
+                        radius: Theme.Appearance.rounding.small
+                        color: Colours.tPalette.m3surfaceContainerHigh
+                        clip: true
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.Appearance.padding.normal
+                            anchors.rightMargin: Theme.Appearance.padding.small
+                            spacing: Theme.Appearance.spacing.small
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: {
+                                    const f = root.pickerActiveFilter;
+                                    return root.pickerFilterLabel(f);
+                                }
+                                elide: Text.ElideRight
+                                color: Colours.palette.m3onSurface
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                            MaterialIcon {
+                                visible: root.pickerFilters.length > 1
+                                text: pickerFilterMenu.opened ? "expand_more" : "expand_less"
+                                color: Colours.palette.m3onSurfaceVariant
+                                font.pointSize: Theme.Appearance.font.size.normal
+                            }
+                        }
+
+                        StateLayer {
+                            visible: root.pickerFilters.length > 1
+                            radius: parent.radius
+                            function onClicked(): void {
+                                root.openPickerFilterMenu();
+                            }
+                        }
+                    }
+
+                    StyledRect {
+                        visible: root.pickerKind === "save"
+                        Layout.fillWidth: true
+                        implicitHeight: 36
+                        radius: Theme.Appearance.rounding.small
+                        color: Colours.tPalette.m3surfaceContainerHigh
+
+                        TextInput {
+                            id: pickerNameField
+                            anchors.fill: parent
+                            anchors.leftMargin: Theme.Appearance.padding.normal
+                            anchors.rightMargin: Theme.Appearance.padding.normal
+                            verticalAlignment: TextInput.AlignVCenter
+                            color: Colours.palette.m3onSurface
+                            selectedTextColor: Colours.palette.m3onPrimary
+                            selectionColor: Colours.palette.m3primary
+                            text: root.pickerCurrentName
+                            onTextChanged: root.pickerCurrentName = text
+                            clip: true
+                        }
+                    }
+
+                    Item {
+                        Layout.fillWidth: root.pickerKind !== "save" && root.pickerFilters.length === 0
+                        visible: root.pickerKind !== "save" && root.pickerFilters.length === 0
+                    }
+
+                    StyledRect {
+                        implicitWidth: pickerCancelLabel.implicitWidth + Theme.Appearance.padding.large * 2
+                        implicitHeight: 36
+                        radius: Theme.Appearance.rounding.full
+                        color: Colours.palette.m3surfaceContainerHighest
+
+                        StateLayer {
+                            color: Colours.palette.m3onSurface
+                            function onClicked(): void {
+                                root.pickerCancel();
+                            }
+                        }
+
+                        StyledText {
+                            id: pickerCancelLabel
+                            anchors.centerIn: parent
+                            text: qsTr("Cancel")
+                            color: Colours.palette.m3onSurface
+                        }
+                    }
+
+                    StyledRect {
+                        implicitWidth: pickerAcceptLabel.implicitWidth + Theme.Appearance.padding.large * 2
+                        implicitHeight: 36
+                        radius: Theme.Appearance.rounding.full
+                        color: root.pickerSelectionValid ? Colours.palette.m3primary : Colours.palette.m3surfaceContainerHighest
+                        opacity: root.pickerSelectionValid ? 1 : 0.55
+
+                        StateLayer {
+                            enabled: root.pickerSelectionValid
+                            color: Colours.palette.m3onPrimary
+                            function onClicked(): void {
+                                root.pickerAccept();
+                            }
+                        }
+
+                        StyledText {
+                            id: pickerAcceptLabel
+                            anchors.centerIn: parent
+                            text: root.pickerAcceptLabel.length ? root.pickerAcceptLabel : (root.pickerKind === "save" || root.pickerKind === "saveFiles" ? qsTr("Save") : qsTr("Select"))
+                            color: root.pickerSelectionValid ? Colours.palette.m3onPrimary : Colours.palette.m3onSurfaceVariant
+                            font.weight: Font.Medium
+                        }
                     }
                 }
             }
@@ -3843,5 +4322,6 @@ Item {
         id: fmToasts
         session: session
         anchors.fill: parent
+        bottomInset: root.pickerMode ? (pickerChrome.height + Theme.Appearance.padding.small) : 0
     }
 }

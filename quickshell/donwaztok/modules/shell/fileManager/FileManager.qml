@@ -5,6 +5,7 @@ import qs.components.effects
 import qs.services
 import qs.services.shell
 import qs.config as Theme
+import qs.utils
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
@@ -19,10 +20,26 @@ Scope {
     function openWindow(path: string): void {
         const start = (path && String(path).length) ? String(path) : FileManagerService.home;
         fmWindow.createObject(root, {
-            startPath: start
+            startPath: start,
+            pickerMode: false,
+            pickerRequestId: ""
         });
         root.windowCount += 1;
         FileManagerService.refreshMounts();
+    }
+
+    function openPicker(requestId: string): string {
+        const id = String(requestId || "").trim();
+        if (!id.length)
+            return "{\"ok\":false,\"error\":\"missing request id\"}";
+        fmWindow.createObject(root, {
+            startPath: FileManagerService.home,
+            pickerMode: true,
+            pickerRequestId: id
+        });
+        root.windowCount += 1;
+        FileManagerService.refreshMounts();
+        return "{\"ok\":true,\"id\":\"" + id + "\"}";
     }
 
     function hyprTitle(): string {
@@ -35,7 +52,13 @@ Scope {
 
     function isFmFocused(): bool {
         const title = root.hyprTitle();
-        return title.indexOf("Files") >= 0 && title.indexOf("Donwaztok") >= 0;
+        if (title.indexOf("Donwaztok") < 0)
+            return false;
+        return title.indexOf("Files") >= 0
+            || title.indexOf("Open File") >= 0
+            || title.indexOf("Select Folder") >= 0
+            || title.indexOf("Save As") >= 0
+            || title.indexOf("Save Files") >= 0;
     }
 
     function runMod(kind: string, held: bool): void {
@@ -64,6 +87,8 @@ Scope {
     function runEdit(action: string): string {
         const c = root.latest;
         if (!c || !root.isFmFocused())
+            return root.statusJson();
+        if (c.pickerMode)
             return root.statusJson();
         if (action === "cut")
             c.shortcutCut();
@@ -95,7 +120,8 @@ Scope {
             lastInput: c.lastInput,
             qtActive: c.isWindowActive,
             hyprTitle: root.hyprTitle(),
-            fmFocused: root.isFmFocused()
+            fmFocused: root.isFmFocused(),
+            picker: !!c.pickerMode
         });
     }
 
@@ -106,11 +132,13 @@ Scope {
             id: win
 
             property string startPath: FileManagerService.home
+            property bool pickerMode: false
+            property string pickerRequestId: ""
 
-            title: qsTr("Files — Donwaztok")
+            title: content.pickerWindowTitle
             color: Colours.shellSurface
-            implicitWidth: 1100
-            implicitHeight: 720
+            implicitWidth: win.pickerMode ? 980 : 1100
+            implicitHeight: win.pickerMode ? 640 : 720
 
             onVisibleChanged: {
                 if (!visible)
@@ -130,10 +158,15 @@ Scope {
             FileManagerContent {
                 id: content
                 anchors.fill: parent
+                pickerMode: win.pickerMode
+                pickerRequestId: win.pickerRequestId
                 onRequestClose: win.destroy()
                 Component.onCompleted: {
                     root.latest = content;
-                    content.openAt(win.startPath);
+                    if (win.pickerMode)
+                        content.beginPicker(win.pickerRequestId);
+                    else
+                        content.openAt(win.startPath);
                 }
             }
         }
@@ -235,6 +268,10 @@ Scope {
         }
 
         function close(): void {}
+
+        function pick(requestId: string): string {
+            return root.openPicker(requestId);
+        }
 
         function status(): string {
             return root.statusJson();

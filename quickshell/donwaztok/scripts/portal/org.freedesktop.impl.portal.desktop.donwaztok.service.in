@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.freedesktop.impl.portal.desktop.donwaztok
+Exec=@HOME@/.config/quickshell/donwaztok/scripts/portal/xdg-desktop-portal-donwaztok.py
+SystemdService=xdg-desktop-portal-donwaztok.service

@@ -1,5 +1,6 @@
 import qs
 import qs.services
+import qs.services.shell as ShellServices
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.config as DwCfg
@@ -17,6 +18,9 @@ Scope {
     property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
 
     property string currentIndicator: "volume"
+    property bool seenCapsLock: false
+    property bool seenNumLock: false
+
     property var indicators: [
         {
             id: "volume",
@@ -25,6 +29,14 @@ Scope {
         {
             id: "brightness",
             sourceUrl: "indicators/BrightnessIndicator.qml"
+        },
+        {
+            id: "capslock",
+            sourceUrl: "indicators/CapsLockIndicator.qml"
+        },
+        {
+            id: "numlock",
+            sourceUrl: "indicators/NumLockIndicator.qml"
         },
     ]
 
@@ -51,6 +63,32 @@ Scope {
             root.protectionMessage = "";
             root.currentIndicator = "brightness";
             root.triggerOsd();
+        }
+    }
+
+    Connections {
+        target: ShellServices.Hypr
+        function onCapsLockChanged() {
+            if (!root.seenCapsLock) {
+                root.seenCapsLock = true;
+                return;
+            }
+            if (!DwCfg.Config.utilities.toasts.capsLockChanged)
+                return;
+            root.protectionMessage = "";
+            root.currentIndicator = "capslock";
+            root.triggerOsd(1500);
+        }
+        function onNumLockChanged() {
+            if (!root.seenNumLock) {
+                root.seenNumLock = true;
+                return;
+            }
+            if (!DwCfg.Config.utilities.toasts.numLockChanged)
+                return;
+            root.protectionMessage = "";
+            root.currentIndicator = "numlock";
+            root.triggerOsd(1500);
         }
     }
 

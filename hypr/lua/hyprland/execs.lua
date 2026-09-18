@@ -12,7 +12,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --all")
     hl.exec_cmd(
         "sleep 1 && dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP "
-            .. "XDG_SESSION_TYPE && systemctl --user start hyprland-session.target"
+            .. "XDG_SESSION_TYPE GTK_USE_PORTAL && systemctl --user start hyprland-session.target"
     )
 
     -- Tray

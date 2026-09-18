@@ -1,12 +1,22 @@
 -- Window and layer rules (order matters: later rules override earlier ones)
 -- https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 
--- File / save dialogs
+-- File / save dialogs (GTK portal + Donwaztok picker)
 hl.window_rule({
     name = "file-dialogs",
-    match = { title = "^(Open File|Select a File|Open Folder|Save As|Library|File Upload)(.*)$" },
+    match = {
+        title = "^(Open File|Select a File|Open Folder|Save As|Library|File Upload|Select Folder|Escolha|Salvar|Abrir)(.*)$",
+    },
     float = true,
     center = true,
+})
+
+hl.window_rule({
+    name = "donwaztok-file-picker",
+    match = { title = "^(Open File|Select Folder|Save As|Save Files) — Donwaztok$" },
+    float = true,
+    center = true,
+    size = { "monitor_w*0.55", "monitor_h*0.65" },
 })
 
 hl.window_rule({
@@ -85,7 +95,8 @@ hl.window_rule({
     name = "gtk-portal",
     match = { class = "^org\\.freedesktop\\.impl\\.portal\\.desktop\\.gtk$" },
     float = true,
-    size = { "monitor_w*0.60", "monitor_h*0.65" },
+    center = true,
+    size = { "monitor_w*0.55", "monitor_h*0.65" },
 })
 
 hl.window_rule({

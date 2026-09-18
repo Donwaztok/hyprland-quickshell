@@ -160,6 +160,15 @@ if [ -f "$FM_RS/build.sh" ]; then
 fi
 
 # -----------------------------------------------------------------------------
+# 6c. Donwaztok FileChooser portal (xdg-desktop-portal)
+# -----------------------------------------------------------------------------
+PORTAL_DIR="$REPO_ROOT/quickshell/donwaztok/scripts/portal"
+if [ -f "$PORTAL_DIR/install.sh" ]; then
+  echo -e "\033[0;32m[PORTAL]\033[0m Installing Donwaztok FileChooser portal…"
+  bash "$PORTAL_DIR/install.sh" || echo -e "\033[0;33m[PORTAL]\033[0m Portal install failed."
+fi
+
+# -----------------------------------------------------------------------------
 # 6. Desktop files (custom launchers)
 # -----------------------------------------------------------------------------
 mkdir -p "$HOME/.local/share/applications"

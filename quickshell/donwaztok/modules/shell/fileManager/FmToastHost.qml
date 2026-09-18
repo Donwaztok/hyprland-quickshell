@@ -12,9 +12,11 @@ Item {
     id: root
 
     required property var session
+    property real bottomInset: 0
 
     readonly property int pad: Theme.Appearance.padding.large
     readonly property bool compact: width < 820
+    readonly property real toastBottomMargin: root.pad + root.bottomInset
 
     readonly property var progressJobs: {
         const out = [];
@@ -82,7 +84,7 @@ Item {
         id: progressHost
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: root.pad
+        anchors.bottomMargin: root.toastBottomMargin
         anchors.leftMargin: root.jobVisible ? root.pad : root.pad - 24
         width: root.compact ? 240 : 300
         height: progressCol.implicitHeight
@@ -152,7 +154,7 @@ Item {
         id: timedStack
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: root.pad
+        anchors.bottomMargin: root.toastBottomMargin
         spacing: Theme.Appearance.spacing.small
         width: root.compact ? Math.min(320, parent.width * 0.56) : 360
 
@@ -176,7 +178,7 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.rightMargin: root.infoToast ? root.pad : root.pad - 24
-        anchors.bottomMargin: root.pad
+        anchors.bottomMargin: root.toastBottomMargin
         visible: !!root.infoToast || opacity > 0.01
         enabled: !!root.infoToast
         opacity: root.infoToast ? 1 : 0

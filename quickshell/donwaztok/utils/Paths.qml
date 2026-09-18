@@ -11,6 +11,7 @@ QtObject {
     readonly property string pictures: Quickshell.env("XDG_PICTURES_DIR") || `${home}/Pictures`
 
     readonly property string state: `${Quickshell.env("XDG_STATE_HOME") || `${home}/.local/state`}/donwaztok`
+    readonly property string runtime: `${Quickshell.env("XDG_RUNTIME_DIR") || `/run/user/${Quickshell.env("UID") || "1000"}`}/donwaztok-portal`
 
     readonly property string notifimagecache: `${Quickshell.env("XDG_CACHE_HOME") || `${home}/.cache`}/donwaztok/imagecache/notifs`
     readonly property string wallsdir: Quickshell.env("DONWAZTOK_WALLPAPERS_DIR") || absolutePath(Config.paths.wallpaperDir)
