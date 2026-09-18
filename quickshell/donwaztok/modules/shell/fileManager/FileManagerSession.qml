@@ -684,6 +684,24 @@ Item {
         showAppToast(qsTr("Copied"), qsTr("Copied %1 item(s)").arg(selectedPaths.length), "content_copy");
     }
 
+    function copyPathSelection(): void {
+        const paths = selectedPaths.length ? selectedPaths.slice() : (currentPath.length ? [currentPath] : []);
+        if (!paths.length)
+            return;
+        Quickshell.clipboardText = paths.join("\n");
+        if (paths.length === 1)
+            showAppToast(qsTr("Path copied"), paths[0], "link");
+        else
+            showAppToast(qsTr("Paths copied"), qsTr("%1 path(s)").arg(paths.length), "link");
+    }
+
+    function copyCurrentPath(): void {
+        if (!currentPath.length || isTrashView)
+            return;
+        Quickshell.clipboardText = currentPath;
+        showAppToast(qsTr("Path copied"), currentPath, "link");
+    }
+
     function cutSelection(): void {
         if (!selectedPaths.length)
             return;
@@ -725,7 +743,7 @@ Item {
             return 2;
         if (icon === "delete" || icon === "delete_forever" || icon === "delete_sweep")
             return 2;
-        if (icon === "check_circle" || icon === "check_circle_unread" || icon === "content_copy" || icon === "content_cut" || icon === "undo" || icon === "folder_zip")
+        if (icon === "check_circle" || icon === "check_circle_unread" || icon === "content_copy" || icon === "content_cut" || icon === "undo" || icon === "folder_zip" || icon === "link")
             return 1;
         return 0;
     }

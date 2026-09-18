@@ -1317,6 +1317,12 @@ Item {
                 onActivated: session.pasteClipboard()
             }
             CtxBtn {
+                label: qsTr("Copy path")
+                iconName: "link"
+                rowEnabled: session.currentPath.length > 0 && !session.isTrashView
+                onActivated: session.copyCurrentPath()
+            }
+            CtxBtn {
                 label: qsTr("Open in Terminal")
                 iconName: "terminal"
                 rowEnabled: !session.isTrashView
@@ -1400,6 +1406,12 @@ Item {
                 iconName: "content_paste"
                 rowEnabled: !session.isTrashView && FileManagerService.clipboardPaths.length > 0
                 onActivated: session.pasteClipboard()
+            }
+            CtxBtn {
+                label: qsTr("Copy path")
+                iconName: "link"
+                rowEnabled: session.currentPath.length > 0 && !session.isTrashView
+                onActivated: session.copyCurrentPath()
             }
             Item {
                 width: 1
@@ -1533,6 +1545,12 @@ Item {
                 iconName: "content_copy"
                 rowEnabled: session.selectedPaths.length > 0 && !session.isTrashView
                 onActivated: session.copySelection()
+            }
+            CtxBtn {
+                label: session.selectedPaths.length > 1 ? qsTr("Copy paths") : qsTr("Copy path")
+                iconName: "link"
+                rowEnabled: session.selectedPaths.length > 0
+                onActivated: session.copyPathSelection()
             }
             CtxBtn {
                 label: qsTr("Cut")
