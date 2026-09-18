@@ -140,9 +140,10 @@ Item {
     Toasts.Toasts {
         id: toasts
 
-        anchors.bottom: sidebar.visible ? parent.bottom : utilities.top
-        anchors.right: sidebar.left
-        anchors.margins: Appearance.padding.normal
+        z: 12
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: Appearance.padding.normal
     }
 
     Sidebar.Wrapper {

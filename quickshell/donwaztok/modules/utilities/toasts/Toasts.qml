@@ -12,15 +12,24 @@ Item {
     readonly property int spacing: Appearance.spacing.small
     property bool flag
 
-    implicitWidth: Config.utilities.sizes.toastWidth - Appearance.padding.normal * 2
-    implicitHeight: {
-        let h = -spacing;
+    implicitWidth: {
+        let w = 0;
         for (let i = 0; i < repeater.count; i++) {
             const item = repeater.itemAt(i) as ToastWrapper;
-            if (!item.modelData.closed && !item.previewHidden)
-                h += item.implicitHeight + spacing;
+            if (item && !item.modelData.closed && !item.previewHidden)
+                w = Math.max(w, item.implicitWidth);
         }
-        return h;
+        return w;
+    }
+
+    implicitHeight: {
+        let h = 0;
+        for (let i = 0; i < repeater.count; i++) {
+            const item = repeater.itemAt(i) as ToastWrapper;
+            if (item && !item.modelData.closed && !item.previewHidden)
+                h += item.implicitHeight + root.spacing;
+        }
+        return h > 0 ? h - root.spacing : 0;
     }
 
     Repeater {
@@ -68,7 +77,7 @@ Item {
         opacity: modelData.closed || previewHidden ? 0 : 1
         scale: modelData.closed || previewHidden ? 0.7 : 1
 
-        anchors.bottomMargin: {
+        anchors.topMargin: {
             root.flag; // Force update
             let y = 0;
             for (let i = 0; i < index; i++) {
@@ -79,9 +88,9 @@ Item {
             return y;
         }
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        implicitWidth: toastInner.implicitWidth
         implicitHeight: toastInner.implicitHeight
 
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
@@ -104,7 +113,7 @@ Item {
 
         ParallelAnimation {
             running: toast.modelData.closed
-            onStarted: toast.anchors.bottomMargin = toast.anchors.bottomMargin
+            onStarted: toast.anchors.topMargin = toast.anchors.topMargin
             onFinished: toast.modelData.unlock(toast)
 
             Anim {
@@ -133,7 +142,7 @@ Item {
             Anim {}
         }
 
-        Behavior on anchors.bottomMargin {
+        Behavior on anchors.topMargin {
             Anim {
                 duration: Appearance.anim.durations.expressiveDefaultSpatial
                 easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial

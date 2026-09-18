@@ -97,6 +97,26 @@ Singleton {
 
     Component.onCompleted: reloadDynamicConfs()
 
+    onCapsLockChanged: {
+        if (!Config.utilities.toasts.capsLockChanged)
+            return;
+
+        if (capsLock)
+            Toaster.toast(qsTr("Caps lock enabled"), qsTr("Caps lock is currently enabled"), "keyboard_capslock_badge");
+        else
+            Toaster.toast(qsTr("Caps lock disabled"), qsTr("Caps lock is currently disabled"), "keyboard_capslock");
+    }
+
+    onNumLockChanged: {
+        if (!Config.utilities.toasts.numLockChanged)
+            return;
+
+        if (numLock)
+            Toaster.toast(qsTr("Num lock enabled"), qsTr("Num lock is currently enabled"), "looks_one");
+        else
+            Toaster.toast(qsTr("Num lock disabled"), qsTr("Num lock is currently disabled"), "timer_1");
+    }
+
     onKbLayoutFullChanged: {
         if (hadKeyboard && Config.utilities.toasts.kbLayoutChanged)
             Toaster.toast(qsTr("Keyboard layout changed"), qsTr("Layout changed to: %1").arg(kbLayoutFull), "keyboard");
