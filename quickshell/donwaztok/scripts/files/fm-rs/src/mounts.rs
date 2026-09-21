@@ -436,6 +436,7 @@ fn device_node_exists(device: &str) -> bool {
 }
 
 pub fn do_eject(mount_point: &str) {
+    // Real eject (udiskie "Eject" / gio -e) — not plain unmount, not power-off/Unpower.
     let mp = expand_user(mount_point).to_string_lossy().into_owned();
     let home = dirs_home().to_string_lossy().into_owned();
     if mp == "/" || mp == "/home" || mp == home {
@@ -456,74 +457,83 @@ pub fn do_eject(mount_point: &str) {
         String::new()
     };
 
-    if !is_mount_live(&mp) {
-        if !disk.is_empty() && device_node_exists(&disk) {
-            let (code, _) = run_cmd(&[
-                "udisksctl",
-                "power-off",
-                "-b",
-                &disk,
-                "--no-user-interaction",
-            ]);
-            out_ok(serde_json::json!({
-                "ok": true,
-                "mount": mp,
-                "device": source,
-                "disk": disk,
-                "poweredOff": code == 0 || !device_node_exists(&disk),
-                "mode": "eject",
-            }));
-            return;
-        }
+    // Prefer the same path as the udiskie tray "Eject" action.
+    let (udie_code, udie_msg) = run_cmd(&[
+        "udiskie-umount",
+        "--eject",
+        "--no-detach",
+        "--force",
+        &mp,
+    ]);
+    if udie_code == 0 {
         out_ok(serde_json::json!({
             "ok": true,
             "mount": mp,
+            "device": source,
+            "disk": disk,
+            "poweredOff": false,
             "mode": "eject",
-            "alreadyUnmounted": true,
-            "poweredOff": true,
+            "via": "udiskie",
         }));
         return;
     }
 
-    let (code, _) = run_cmd(&["gio", "mount", "-e", &uri]);
+    if !is_mount_live(&mp) {
+        // Already unmounted — still try drive eject when the node is present.
+        if !disk.is_empty() && device_node_exists(&disk) {
+            let _ = run_cmd(&["gio", "mount", "-e", &uri]);
+        }
+        out_ok(serde_json::json!({
+            "ok": true,
+            "mount": mp,
+            "device": source,
+            "disk": disk,
+            "mode": "eject",
+            "alreadyUnmounted": true,
+            "poweredOff": false,
+            "via": "gio",
+        }));
+        return;
+    }
+
+    let (code, msg) = run_cmd(&["gio", "mount", "-e", &uri]);
     if code != 0 && is_mount_live(&mp) {
         thread::sleep(Duration::from_millis(400));
         let _ = run_cmd(&["gio", "mount", "-e", "-f", &uri]);
     }
 
     if is_mount_live(&mp) {
-        let (_, msg) = run_cmd(&["gio", "mount", "-u", "-f", &uri]);
+        let (_, umsg) = run_cmd(&["gio", "mount", "-u", "-f", &uri]);
         if is_mount_live(&mp) {
             err_exit(&format!(
                 "{}\n{}",
-                if msg.is_empty() {
-                    "Device is busy".into()
-                } else {
+                if !umsg.is_empty() {
+                    umsg
+                } else if !msg.is_empty() {
                     msg
+                } else if !udie_msg.is_empty() {
+                    udie_msg
+                } else {
+                    "Device is busy".into()
                 },
                 busy_hint(&mp)
             ));
         }
+        // Unmounted; retry eject on the drive.
         if !disk.is_empty() && device_node_exists(&disk) {
-            thread::sleep(Duration::from_millis(250));
-            let _ = run_cmd(&[
-                "udisksctl",
-                "power-off",
-                "-b",
-                &disk,
-                "--no-user-interaction",
-            ]);
+            thread::sleep(Duration::from_millis(200));
+            let _ = run_cmd(&["gio", "mount", "-e", &uri]);
         }
     }
 
-    let powered_off = disk.is_empty() || !device_node_exists(&disk);
     out_ok(serde_json::json!({
         "ok": true,
         "mount": mp,
         "device": source,
         "disk": disk,
-        "poweredOff": powered_off,
+        "poweredOff": false,
         "mode": "eject",
+        "via": "gio",
     }));
 }
 
@@ -543,12 +553,63 @@ pub fn do_mount(device: &str) {
         return;
     }
 
-    let (code, msg) = run_cmd(&["gio", "mount", "-d", &dev]);
-    if code != 0 {
-        err_exit(&if msg.is_empty() {
+    // After eject, gvfs often has no Volume for the block id ("Nenhum volume para o ID dado").
+    // Prefer udisksctl (same stack as udiskie), then udiskie-mount, then gio.
+    let mut last_msg = String::new();
+    let mut mounted_ok = false;
+
+    let (code, msg) = run_cmd(&[
+        "udisksctl",
+        "mount",
+        "-b",
+        &dev,
+        "--no-user-interaction",
+    ]);
+    if !msg.is_empty() {
+        last_msg = msg.clone();
+    }
+    if code == 0 {
+        mounted_ok = true;
+        // "Mounted /dev/sda1 at /run/media/user/LABEL"
+        if let Some(at) = msg.find(" at ") {
+            let mp = msg[at + 4..].trim().to_string();
+            if !mp.is_empty() && Path::new(&mp).is_dir() {
+                out_ok(serde_json::json!({
+                    "ok": true,
+                    "mount": mp,
+                    "device": dev,
+                    "via": "udisksctl",
+                }));
+                return;
+            }
+        }
+    }
+
+    if !mounted_ok {
+        let (code, msg) = run_cmd(&["udiskie-mount", &dev]);
+        if !msg.is_empty() {
+            last_msg = msg;
+        }
+        if code == 0 {
+            mounted_ok = true;
+        }
+    }
+
+    if !mounted_ok {
+        let (code, msg) = run_cmd(&["gio", "mount", "-d", &dev]);
+        if !msg.is_empty() {
+            last_msg = msg;
+        }
+        if code == 0 {
+            mounted_ok = true;
+        }
+    }
+
+    if !mounted_ok {
+        err_exit(&if last_msg.is_empty() {
             format!("Failed to mount {dev}")
         } else {
-            msg
+            last_msg
         });
     }
 
@@ -558,10 +619,10 @@ pub fn do_mount(device: &str) {
         targets = mount_targets_for_device(&dev);
     }
     if targets.is_empty() {
-        err_exit(&if msg.is_empty() {
+        err_exit(&if last_msg.is_empty() {
             format!("Mounted but mountpoint not found for {dev}")
         } else {
-            msg
+            last_msg
         });
     }
 

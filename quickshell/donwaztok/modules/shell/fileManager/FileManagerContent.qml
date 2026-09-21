@@ -851,20 +851,8 @@ Item {
         return n.length > 0 && n.charAt(0) === ".";
     }
 
-    MouseArea {
-        anchors.fill: parent
-        z: 10000
-        hoverEnabled: false
-        acceptedButtons: Qt.BackButton | Qt.ForwardButton | Qt.ExtraButton1 | Qt.ExtraButton2 | Qt.ExtraButton3 | Qt.ExtraButton4 | Qt.ExtraButton5 | Qt.ExtraButton6
-        onPressed: mouse => {
-            root.noteInput("mouse:" + mouse.button);
-            if (mouse.button === Qt.BackButton || mouse.button === Qt.ExtraButton1 || mouse.button === Qt.ExtraButton3)
-                root.shortcutBack();
-            else if (mouse.button === Qt.ForwardButton || mouse.button === Qt.ExtraButton2 || mouse.button === Qt.ExtraButton4)
-                root.shortcutForward();
-            mouse.accepted = true;
-        }
-    }
+    // Mouse back/forward: Hyprland → GlobalShortcut (non_consuming). Handled only on the
+    // focused window via FileManager.focusedContent() — do not catch ExtraButtons here.
 
     Shortcut {
         sequences: ["Alt+Up"]

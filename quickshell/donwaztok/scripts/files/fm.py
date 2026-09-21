@@ -1593,11 +1593,7 @@ def _device_node_exists(device: str) -> bool:
 
 
 def do_eject(mount_point: str) -> None:
-    """Nautilus-style eject button: gio mount -e (unmount + safe-remove when supported).
-
-    On USB drives with can_eject, this is what Files/Nautilus calls — the system then
-    shows “device can be removed”. Only one/two gio calls to avoid udiskie spam.
-    """
+    """Real eject (udiskie tray "Eject" / gio -e) — not plain unmount, not Unpower."""
     mp = str(Path(mount_point).expanduser())
     if mp in ("/", "/home", str(Path.home())):
         err("Refusing to eject system volume")
@@ -1609,76 +1605,118 @@ def do_eject(mount_point: str) -> None:
     source = _block_source_for_mount(mp) if _is_mount_live(mp) else ""
     disk = _disk_for_partition(source) if source else ""
 
-    if not _is_mount_live(mp):
-        # Volume already unmounted — still try to stop/eject the drive once.
-        if disk and _device_node_exists(disk):
-            code, msg = _run_cmd(["udisksctl", "power-off", "-b", disk, "--no-user-interaction"])
-            out(
-                {
-                    "ok": True,
-                    "mount": mp,
-                    "device": source,
-                    "disk": disk,
-                    "poweredOff": code == 0 or not _device_node_exists(disk),
-                    "mode": "eject",
-                }
-            )
-            return
-        out({"ok": True, "mount": mp, "mode": "eject", "alreadyUnmounted": True, "poweredOff": True})
+    # Same action as udiskie tray "Eject /dev/sdX".
+    udie_code, udie_msg = _run_cmd(
+        ["udiskie-umount", "--eject", "--no-detach", "--force", mp]
+    )
+    if udie_code == 0:
+        out(
+            {
+                "ok": True,
+                "mount": mp,
+                "device": source or "",
+                "disk": disk or "",
+                "poweredOff": False,
+                "mode": "eject",
+                "via": "udiskie",
+            }
+        )
         return
 
-    # Same path as Nautilus: eject mountable (not plain unmount).
+    if not _is_mount_live(mp):
+        if disk and _device_node_exists(disk):
+            _run_cmd(["gio", "mount", "-e", uri])
+        out(
+            {
+                "ok": True,
+                "mount": mp,
+                "device": source or "",
+                "disk": disk or "",
+                "mode": "eject",
+                "alreadyUnmounted": True,
+                "poweredOff": False,
+                "via": "gio",
+            }
+        )
+        return
+
     code, msg = _run_cmd(["gio", "mount", "-e", uri])
     if code != 0 and _is_mount_live(mp):
         time.sleep(0.4)
-        code, msg = _run_cmd(["gio", "mount", "-e", "-f", uri])
+        _run_cmd(["gio", "mount", "-e", "-f", uri])
 
-    # Some volumes only support unmount; finish with unmount then one power-off.
     if _is_mount_live(mp):
-        code, msg = _run_cmd(["gio", "mount", "-u", "-f", uri])
+        code, umsg = _run_cmd(["gio", "mount", "-u", "-f", uri])
         if _is_mount_live(mp):
-            err((msg or "Device is busy") + "\n" + _busy_hint(mp))
+            detail = umsg or msg or udie_msg or "Device is busy"
+            err(detail + "\n" + _busy_hint(mp))
         if disk and _device_node_exists(disk):
-            time.sleep(0.25)
-            _run_cmd(["udisksctl", "power-off", "-b", disk, "--no-user-interaction"])
+            time.sleep(0.2)
+            _run_cmd(["gio", "mount", "-e", uri])
 
-    powered_off = not disk or not _device_node_exists(disk)
     out(
         {
             "ok": True,
             "mount": mp,
             "device": source or "",
             "disk": disk or "",
-            "poweredOff": powered_off,
+            "poweredOff": False,
             "mode": "eject",
+            "via": "gio",
         }
     )
 
 
 def do_mount(device: str) -> None:
-    """Mount a block device (Nautilus click on unmounted volume) and return mountpoint."""
+    """Mount a block device and return mountpoint.
+
+    After eject, gvfs often has no Volume for the block id ("Nenhum volume para o ID dado").
+    Prefer udisksctl (same stack as udiskie), then udiskie-mount, then gio.
+    """
     dev = str(device).strip()
     if not dev:
         err("No device")
 
-    # Already mounted?
     existing = _mount_targets_for_device(dev)
     if existing:
         out({"ok": True, "mount": existing[0], "device": dev, "alreadyMounted": True})
         return
 
-    code, msg = _run_cmd(["gio", "mount", "-d", dev])
-    if code != 0:
-        err(msg or f"Failed to mount {dev}")
+    last_msg = ""
+    mounted_ok = False
 
-    # gio may print the mount path; also resolve via findmnt
+    code, msg = _run_cmd(["udisksctl", "mount", "-b", dev, "--no-user-interaction"])
+    last_msg = msg or last_msg
+    if code == 0:
+        mounted_ok = True
+        # "Mounted /dev/sda1 at /run/media/user/LABEL"
+        if " at " in msg:
+            mp = msg.split(" at ", 1)[1].strip()
+            if mp and Path(mp).is_dir():
+                out({"ok": True, "mount": mp, "device": dev, "via": "udisksctl"})
+                return
+
+    if not mounted_ok:
+        code, msg = _run_cmd(["udiskie-mount", dev])
+        last_msg = msg or last_msg
+        if code == 0:
+            mounted_ok = True
+
+    if not mounted_ok:
+        code, msg = _run_cmd(["gio", "mount", "-d", dev])
+        last_msg = msg or last_msg
+        if code == 0:
+            mounted_ok = True
+
+    if not mounted_ok:
+        err(last_msg or f"Failed to mount {dev}")
+
     targets = _mount_targets_for_device(dev)
     if not targets:
-        # Brief wait for udisks to publish the mount
         time.sleep(0.3)
         targets = _mount_targets_for_device(dev)
     if not targets:
-        err(msg or f"Mounted but mountpoint not found for {dev}")
+        err(last_msg or f"Mounted but mountpoint not found for {dev}")
 
     out({"ok": True, "mount": targets[0], "device": dev})
 

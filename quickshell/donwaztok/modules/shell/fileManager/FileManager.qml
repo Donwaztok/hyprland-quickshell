@@ -26,6 +26,7 @@ Scope {
             pickerRequestId: ""
         });
         root.windowCount += 1;
+        FileManagerService.openWindowCount += 1;
         FileManagerService.refreshMounts();
     }
 
@@ -39,6 +40,7 @@ Scope {
             pickerRequestId: id
         });
         root.windowCount += 1;
+        FileManagerService.openWindowCount += 1;
         FileManagerService.refreshMounts();
         return "{\"ok\":true,\"id\":\"" + id + "\"}";
     }
@@ -62,8 +64,15 @@ Scope {
             || title.indexOf("Save Files") >= 0;
     }
 
-    function runMod(kind: string, held: bool): void {
+    function focusedContent(): var {
         const c = root.latest;
+        if (c && c.isWindowActive)
+            return c;
+        return null;
+    }
+
+    function runMod(kind: string, held: bool): void {
+        const c = root.focusedContent();
         if (!c || !root.isFmFocused())
             return;
         if (kind === "shift")
@@ -73,7 +82,7 @@ Scope {
     }
 
     function runNav(action: string): string {
-        const c = root.latest;
+        const c = root.focusedContent();
         if (!c || !root.isFmFocused())
             return root.statusJson();
         if (action === "back")
@@ -86,7 +95,7 @@ Scope {
     }
 
     function runEdit(action: string): string {
-        const c = root.latest;
+        const c = root.focusedContent();
         if (!c || !root.isFmFocused())
             return root.statusJson();
         if (c.pickerMode)
@@ -148,6 +157,7 @@ Scope {
 
             Component.onDestruction: {
                 root.windowCount = Math.max(0, root.windowCount - 1);
+                FileManagerService.openWindowCount = Math.max(0, FileManagerService.openWindowCount - 1);
                 if (root.latest === content)
                     root.latest = null;
             }
@@ -162,6 +172,10 @@ Scope {
                 pickerMode: win.pickerMode
                 pickerRequestId: win.pickerRequestId
                 onRequestClose: win.destroy()
+                onIsWindowActiveChanged: {
+                    if (content.isWindowActive)
+                        root.latest = content;
+                }
                 Component.onCompleted: {
                     root.latest = content;
                     if (win.pickerMode)

@@ -48,6 +48,8 @@ Singleton {
 
     property var mounts: []
     property string mountsSignature: ""
+    /** Number of open Files windows — drives the 1s mounts poll while active. */
+    property int openWindowCount: 0
 
     property string clipboardMode: ""
     property var clipboardPaths: []
@@ -700,8 +702,8 @@ Singleton {
     }
 
     Timer {
-        interval: 8000
-        running: true
+        interval: 1000
+        running: root.openWindowCount > 0
         repeat: true
         triggeredOnStart: true
         onTriggered: root.refreshMounts()
