@@ -269,6 +269,93 @@ Item {
         FileManagerService.refreshMounts();
     }
 
+    function parentDirectory(path: string): string {
+        if (!path || path === "/" || isTrashView)
+            return FileManagerService.home || "/";
+        const n = normalizePath(path);
+        if (!n.length || n === "/")
+            return "/";
+        const i = n.lastIndexOf("/");
+        if (i <= 0)
+            return "/";
+        return n.slice(0, i) || "/";
+    }
+
+    function stopDirWatch(): void {
+        watchRestart.stop();
+        dirWatchDebounce.stop();
+        watchProc.watchTarget = "";
+        watchProc.running = false;
+    }
+
+    /** Walk up when current folder was deleted / moved away. */
+    function recoverMissingFolder(): void {
+        if (isTrashView)
+            return;
+        stopDirWatch();
+        selectedPaths = [];
+        renameTarget = "";
+        renameDraft = "";
+        const parent = parentDirectory(currentPath);
+        suppressHistory = true;
+        if (!parent.length || parent === currentPath) {
+            if (currentPath !== FileManagerService.home)
+                navigate(FileManagerService.home);
+            suppressHistory = false;
+            return;
+        }
+        navigate(parent);
+        suppressHistory = false;
+    }
+
+    function pathIsUnder(path: string, rootPath: string): bool {
+        if (!path || !rootPath)
+            return false;
+        return path === rootPath || path.startsWith(rootPath + "/");
+    }
+
+    /** If we were browsing a deleted/moved folder (or inside it), leave to its parent. */
+    function leaveDeletedPaths(paths: var): bool {
+        if (isTrashView || !paths || !paths.length)
+            return false;
+        let deepest = "";
+        for (let i = 0; i < paths.length; ++i) {
+            const p = normalizePath(String(paths[i] || ""));
+            if (!p.length)
+                continue;
+            if (pathIsUnder(currentPath, p) && p.length >= deepest.length)
+                deepest = p;
+        }
+        if (!deepest.length)
+            return false;
+        stopDirWatch();
+        selectedPaths = [];
+        suppressHistory = true;
+        navigate(parentDirectory(deepest));
+        suppressHistory = false;
+        return true;
+    }
+
+    function pruneSelection(): void {
+        if (!selectedPaths.length)
+            return;
+        const alive = {};
+        for (let i = 0; i < entries.length; ++i) {
+            const p = entries[i] && entries[i].path;
+            if (p)
+                alive[p] = true;
+        }
+        const next = [];
+        for (let i = 0; i < selectedPaths.length; ++i) {
+            if (alive[selectedPaths[i]])
+                next.push(selectedPaths[i]);
+        }
+        if (next.length !== selectedPaths.length)
+            selectedPaths = next;
+        if (selectAnchor.length && !alive[selectAnchor])
+            selectAnchor = next.length ? next[next.length - 1] : "";
+    }
+
     function refresh(): void {
         if (!currentPath.length || currentPath === "undefined")
             currentPath = FileManagerService.home || Quickshell.env("HOME") || "/";
@@ -286,6 +373,7 @@ Item {
             return;
         if (watchProc.watchTarget === target && watchProc.running)
             return;
+        watchRestart.stop();
         watchProc.watchTarget = target;
         watchProc.exec(FileManagerService.fm(["watch", target]));
     }
@@ -309,15 +397,29 @@ Item {
         try {
             const data = JSON.parse(payload);
             if (!data.ok) {
-                if (String(data.error || "").includes("undefined") || !root.currentPath.length) {
+                const err = String(data.error || "");
+                if (err.includes("undefined") || !root.currentPath.length) {
                     root.currentPath = FileManagerService.home;
                     root.refresh();
                     return;
                 }
-                root.showAppToast(qsTr("Files"), data.error || qsTr("Failed to list folder"), "error");
+                // Folder gone (deleted while open / refresh on missing path) — leave quietly.
+                if (err.indexOf("Not a directory") >= 0 || err.indexOf("No such file") >= 0 || err.indexOf("não é um diretório") >= 0) {
+                    root.recoverMissingFolder();
+                    return;
+                }
+                upsertToast({
+                    key: "list-error",
+                    title: qsTr("Files"),
+                    message: err || qsTr("Failed to list folder"),
+                    icon: "error",
+                    lane: "timed",
+                    timeout: 4000
+                });
                 return;
             }
             root.entries = data.entries || [];
+            root.pruneSelection();
         } catch (e) {}
     }
 
@@ -1007,16 +1109,35 @@ Item {
             if (data && data.result)
                 selectOnly(data.result);
         } else if (kind === "trash") {
-            selectedPaths = [];
-            refresh();
-            showUndoToast("trash", data?.items || [], data?.count || 0);
-        } else if (kind === "move") {
-            selectedPaths = [];
-            refresh();
             const items = data?.items || [];
+            const originals = [];
+            for (let i = 0; i < items.length; ++i) {
+                const orig = items[i] && items[i].original;
+                if (orig)
+                    originals.push(orig);
+            }
+            selectedPaths = [];
+            if (!leaveDeletedPaths(originals))
+                refresh();
+            showUndoToast("trash", items, data?.count || 0);
+        } else if (kind === "move") {
+            const items = data?.items || [];
+            const movedFrom = [];
+            for (let i = 0; i < items.length; ++i) {
+                const src = items[i] && (items[i].from || items[i].src || items[i].source);
+                if (src)
+                    movedFrom.push(src);
+            }
+            selectedPaths = [];
+            if (!leaveDeletedPaths(movedFrom))
+                refresh();
             if (items.length)
                 showUndoToast("move", items, data?.count || items.length);
-        } else if (kind === "undo-move" || kind === "delete" || kind === "restore" || kind === "empty-trash") {
+        } else if (kind === "delete") {
+            // Permanent delete payload may only have count — use previous selection via refresh recovery.
+            selectedPaths = [];
+            refresh();
+        } else if (kind === "undo-move" || kind === "restore" || kind === "empty-trash") {
             selectedPaths = [];
             refresh();
         } else if (kind === "eject") {
@@ -1073,8 +1194,18 @@ Item {
                 dirWatchDebounce.restart();
             }
         }
-        onExited: {
-            if (watchProc.watchTarget.length)
+        onExited: (exitCode, exitStatus) => {
+            const target = watchProc.watchTarget;
+            if (!target.length)
+                return;
+            // Missing/deleted folder: do not restart-watch forever (spam).
+            if (exitCode !== 0) {
+                watchProc.watchTarget = "";
+                if (!root.isTrashView && target === root.currentPath)
+                    Qt.callLater(() => root.recoverMissingFolder());
+                return;
+            }
+            if (target === root.currentPath || (root.isTrashView && target === "trash://"))
                 watchRestart.restart();
         }
     }

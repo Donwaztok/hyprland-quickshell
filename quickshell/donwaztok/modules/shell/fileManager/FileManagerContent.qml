@@ -501,6 +501,13 @@ Item {
         const list = session.filteredEntries;
         if (idx >= list.length)
             return "";
+        // indexAt can return a neighbor for empty padding — require the point inside the delegate.
+        const item = view.itemAtIndex ? view.itemAtIndex(idx) : view.itemAt(p.x, p.y);
+        if (!item)
+            return "";
+        const local = item.mapFromItem(fileArea, areaX, areaY);
+        if (local.x < 0 || local.y < 0 || local.x >= item.width || local.y >= item.height)
+            return "";
         return list[idx].path || "";
     }
 
