@@ -6,9 +6,33 @@ use crate::trash::{is_trash_uri, trash_original, trash_root};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
+use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use walkdir::WalkDir;
+
+/// Spawn a GUI/executable detached from `fm` (and Quickshell's Process group).
+/// Without setsid, AppImages die when the helper exits under qs Process.
+fn spawn_detached(bin: &Path, cwd: &Path) -> Result<(), String> {
+    let mut cmd = Command::new(bin);
+    cmd.current_dir(cwd)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        // Force portal file dialogs → Donwaztok FileChooser (overrides gtk3/qt6ct).
+        .env("GTK_USE_PORTAL", "1")
+        .env("QT_QPA_PLATFORMTHEME", "xdgdesktopportal");
+    unsafe {
+        cmd.pre_exec(|| {
+            if libc::setsid() == -1 {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+    cmd.spawn().map_err(|e| e.to_string())?;
+    Ok(())
+}
 
 pub fn do_mkdir(path: &str) {
     let p = expand_user(path);
@@ -343,12 +367,8 @@ fn open_one(path: &str) -> Result<serde_json::Value, String> {
                 }
             }
         }
-        let _ = Command::new(&p)
-            .current_dir(p.parent().unwrap_or(Path::new("/")))
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn();
+        let cwd = p.parent().unwrap_or(Path::new("/"));
+        spawn_detached(&p, cwd)?;
         return Ok(serde_json::json!({
             "ok": true,
             "mode": "exec",
@@ -375,12 +395,8 @@ fn open_one(path: &str) -> Result<serde_json::Value, String> {
     }
 
     if executable {
-        let _ = Command::new(&p)
-            .current_dir(p.parent().unwrap_or(Path::new("/")))
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn();
+        let cwd = p.parent().unwrap_or(Path::new("/"));
+        spawn_detached(&p, cwd)?;
         return Ok(serde_json::json!({
             "ok": true,
             "mode": "exec-fallback",

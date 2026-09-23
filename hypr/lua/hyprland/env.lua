@@ -15,7 +15,9 @@ hl.env(
 
 -- Themes
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
-hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
+-- xdgdesktopportal → Qt QFileDialog uses xdg-desktop-portal → Donwaztok Files.
+-- gtk3 forces the GTK chooser and bypasses our FileChooser portal.
+hl.env("QT_QPA_PLATFORMTHEME", "xdgdesktopportal")
 hl.env("QT_QUICK_CONTROLS_STYLE", "Basic")
 -- Quiet MPRIS Position warnings when Firefox/Chromium buses disappear mid-update
 hl.env("QT_LOGGING_RULES", "quickshell.dbus.properties.warning=false")

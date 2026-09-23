@@ -707,6 +707,11 @@ Item {
             navigate(entry.path);
             return;
         }
+        // AppImages before archive/text checks — always run, never extract/edit.
+        if (entry.isAppImage) {
+            FileManagerService.openFile(entry.path, root);
+            return;
+        }
         if (entry.isArchive) {
             FileManagerService.smartExtract(entry.path, currentPath, root);
             return;
