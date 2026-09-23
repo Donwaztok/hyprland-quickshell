@@ -2643,8 +2643,8 @@ Item {
                 event.accepted = true;
                 return;
             }
+            // Enter/Return: renameField.onAccepted only — avoid double commitRename
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                session.commitRename(renameField.text);
                 event.accepted = true;
                 return;
             }

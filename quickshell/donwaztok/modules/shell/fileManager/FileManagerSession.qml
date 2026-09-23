@@ -30,6 +30,12 @@ Item {
     property bool pathEditing: false
     property string pathEditText: ""
     property bool suppressHistory: false
+    /** Count of intentional watch stops; onExited must not treat those as "folder missing". */
+    property int ignoreWatchExits: 0
+    /** Paths to select once the next successful list includes them (paste/rename). */
+    property var pendingSelectPaths: []
+    /** Blocks re-entrant Enter/OK on the rename dialog. */
+    property bool renameCommitting: false
 
     readonly property bool appToastVisible: toasts.length > 0
     readonly property bool undoToastVisible: {
@@ -284,8 +290,12 @@ Item {
     function stopDirWatch(): void {
         watchRestart.stop();
         dirWatchDebounce.stop();
+        // Clear target first so a late onExited cannot match currentPath and recover upward.
         watchProc.watchTarget = "";
-        watchProc.running = false;
+        if (watchProc.running) {
+            ignoreWatchExits += 1;
+            watchProc.running = false;
+        }
     }
 
     /** Walk up when current folder was deleted / moved away. */
@@ -374,6 +384,14 @@ Item {
         if (watchProc.watchTarget === target && watchProc.running)
             return;
         watchRestart.stop();
+        dirWatchDebounce.stop();
+        // Replacing a live watch kills it (exit 143). That must not trigger recoverMissingFolder,
+        // or navigate → recover(parent) → … climbs to / and flickers with the System mount.
+        if (watchProc.running) {
+            ignoreWatchExits += 1;
+            watchProc.watchTarget = "";
+            watchProc.running = false;
+        }
         watchProc.watchTarget = target;
         watchProc.exec(FileManagerService.fm(["watch", target]));
     }
@@ -419,8 +437,48 @@ Item {
                 return;
             }
             root.entries = data.entries || [];
+            root.applyPendingSelection();
             root.pruneSelection();
         } catch (e) {}
+    }
+
+    function applyPendingSelection(): void {
+        const pending = pendingSelectPaths;
+        if (!pending || !pending.length)
+            return;
+        const alive = {};
+        for (let i = 0; i < entries.length; ++i) {
+            const p = entries[i] && entries[i].path;
+            if (p)
+                alive[p] = true;
+        }
+        const next = [];
+        for (let i = 0; i < pending.length; ++i) {
+            const p = pending[i];
+            if (p && alive[p] && next.indexOf(p) < 0)
+                next.push(p);
+        }
+        if (!next.length)
+            return;
+        pendingSelectPaths = [];
+        selectedPaths = next;
+        selectAnchor = next[next.length - 1];
+    }
+
+    function requestSelectPaths(paths: var): void {
+        if (!paths || !paths.length) {
+            pendingSelectPaths = [];
+            return;
+        }
+        const next = [];
+        for (let i = 0; i < paths.length; ++i) {
+            const p = normalizePath(String(paths[i] || ""));
+            if (p.length && next.indexOf(p) < 0)
+                next.push(p);
+        }
+        pendingSelectPaths = next;
+        if (next.length)
+            applyPendingSelection();
     }
 
     function navigate(path: string): void {
@@ -439,8 +497,10 @@ Item {
         }
         currentPath = target;
         selectedPaths = [];
+        pendingSelectPaths = [];
         renameTarget = "";
         renameDraft = "";
+        renameCommitting = false;
         searchQuery = "";
         pathEditing = false;
         refresh();
@@ -1022,12 +1082,15 @@ Item {
         const target = path || (selectedPaths.length === 1 ? selectedPaths[0] : "");
         if (!target.length)
             return;
+        renameCommitting = false;
         renameTarget = target;
         const slash = target.lastIndexOf("/");
         renameDraft = slash >= 0 ? target.slice(slash + 1) : target;
     }
 
     function commitRename(newName: string): void {
+        if (renameCommitting)
+            return;
         const name = String(newName || renameDraft || "").trim();
         if (!renameTarget.length || !name.length) {
             renameTarget = "";
@@ -1045,13 +1108,21 @@ Item {
             renameDraft = "";
             return;
         }
-        const src = renameTarget;
+        const src = normalizePath(renameTarget);
+        const dest = normalizePath(dst);
+        if (!src.length || !dest.length || src === dest) {
+            renameTarget = "";
+            renameDraft = "";
+            return;
+        }
+        renameCommitting = true;
         renameTarget = "";
         renameDraft = "";
-        FileManagerService.runQuick(FileManagerService.fm(["rename", src, dst]), "rename", "", root);
+        FileManagerService.runQuick(FileManagerService.fm(["rename", src, dest]), "rename", "", root);
     }
 
     function cancelRename(): void {
+        renameCommitting = false;
         renameTarget = "";
         renameDraft = "";
     }
@@ -1096,18 +1167,28 @@ Item {
     }
 
     function onJobDone(kind: string, data: var): void {
+        if (kind === "rename")
+            renameCommitting = false;
         if (kind === "extract") {
             if (data && data.isDir && data.result)
                 navigate(data.result);
             else {
-                refresh();
                 if (data && data.result)
-                    selectOnly(data.result);
+                    requestSelectPaths([data.result]);
+                refresh();
             }
         } else if (kind === "compress") {
-            refresh();
             if (data && data.result)
-                selectOnly(data.result);
+                requestSelectPaths([data.result]);
+            refresh();
+        } else if (kind === "copy") {
+            const results = (data && data.results) ? data.results : [];
+            requestSelectPaths(results);
+            refresh();
+        } else if (kind === "rename") {
+            if (data && data.path)
+                requestSelectPaths([data.path]);
+            refresh();
         } else if (kind === "trash") {
             const items = data?.items || [];
             const originals = [];
@@ -1122,15 +1203,21 @@ Item {
             showUndoToast("trash", items, data?.count || 0);
         } else if (kind === "move") {
             const items = data?.items || [];
+            const results = (data && data.results) ? data.results : [];
             const movedFrom = [];
             for (let i = 0; i < items.length; ++i) {
                 const src = items[i] && (items[i].from || items[i].src || items[i].source);
                 if (src)
                     movedFrom.push(src);
             }
-            selectedPaths = [];
-            if (!leaveDeletedPaths(movedFrom))
+            const left = leaveDeletedPaths(movedFrom);
+            if (!left) {
+                if (results.length)
+                    requestSelectPaths(results);
+                else
+                    selectedPaths = [];
                 refresh();
+            }
             if (items.length)
                 showUndoToast("move", items, data?.count || items.length);
         } else if (kind === "delete") {
@@ -1159,6 +1246,12 @@ Item {
             refresh();
         }
         FileManagerService.refreshMounts();
+    }
+
+    function onJobFailed(kind: string, data: var): void {
+        if (kind === "rename")
+            renameCommitting = false;
+        // Keep pending selections; a failed op should not wipe a prior paste highlight.
     }
 
     Timer {
@@ -1195,8 +1288,16 @@ Item {
             }
         }
         onExited: (exitCode, exitStatus) => {
+            // Intentional stop/replace while navigating — ignore (see startDirWatch/stopDirWatch).
+            if (root.ignoreWatchExits > 0) {
+                root.ignoreWatchExits -= 1;
+                return;
+            }
             const target = watchProc.watchTarget;
             if (!target.length)
+                return;
+            // SIGTERM/SIGKILL from an intentional kill we failed to mark — never climb the tree.
+            if (exitCode === 143 || exitCode === 137 || exitCode === 15 || exitCode === 9)
                 return;
             // Missing/deleted folder: do not restart-watch forever (spam).
             if (exitCode !== 0) {

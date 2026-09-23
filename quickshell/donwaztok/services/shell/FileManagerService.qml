@@ -607,9 +607,12 @@ Singleton {
                     const renameAfter = opProc.renameAfter;
 
                     if (data.ok === false || data.type === "error") {
+                        const failKind = opProc.kind;
                         root.notifyOwnerError(owner, data.error || qsTr("Operation failed"));
                         root.finishJob();
-                        if (owner && owner.refresh)
+                        if (owner && owner.onJobFailed)
+                            owner.onJobFailed(failKind, data || {});
+                        else if (owner && owner.refresh)
                             owner.refresh();
                         return;
                     }
@@ -666,15 +669,55 @@ Singleton {
                 return;
             }
 
+            Qt.callLater(() => root.pumpQueue());
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            opProc.lastExitCode = exitCode;
+            if (root.jobCancelRequested)
+                return;
+            // SplitParser may deliver the final JSON after exit — defer before treating as failure.
             if (root.currentJobId.length && !root.jobSettled && opProc.jobId.length && opProc.jobId === root.currentJobId) {
-                const owner = root.jobOwner;
-                root.notifyOwnerError(owner, qsTr("Operation interrupted"));
+                const settledId = opProc.jobId;
+                Qt.callLater(() => root.settleOpProcIfNeeded(settledId, exitCode));
+            }
+        }
+
+        property int lastExitCode: 0
+    }
+
+    function settleOpProcIfNeeded(jobId: string, exitCode: int): void {
+        if (!jobId || root.jobSettled || root.currentJobId !== jobId)
+            return;
+        if (opProc.jobId !== jobId)
+            return;
+
+        const owner = root.jobOwner;
+        const kind = opProc.kind;
+
+        // Clean exit: stdout success line may still be in flight. Never show a false error
+        // (was: rename succeeded on disk, then UI toasted "No such file" / interrupted).
+        if (exitCode === 0) {
+            Qt.callLater(() => {
+                if (!jobId || root.jobSettled || root.currentJobId !== jobId)
+                    return;
                 root.finishJob();
                 if (owner && owner.refresh)
                     owner.refresh();
-            }
-            Qt.callLater(() => root.pumpQueue());
+                root.refreshMounts();
+            });
+            return;
         }
+
+        root.notifyOwnerError(owner, qsTr("Operation interrupted"));
+        root.finishJob();
+        if (owner && owner.onJobFailed)
+            owner.onJobFailed(kind, {
+                ok: false,
+                error: qsTr("Operation interrupted")
+            });
+        else if (owner && owner.refresh)
+            owner.refresh();
     }
 
     FileView {
