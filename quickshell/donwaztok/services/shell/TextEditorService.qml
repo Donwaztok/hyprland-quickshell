@@ -224,6 +224,10 @@ Singleton {
             return "ini";
         if (ext === "yaml" || ext === "yml")
             return "yaml";
+        if (ext === "sh" || ext === "bash" || ext === "zsh" || ext === "fish" || ext === "ksh" || ext === "csh")
+            return "sh";
+        if (name === ".bashrc" || name === ".bash_profile" || name === ".bash_login" || name === ".bash_logout" || name === ".zshrc" || name === ".zprofile" || name === ".zshenv" || name === ".zlogin" || name === ".zlogout" || name === ".profile" || name === ".xprofile" || name === "bashrc" || name === "zshrc" || name === "profile")
+            return "sh";
         if (ext === "ini" || ext === "conf" || ext === "cfg" || ext === "cnf" || ext === "env" || ext === "desktop" || ext === "properties" || ext === "service" || ext === "timer")
             return "ini";
         if (name === "config" || name === "mimeapps.list" || name.endsWith("rc"))

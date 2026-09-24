@@ -449,6 +449,218 @@ function highlightMarkdown(src, c, mdx) {
     return out;
 }
 
+const SHELL_KEYWORDS = " if then else elif fi for while until do done case esac in select function time coproc ";
+const SHELL_BUILTINS = " alias bg bind break builtin caller cd command compgen complete continue declare dirs disown echo enable eval exec exit export false fc fg getopts hash help history jobs kill let local logout mapfile popd printf pushd pwd read readarray readonly return set shift shopt source suspend test times trap true type typeset ulimit umask unalias unset wait ";
+
+function isShellKeyword(word) {
+    return SHELL_KEYWORDS.indexOf(" " + word + " ") >= 0;
+}
+
+function isShellBuiltin(word) {
+    return SHELL_BUILTINS.indexOf(" " + word + " ") >= 0;
+}
+
+function isShellIdentStart(ch) {
+    return (ch >= "A" && ch <= "Z") || (ch >= "a" && ch <= "z") || ch === "_";
+}
+
+function isShellIdent(ch) {
+    return isShellIdentStart(ch) || (ch >= "0" && ch <= "9") || ch === "_" || ch === ".";
+}
+
+function shellVarColor(c) {
+    return c.variable || c.key;
+}
+
+function shellCmdColor(c) {
+    return c.command || c.key;
+}
+
+function shellFlagColor(c) {
+    return c.flag || c.keyword;
+}
+
+function readShellVar(src, i) {
+    const n = src.length;
+    let j = i + 1;
+    if (j >= n)
+        return j;
+    if (src[j] === "{") {
+        j++;
+        while (j < n && src[j] !== "}" && src[j] !== "\n")
+            j++;
+        if (j < n && src[j] === "}")
+            j++;
+        return j;
+    }
+    if (src[j] === "(") {
+        let depth = 1;
+        j++;
+        while (j < n && depth > 0 && src[j] !== "\n") {
+            if (src[j] === "(")
+                depth++;
+            else if (src[j] === ")")
+                depth--;
+            j++;
+        }
+        return j;
+    }
+    if (/[0-9@*#?$!-]/.test(src[j]))
+        return j + 1;
+    while (j < n && isShellIdent(src[j]))
+        j++;
+    return j;
+}
+
+function highlightShellString(src, i, quote, c) {
+    const n = src.length;
+    let out = span(c.string, quote);
+    let j = i + 1;
+    let start = j;
+    const flush = end => {
+        if (end > start)
+            out += span(c.string, src.slice(start, end));
+    };
+    while (j < n && src[j] !== quote && src[j] !== "\n") {
+        if (src[j] === "\\" && j + 1 < n) {
+            j += 2;
+            continue;
+        }
+        if (quote === "\"" && src[j] === "$") {
+            flush(j);
+            const end = readShellVar(src, j);
+            out += span(shellVarColor(c), src.slice(j, end));
+            j = end;
+            start = j;
+            continue;
+        }
+        j++;
+    }
+    flush(j);
+    if (j < n && src[j] === quote) {
+        out += span(c.string, quote);
+        j++;
+    }
+    return { html: out, end: j };
+}
+
+function highlightShell(src, c) {
+    const n = src.length;
+    let out = "";
+    let i = 0;
+    let expectCmd = true;
+    while (i < n) {
+        const ch = src[i];
+        if (ch === "\n") {
+            out += "\n";
+            i++;
+            expectCmd = true;
+            continue;
+        }
+        if (ch === " " || ch === "\t") {
+            out += escapeHtml(ch);
+            i++;
+            continue;
+        }
+        if (ch === "#" && (expectCmd || src[i - 1] === " " || src[i - 1] === "\t" || src[i - 1] === ";")) {
+            let j = i + 1;
+            while (j < n && src[j] !== "\n")
+                j++;
+            const raw = src.slice(i, j);
+            const isShebang = i === 0 && raw.startsWith("#!");
+            out += span(isShebang ? (c.shebang || c.keyword) : c.comment, raw);
+            i = j;
+            expectCmd = false;
+            continue;
+        }
+        if (ch === "'" || ch === "\"") {
+            const got = highlightShellString(src, i, ch, c);
+            out += got.html;
+            i = got.end;
+            expectCmd = false;
+            continue;
+        }
+        if (ch === "`") {
+            let j = i + 1;
+            while (j < n && src[j] !== "`" && src[j] !== "\n") {
+                if (src[j] === "\\" && j + 1 < n)
+                    j += 2;
+                else
+                    j++;
+            }
+            if (j < n && src[j] === "`")
+                j++;
+            out += span(c.string, src.slice(i, j));
+            i = j;
+            expectCmd = false;
+            continue;
+        }
+        if (ch === "$") {
+            const end = readShellVar(src, i);
+            out += span(shellVarColor(c), src.slice(i, end));
+            i = end;
+            expectCmd = false;
+            continue;
+        }
+        if (src.substr(i, 2) === "&&" || src.substr(i, 2) === "||" || src.substr(i, 2) === ">>" || src.substr(i, 2) === "<<" || src.substr(i, 2) === ";;" || src.substr(i, 2) === "[[" || src.substr(i, 2) === "]]") {
+            out += span(c.punct, src.slice(i, i + 2));
+            i += 2;
+            expectCmd = src.substr(i - 2, 2) === "&&" || src.substr(i - 2, 2) === "||" || src.substr(i - 2, 2) === ";;";
+            continue;
+        }
+        if ("|;&=<>!(){}".indexOf(ch) >= 0) {
+            out += span(c.punct, ch);
+            i++;
+            expectCmd = ch === ";" || ch === "|" || ch === "&" || ch === "(" || ch === "{" || ch === ")";
+            continue;
+        }
+        if (ch === "-" && i + 1 < n && isShellIdentStart(src[i + 1])) {
+            let j = i + 1;
+            while (j < n && (isShellIdent(src[j]) || src[j] === "-"))
+                j++;
+            out += span(shellFlagColor(c), src.slice(i, j));
+            i = j;
+            expectCmd = false;
+            continue;
+        }
+        if ((ch >= "0" && ch <= "9") || (ch === "-" && src[i + 1] >= "0" && src[i + 1] <= "9")) {
+            let j = i + 1;
+            while (j < n && /[0-9.xX]/.test(src[j]))
+                j++;
+            out += span(c.number, src.slice(i, j));
+            i = j;
+            expectCmd = false;
+            continue;
+        }
+        if (isShellIdentStart(ch) || ch === "." || ch === "/") {
+            let j = i + 1;
+            while (j < n && (isShellIdent(src[j]) || src[j] === "-" || src[j] === "/" || src[j] === "+" || src[j] === ":" || src[j] === "@"))
+                j++;
+            const word = src.slice(i, j);
+            const next = src[j] || "";
+            if (isShellKeyword(word)) {
+                out += span(c.keyword, word);
+                expectCmd = " then else elif do in while until if for time coproc ".indexOf(" " + word + " ") >= 0;
+            } else if (next === "=") {
+                out += span(shellVarColor(c), word);
+                expectCmd = false;
+            } else if (expectCmd || isShellBuiltin(word)) {
+                out += span(isShellBuiltin(word) ? c.keyword : shellCmdColor(c), word);
+                expectCmd = false;
+            } else {
+                out += escapeHtml(word);
+                expectCmd = false;
+            }
+            i = j;
+            continue;
+        }
+        out += escapeHtml(ch);
+        i++;
+        expectCmd = false;
+    }
+    return out;
+}
+
 function highlight(src, lang, colors) {
     const text = String(src || "");
     if (!text.length)
@@ -463,6 +675,8 @@ function highlight(src, lang, colors) {
         body = highlightYaml(text, c);
     else if (lang === "md" || lang === "mdx")
         body = highlightMarkdown(text, c, lang === "mdx");
+    else if (lang === "sh" || lang === "bash")
+        body = highlightShell(text, c);
     else
         body = highlightIni(text, c);
     return `<div style="margin:0;padding:0;white-space:pre;line-height:1;">${body}</div>`;

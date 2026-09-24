@@ -61,9 +61,13 @@ Item {
     function syntaxColors(): var {
         return {
             key: root.cssColor(Colours.palette.m3primary),
-            string: root.cssColor(Colours.palette.m3tertiary),
-            number: root.cssColor(Colours.palette.m3secondary),
-            keyword: root.cssColor(Colours.palette.m3secondary),
+            string: root.cssColor(Colours.palette.m3success),
+            number: root.cssColor(Colours.palette.m3primaryFixedDim),
+            keyword: root.cssColor(Colours.palette.m3error),
+            command: root.cssColor(Colours.palette.m3primary),
+            variable: root.cssColor(Colours.palette.m3onPrimaryContainer),
+            flag: root.cssColor(Colours.palette.m3error),
+            shebang: root.cssColor(Colours.palette.m3success),
             comment: root.cssColor(Colours.palette.m3outline),
             punct: root.cssColor(Colours.palette.m3onSurfaceVariant),
             section: root.cssColor(Colours.palette.m3primary),
