@@ -1081,6 +1081,21 @@ Item {
         FileManagerService.runQuick(FileManagerService.fm(["mkdir", path]), "mkdir", path, root);
     }
 
+    function mkfile(): void {
+        if (isTrashView)
+            return;
+        let name = qsTr("New File");
+        let path = `${currentPath}/${name}`;
+        let n = 1;
+        const names = new Set(entries.map(e => e.name));
+        while (names.has(name)) {
+            n += 1;
+            name = qsTr("New File (%1)").arg(n);
+            path = `${currentPath}/${name}`;
+        }
+        FileManagerService.runQuick(FileManagerService.fm(["mkfile", path]), "mkfile", path, root);
+    }
+
     function beginRename(path: string): void {
         if (isTrashView)
             return;
@@ -1242,7 +1257,7 @@ Item {
             if (mp.length)
                 navigate(mp);
             FileManagerService.refreshMounts();
-        } else if (kind === "mkdir") {
+        } else if (kind === "mkdir" || kind === "mkfile") {
             refresh();
             const renamePath = (data && (data.renameAfter || data.path)) || "";
             if (renamePath.length)

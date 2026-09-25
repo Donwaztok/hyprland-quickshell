@@ -81,6 +81,8 @@ Singleton {
             return "undo";
         if (kind === "mkdir")
             return "create_new_folder";
+        if (kind === "mkfile")
+            return "note_add";
         return "progress_activity";
     }
 
@@ -460,7 +462,12 @@ Singleton {
     }
 
     function runQuick(command: list<string>, kind: string, renameAfter: string, owner: var): void {
-        startJob(kind, kind === "mkdir" ? qsTr("Creating folder…") : qsTr("Working…"), command, owner, renameAfter || "");
+        let label = qsTr("Working…");
+        if (kind === "mkdir")
+            label = qsTr("Creating folder…");
+        else if (kind === "mkfile")
+            label = qsTr("Creating file…");
+        startJob(kind, label, command, owner, renameAfter || "");
     }
 
     function fetchInfo(paths: var, owner: var): void {

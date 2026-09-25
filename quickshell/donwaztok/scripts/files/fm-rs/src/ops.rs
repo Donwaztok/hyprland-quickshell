@@ -42,6 +42,22 @@ pub fn do_mkdir(path: &str) {
     out_ok(serde_json::json!({ "ok": true, "path": p.to_string_lossy() }));
 }
 
+pub fn do_mkfile(path: &str) {
+    let p = expand_user(path);
+    if p.exists() {
+        err_exit(&format!("Already exists: {}", p.display()));
+    }
+    if let Some(parent) = p.parent() {
+        if !parent.as_os_str().is_empty() && !parent.exists() {
+            err_exit(&format!("Parent does not exist: {}", parent.display()));
+        }
+    }
+    if let Err(e) = File::create(&p) {
+        err_exit(&e.to_string());
+    }
+    out_ok(serde_json::json!({ "ok": true, "path": p.to_string_lossy() }));
+}
+
 pub fn do_rename(src: &str, dst: &str) {
     let s = expand_user(src);
     let d = expand_user(dst);

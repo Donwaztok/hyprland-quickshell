@@ -48,6 +48,10 @@ enum Commands {
     Mkdir {
         path: String,
     },
+    /// Create an empty file
+    Mkfile {
+        path: String,
+    },
     Rename {
         src: String,
         dst: String,
@@ -133,6 +137,7 @@ fn run(cli: Cli) {
             compress::smart_compress(&dest, &sources, &format)
         }
         Commands::Mkdir { path } => ops::do_mkdir(&path),
+        Commands::Mkfile { path } => ops::do_mkfile(&path),
         Commands::Rename { src, dst } => ops::do_rename(&src, &dst),
         Commands::Trash { paths } => {
             if paths.is_empty() {

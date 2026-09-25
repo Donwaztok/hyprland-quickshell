@@ -1552,6 +1552,12 @@ Item {
                 onActivated: session.mkdir()
             }
             CtxBtn {
+                label: qsTr("New file")
+                iconName: "note_add"
+                rowEnabled: !session.isTrashView
+                onActivated: session.mkfile()
+            }
+            CtxBtn {
                 label: qsTr("Paste")
                 iconName: "content_paste"
                 rowEnabled: !session.isTrashView && FileManagerService.clipboardPaths.length > 0
@@ -1641,6 +1647,12 @@ Item {
                 iconName: "create_new_folder"
                 rowEnabled: !session.isTrashView
                 onActivated: session.mkdir()
+            }
+            CtxBtn {
+                label: qsTr("New file")
+                iconName: "note_add"
+                rowEnabled: !session.isTrashView
+                onActivated: session.mkfile()
             }
             CtxBtn {
                 label: qsTr("Paste")
