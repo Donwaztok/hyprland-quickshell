@@ -17,6 +17,8 @@ hl.env(
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 -- xdgdesktopportal → Qt QFileDialog uses xdg-desktop-portal → Donwaztok Files.
 -- gtk3 forces the GTK chooser and bypasses our FileChooser portal.
+-- Quickshell itself is started with QT_QPA_PLATFORMTHEME=gtk3 (see constants.lua)
+-- so its notification/tray/launcher icons follow the GTK theme (Tela).
 hl.env("QT_QPA_PLATFORMTHEME", "xdgdesktopportal")
 hl.env("QT_QUICK_CONTROLS_STYLE", "Basic")
 -- Quiet MPRIS Position warnings when Firefox/Chromium buses disappear mid-update

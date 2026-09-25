@@ -247,10 +247,25 @@ Singleton {
             if (sub.id === id)
                 return sub.image ? Qt.resolvedUrl(sub.image) : Quickshell.iconPath(sub.icon);
 
-        if (icon.includes("?path=")) {
-            const [name, path] = icon.split("?path=");
-            icon = Qt.resolvedUrl(`${path}/${name.slice(name.lastIndexOf("/") + 1)}`);
+        const raw = String(icon || "");
+        if (!raw.length)
+            return Quickshell.iconPath("application-x-executable");
+
+        // StatusNotifierItem: "icon-name?path=/theme/dir"
+        if (raw.includes("?path=")) {
+            const [name, path] = raw.split("?path=");
+            const fileName = name.slice(name.lastIndexOf("/") + 1);
+            return Qt.resolvedUrl(`${path}/${fileName}`);
         }
-        return icon;
+
+        // Already a URL or absolute path (incl. pixmap image:// from Quickshell)
+        if (raw.includes(":/") || raw.startsWith("/") || raw.startsWith("file:"))
+            return raw;
+
+        // Theme icon name (solaar battery-*, udiskie drive-*, etc.)
+        const resolved = Quickshell.iconPath(raw);
+        if (resolved && resolved.length && !resolved.includes("image-missing"))
+            return resolved;
+        return Quickshell.iconPath("application-x-executable");
     }
 }

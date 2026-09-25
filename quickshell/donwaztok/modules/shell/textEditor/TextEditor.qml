@@ -61,6 +61,47 @@ Scope {
         root.windows = next;
     }
 
+    function hyprTitle(): string {
+        const top = Hyprland.activeToplevel;
+        if (!top)
+            return "";
+        const ipc = top.lastIpcObject || {};
+        return String(top.title || ipc.title || "");
+    }
+
+    function isEditorFocused(): bool {
+        return root.hyprTitle().indexOf(" — Text") >= 0;
+    }
+
+    function focusedWindow(): var {
+        const title = root.hyprTitle();
+        const list = root.windows;
+        for (let i = 0; i < list.length; ++i) {
+            const w = list[i];
+            if (w && String(w.title || "") === title)
+                return w;
+        }
+        if (list.length)
+            return list[list.length - 1];
+        return null;
+    }
+
+    function openFind(): void {
+        const list = root.windows;
+        let target = null;
+        for (let i = 0; i < list.length; ++i) {
+            const w = list[i];
+            if (w && w.active) {
+                target = w;
+                break;
+            }
+        }
+        if (!target && root.isEditorFocused())
+            target = root.focusedWindow();
+        if (target)
+            target.openFind();
+    }
+
     Connections {
         target: TextEditorService
         function onRequestOpen(path: string): void {
@@ -102,6 +143,10 @@ Scope {
                 win.destroy();
             }
 
+            function openFind(): void {
+                content.openFind();
+            }
+
             Behavior on color {
                 CAnim {}
             }
@@ -128,6 +173,13 @@ Scope {
         onPressed: root.openWindow("")
     }
 
+    GlobalShortcut {
+        appid: "donwaztok"
+        name: "textEditorFind"
+        description: "Text editor find"
+        onPressed: root.openFind()
+    }
+
     IpcHandler {
         target: "textEditor"
 
@@ -141,6 +193,30 @@ Scope {
 
         function toggle(): void {
             root.openWindow("");
+        }
+
+        function find(): void {
+            root.openFind();
+        }
+
+        function status(): string {
+            const list = root.windows;
+            const wins = [];
+            for (let i = 0; i < list.length; ++i) {
+                const w = list[i];
+                if (!w)
+                    continue;
+                wins.push({
+                    title: String(w.title || ""),
+                    active: !!w.active,
+                    visible: !!w.visible
+                });
+            }
+            return JSON.stringify({
+                hyprTitle: root.hyprTitle(),
+                editorFocused: root.isEditorFocused(),
+                windows: wins
+            });
         }
     }
 }

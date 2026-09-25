@@ -264,6 +264,14 @@ hl.bind("Control_L", hl.dsp.global("donwaztok:fileManagerCtrlUp"), fmRelease)
 hl.bind("Control_R", hl.dsp.global("donwaztok:fileManagerCtrlDown"), fm)
 hl.bind("Control_R", hl.dsp.global("donwaztok:fileManagerCtrlUp"), fmRelease)
 
+---------------------------------------------------------------------------
+-- Donwaztok Text (Quickshell FloatingWindow)
+-- Same reason as Files: Qt often drops Ctrl chords inside FloatingWindow.
+-- Use qs ipc (not only GlobalShortcut) so the bind stays reliable after reload.
+---------------------------------------------------------------------------
+local te = { non_consuming = true, description = "Donwaztok Text: Find" }
+hl.bind("CTRL + F", hl.dsp.exec_cmd(qs("ipc call textEditor find")), te)
+
 hl.bind(
     "SUPER + F",
     hl.dsp.exec_cmd(

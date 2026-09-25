@@ -346,7 +346,7 @@ Singleton {
         let mimes = "";
         for (let i = 0; i < root.filesMimes.length; ++i)
             mimes += root.filesMimes[i] + ";";
-        return "[Desktop Entry]\n" + "Type=Application\n" + "Name=Donwaztok Files\n" + "GenericName=File Manager\n" + "Comment=Browse files\n" + "Exec=" + exec + "\n" + "Icon=system-file-manager\n" + "Terminal=false\n" + "StartupNotify=false\n" + "Categories=Utility;FileManager;\n" + "MimeType=" + mimes + "\n";
+        return "[Desktop Entry]\n" + "Type=Application\n" + "Name=Donwaztok Files\n" + "GenericName=File Manager\n" + "Comment=Browse files\n" + "Exec=" + exec + "\n" + "Icon=donwaztok-files\n" + "Terminal=false\n" + "StartupNotify=false\n" + "Categories=Utility;FileManager;\n" + "MimeType=" + mimes + "\n";
     }
 
     property var mimeQueue: []

@@ -26,6 +26,9 @@ Item {
     property bool pendingClose: false
     property bool confirmOpen: false
     property bool saveAsOpen: false
+    property bool findOpen: false
+    property int findMatchIndex: -1
+    property int findMatchCount: 0
     property string loadedText: ""
     property var pendingSaveText: null
     property string highlightedHtml: ""
@@ -152,6 +155,106 @@ Item {
     function lineEndAt(text: string, pos: int): int {
         const i = text.indexOf("\n", pos);
         return i < 0 ? text.length : i;
+    }
+
+    function deleteLine(): void {
+        const t = editor.text;
+        if (!t.length)
+            return;
+        let a = editor.selectionStart;
+        let b = editor.selectionEnd;
+        if (a > b) {
+            const x = a;
+            a = b;
+            b = x;
+        }
+        const endPos = b > a ? b - 1 : a;
+        let from = root.lineStartAt(t, a);
+        let to = root.lineEndAt(t, endPos);
+        if (to < t.length && t.charAt(to) === "\n")
+            to += 1;
+        else if (from > 0)
+            from -= 1;
+        editor.remove(from, to);
+        editor.cursorPosition = from;
+    }
+
+    function collectFindMatches(query: string): var {
+        const q = String(query || "");
+        if (!q.length)
+            return [];
+        const hay = editor.text.toLowerCase();
+        const needle = q.toLowerCase();
+        const nlen = needle.length;
+        const matches = [];
+        let i = 0;
+        while (i <= hay.length - nlen) {
+            const at = hay.indexOf(needle, i);
+            if (at < 0)
+                break;
+            matches.push(at);
+            i = at + Math.max(1, nlen);
+        }
+        return matches;
+    }
+
+    function openFind(): void {
+        if (root.isMarkdown && root.mdView === "preview")
+            root.mdView = "source";
+        root.findOpen = true;
+        const sel = editor.selectedText;
+        if (sel.length && sel.indexOf("\n") < 0)
+            findField.text = sel;
+        Qt.callLater(() => {
+            findField.forceActiveFocus();
+            findField.selectAll();
+            if (findField.text.length)
+                root.findNext(false, true);
+        });
+    }
+
+    function closeFind(): void {
+        root.findOpen = false;
+        root.findMatchIndex = -1;
+        root.findMatchCount = 0;
+        editor.forceActiveFocus();
+    }
+
+    function findNext(backward: bool, includeCurrent: bool): void {
+        const q = findField.text;
+        const matches = root.collectFindMatches(q);
+        root.findMatchCount = matches.length;
+        if (!matches.length) {
+            root.findMatchIndex = -1;
+            return;
+        }
+        const selStart = editor.selectionStart;
+        const selEnd = editor.selectionEnd;
+        let idx = -1;
+        if (backward) {
+            const limit = includeCurrent ? selEnd : selStart;
+            for (let j = matches.length - 1; j >= 0; --j) {
+                if (matches[j] < limit) {
+                    idx = j;
+                    break;
+                }
+            }
+            if (idx < 0)
+                idx = matches.length - 1;
+        } else {
+            const from = includeCurrent ? selStart : selEnd;
+            for (let j = 0; j < matches.length; ++j) {
+                if (matches[j] >= from) {
+                    idx = j;
+                    break;
+                }
+            }
+            if (idx < 0)
+                idx = 0;
+        }
+        root.findMatchIndex = idx;
+        const pos = matches[idx];
+        editor.select(pos, pos + q.length);
     }
 
     function indentBlock(unindent: bool): void {
@@ -426,11 +529,15 @@ Item {
     Shortcut {
         sequences: ["Escape"]
         context: Qt.WindowShortcut
-        enabled: root.confirmOpen || root.saveAsOpen
+        enabled: root.confirmOpen || root.saveAsOpen || root.findOpen
         onActivated: {
-            root.confirmOpen = false;
-            root.saveAsOpen = false;
-            root.pendingClose = false;
+            if (root.confirmOpen || root.saveAsOpen) {
+                root.confirmOpen = false;
+                root.saveAsOpen = false;
+                root.pendingClose = false;
+                return;
+            }
+            root.closeFind();
         }
     }
 
@@ -441,6 +548,28 @@ Item {
         onTriggered: root.refreshHighlight()
     }
 
+    Shortcut {
+        sequences: [StandardKey.Find, "Ctrl+F"]
+        context: Qt.WindowShortcut
+        onActivated: root.openFind()
+    }
+    Shortcut {
+        sequences: ["F3", "Ctrl+G"]
+        context: Qt.WindowShortcut
+        enabled: root.findOpen
+        onActivated: root.findNext(false, false)
+    }
+    Shortcut {
+        sequences: ["Shift+F3", "Ctrl+Shift+G"]
+        context: Qt.WindowShortcut
+        enabled: root.findOpen
+        onActivated: root.findNext(true, false)
+    }
+    Shortcut {
+        sequences: ["Ctrl+D"]
+        context: Qt.WindowShortcut
+        onActivated: root.deleteLine()
+    }
     Shortcut {
         sequences: ["Ctrl+]"]
         context: Qt.WindowShortcut
@@ -509,6 +638,111 @@ Item {
                 label: qsTr("Split")
                 active: root.mdView === "split"
                 onActivated: root.mdView = "split"
+            }
+        }
+
+        StyledRect {
+            visible: root.findOpen
+            Layout.fillWidth: true
+            Layout.preferredHeight: root.findOpen ? findRow.implicitHeight + Theme.Appearance.padding.small * 2 : 0
+            implicitHeight: findRow.implicitHeight + Theme.Appearance.padding.small * 2
+            radius: Theme.Appearance.rounding.normal
+            color: Colours.palette.m3surfaceContainerHigh
+            clip: true
+            z: 10
+
+            RowLayout {
+                id: findRow
+                x: Theme.Appearance.padding.normal
+                y: Theme.Appearance.padding.small
+                width: parent.width - Theme.Appearance.padding.normal - Theme.Appearance.padding.small
+                spacing: Theme.Appearance.spacing.small
+
+                MaterialIcon {
+                    text: "search"
+                    color: Colours.palette.m3onSurfaceVariant
+                    font.pointSize: Theme.Appearance.font.size.normal
+                }
+
+                StyledTextField {
+                    id: findField
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 36
+                    placeholderText: qsTr("Find")
+                    onTextChanged: root.findNext(false, true)
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            root.findNext(!!(event.modifiers & Qt.ShiftModifier), false);
+                            event.accepted = true;
+                        } else if (event.key === Qt.Key_Escape) {
+                            root.closeFind();
+                            event.accepted = true;
+                        }
+                    }
+                }
+
+                StyledText {
+                    visible: findField.text.length > 0
+                    text: root.findMatchCount > 0 ? `${root.findMatchIndex + 1}/${root.findMatchCount}` : qsTr("No results")
+                    color: root.findMatchCount > 0 ? Colours.palette.m3onSurfaceVariant : Colours.palette.m3error
+                    font.pointSize: Theme.Appearance.font.size.small
+                    Layout.minimumWidth: Math.max(implicitWidth, 56)
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                Item {
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "keyboard_arrow_up"
+                        color: Colours.palette.m3onSurface
+                        font.pointSize: Theme.Appearance.font.size.large
+                    }
+                    StateLayer {
+                        radius: Theme.Appearance.rounding.full
+                        color: Colours.palette.m3onSurface
+                        function onClicked(): void {
+                            root.findNext(true, false);
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "keyboard_arrow_down"
+                        color: Colours.palette.m3onSurface
+                        font.pointSize: Theme.Appearance.font.size.large
+                    }
+                    StateLayer {
+                        radius: Theme.Appearance.rounding.full
+                        color: Colours.palette.m3onSurface
+                        function onClicked(): void {
+                            root.findNext(false, false);
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "close"
+                        color: Colours.palette.m3onSurface
+                        font.pointSize: Theme.Appearance.font.size.normal
+                    }
+                    StateLayer {
+                        radius: Theme.Appearance.rounding.full
+                        color: Colours.palette.m3onSurface
+                        function onClicked(): void {
+                            root.closeFind();
+                        }
+                    }
+                }
             }
         }
 
@@ -612,6 +846,11 @@ Item {
                         }
                     }
                     Keys.onPressed: event => {
+                        if (event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier) && !(event.modifiers & Qt.ShiftModifier) && !(event.modifiers & Qt.AltModifier)) {
+                            root.openFind();
+                            event.accepted = true;
+                            return;
+                        }
                         if (event.key === Qt.Key_Backtab) {
                             root.indentBlock(true);
                             event.accepted = true;

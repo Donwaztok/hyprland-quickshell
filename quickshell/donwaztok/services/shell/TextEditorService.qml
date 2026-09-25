@@ -180,7 +180,7 @@ Singleton {
         let mimes = "";
         for (let i = 0; i < root.defaultMimes.length; ++i)
             mimes += root.defaultMimes[i] + ";";
-        return "[Desktop Entry]\n" + "Type=Application\n" + "Name=Donwaztok Text\n" + "GenericName=Text Editor\n" + "Comment=Simple text editor\n" + "Exec=" + exec + "\n" + "Icon=accessories-text-editor\n" + "Terminal=false\n" + "StartupNotify=false\n" + "Categories=Utility;TextEditor;\n" + "MimeType=" + mimes + "\n" + "Keywords=text;editor;notes;plain;\n";
+        return "[Desktop Entry]\n" + "Type=Application\n" + "Name=Donwaztok Text\n" + "GenericName=Text Editor\n" + "Comment=Simple text editor\n" + "Exec=" + exec + "\n" + "Icon=donwaztok-text\n" + "Terminal=false\n" + "StartupNotify=false\n" + "Categories=Utility;TextEditor;\n" + "MimeType=" + mimes + "\n" + "Keywords=text;editor;notes;plain;\n";
     }
 
     function normalizePath(path: string): string {
