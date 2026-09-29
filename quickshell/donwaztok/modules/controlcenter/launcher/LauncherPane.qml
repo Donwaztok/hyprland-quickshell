@@ -40,6 +40,19 @@ Item {
         }
     }
 
+    function entryOf(app) {
+        if (!app)
+            return null;
+        return app.entry || app;
+    }
+
+    function iconOf(app): string {
+        const entry = root.entryOf(app);
+        if (!entry)
+            return "";
+        return Icons.appIconPath(entry.icon, entry.id);
+    }
+
     function updateToggleState() {
         if (!root.selectedApp) {
             root.hideFromLauncherChecked = false;
@@ -347,12 +360,10 @@ Item {
 
                                 IconImage {
                                     Layout.alignment: Qt.AlignVCenter
+                                    Layout.preferredWidth: 32
+                                    Layout.preferredHeight: 32
                                     implicitSize: 32
-                                    visible: source.length > 0
-                                    source: {
-                                        const entry = modelData.entry;
-                                        return entry ? Quickshell.iconPath(entry.icon, "application-x-executable") : "";
-                                    }
+                                    source: root.iconOf(modelData)
                                 }
 
                                 StyledText {
@@ -543,14 +554,7 @@ Item {
                         id: appIconImage
                         Layout.alignment: Qt.AlignHCenter
                         implicitSize: Appearance.font.size.extraLarge * 3 * 2
-                        visible: source.length > 0
-                        source: {
-                            const app = appDetailsLayout.displayedApp;
-                            if (!app)
-                                return "";
-                            const entry = app.entry;
-                            return (entry && entry.icon) ? Quickshell.iconPath(entry.icon, "application-x-executable") : "";
-                        }
+                        source: root.iconOf(appDetailsLayout.displayedApp)
                     }
 
                     StyledText {

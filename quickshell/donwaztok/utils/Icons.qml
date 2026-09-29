@@ -107,6 +107,17 @@ Singleton {
         return Quickshell.iconPath(icon);
     }
 
+    // Theme path for a desktop entry. `id` "system" uses a generic preferences icon.
+    function appIconPath(icon: string, id: string): string {
+        const name = String(icon || "");
+        if (name.length)
+            return Quickshell.iconPath(name, "application-x-executable");
+        const fallbackId = String(id || "");
+        if (!fallbackId.length || fallbackId === "system")
+            return Quickshell.iconPath("preferences-system", "application-x-executable");
+        return Quickshell.iconPath(fallbackId, "application-x-executable");
+    }
+
     function getAppCategoryIcon(name: string, fallback: string): string {
         const workspaceConfig = Config.bar?.workspaces;
         const windowIcons = workspaceConfig?.windowIcons ?? [];

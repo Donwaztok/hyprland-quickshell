@@ -373,14 +373,17 @@ Singleton {
     }
 
     function editorOptions(): var {
+        const ownEntry = DesktopEntries.byId(root.desktopFile) || DesktopEntries.byId(root.appId);
         const out = [
             {
                 text: root.appName,
-                value: root.appId
+                value: root.appId,
+                icon: Icons.appIconPath(ownEntry && ownEntry.icon, root.appId)
             },
             {
                 text: qsTr("System default"),
-                value: "system"
+                value: "system",
+                icon: Icons.appIconPath("", "system")
             }
         ];
         const seen = {
@@ -397,7 +400,8 @@ Singleton {
             seen[e.id] = true;
             editors.push({
                 text: String(e.name || e.id),
-                value: String(e.id)
+                value: String(e.id),
+                icon: Icons.appIconPath(e.icon, e.id)
             });
         }
         editors.sort((a, b) => a.text.localeCompare(b.text));
@@ -406,7 +410,8 @@ Singleton {
             const entry = DesktopEntries.byId(current);
             out.push({
                 text: entry && entry.name ? entry.name : current,
-                value: current
+                value: current,
+                icon: Icons.appIconPath(entry && entry.icon, current)
             });
         }
         return out.concat(editors);

@@ -6,6 +6,7 @@ import qs.services.shell
 import qs.config
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Widgets
 
 // Label + dropdown for `{ text, value }[]` — compact popup; search appears when list is long.
 RowLayout {
@@ -33,6 +34,17 @@ RowLayout {
                 return o[i].text;
         }
         return root.currentValue;
+    }
+
+    readonly property string currentIcon: {
+        const o = root.options;
+        if (!o || !o.length)
+            return "";
+        for (let i = 0; i < o.length; i++) {
+            if (o[i].value === root.currentValue)
+                return o[i].icon ? String(o[i].icon) : "";
+        }
+        return "";
     }
 
     StyledText {
@@ -67,6 +79,15 @@ RowLayout {
                 anchors.leftMargin: Appearance.padding.normal
                 anchors.rightMargin: Appearance.padding.normal
                 spacing: Appearance.spacing.small
+
+                IconImage {
+                    visible: root.currentIcon.length > 0
+                    source: root.currentIcon
+                    implicitSize: 20
+                    Layout.preferredWidth: visible ? 20 : 0
+                    Layout.preferredHeight: 20
+                    Layout.alignment: Qt.AlignVCenter
+                }
 
                 StyledText {
                     Layout.fillWidth: true

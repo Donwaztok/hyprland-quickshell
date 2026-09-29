@@ -223,14 +223,17 @@ Singleton {
     function optionsFor(kind: string): var {
         const extras = [];
         if (kind === "explorer") {
+            const filesEntry = root.lookupEntry(root.filesAppId);
             extras.push({
                 text: root.filesAppName,
-                value: root.filesAppId
+                value: root.filesAppId,
+                icon: Icons.appIconPath(filesEntry && filesEntry.icon, root.filesAppId)
             });
         }
         extras.push({
             text: qsTr("System default"),
-            value: "system"
+            value: "system",
+            icon: Icons.appIconPath("", "system")
         });
         const seen = {
             system: true
@@ -258,7 +261,8 @@ Singleton {
             seen[e.id] = true;
             apps.push({
                 text: String(e.name || e.id),
-                value: String(e.id)
+                value: String(e.id),
+                icon: Icons.appIconPath(e.icon, e.id)
             });
         }
         apps.sort((a, b) => a.text.localeCompare(b.text));
@@ -267,7 +271,8 @@ Singleton {
             const entry = root.lookupEntry(current);
             extras.push({
                 text: entry && entry.name ? entry.name : current,
-                value: current
+                value: current,
+                icon: Icons.appIconPath(entry && entry.icon, current)
             });
         }
         return extras.concat(apps);

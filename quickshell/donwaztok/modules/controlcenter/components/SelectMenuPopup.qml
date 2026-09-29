@@ -7,6 +7,7 @@ import qs.config
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
+import Quickshell.Widgets
 
 /**
  * Dropdown list anchored under `anchor`: optional search field, scrollable list, max height.
@@ -119,6 +120,17 @@ QQC2.Popup {
                         anchors.fill: parent
                         anchors.margins: Appearance.padding.normal
                         spacing: Appearance.spacing.normal
+
+                        IconImage {
+                            readonly property string iconSource: modelData && modelData.icon ? String(modelData.icon) : ""
+
+                            visible: iconSource.length > 0
+                            source: iconSource
+                            implicitSize: 20
+                            Layout.preferredWidth: visible ? 20 : 0
+                            Layout.preferredHeight: 20
+                            Layout.alignment: Qt.AlignVCenter
+                        }
 
                         StyledText {
                             Layout.fillWidth: true
