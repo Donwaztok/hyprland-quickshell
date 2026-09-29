@@ -14,13 +14,26 @@ Searcher {
             return;
         appDb.incrementFrequency(entry.id);
 
+        // qs itself runs with gtk3 so its icons follow the GTK theme. That
+        // value is the process environment inherited by launched apps, and
+        // Qt's gtk3 platform theme opens GtkFileChooserDialog directly,
+        // bypassing the Donwaztok FileChooser portal.
+        const environment = {
+            "QT_QPA_PLATFORMTHEME": "xdgdesktopportal"
+        };
+
         if (entry.runInTerminal)
             Quickshell.execDetached({
                 command: ["app2unit", "--", ...Config.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...entry.command],
-                workingDirectory: entry.workingDirectory
+                workingDirectory: entry.workingDirectory,
+                environment: environment
             });
         else
-            entry.execute();
+            Quickshell.execDetached({
+                command: entry.command,
+                workingDirectory: entry.workingDirectory,
+                environment: environment
+            });
     }
 
     function search(search: string): list<var> {

@@ -19,18 +19,19 @@ sed "s|@HOME@|${HOME_DIR}|g" \
   "$ROOT/org.freedesktop.impl.portal.desktop.donwaztok.service.in" \
   > "$DBUS_DIR/org.freedesktop.impl.portal.desktop.donwaztok.service"
 
-# Prefer Donwaztok for FileChooser; keep Hyprland/GTK for the rest.
+# Donwaztok is the only FileChooser. GTK stays available for the other
+# portal interfaces (settings, notifications, inhibit) via default=.
 cat > "$XDG_PORTAL_CFG/hyprland-portals.conf" <<'EOF'
 [preferred]
 default = hyprland;gtk
-org.freedesktop.impl.portal.FileChooser = donwaztok;gtk
+org.freedesktop.impl.portal.FileChooser = donwaztok
 EOF
 
 # Also write portals.conf (xdg-desktop-portal >= 1.18)
 cat > "$XDG_PORTAL_CFG/portals.conf" <<'EOF'
 [preferred]
 default = hyprland;gtk
-org.freedesktop.impl.portal.FileChooser = donwaztok;gtk
+org.freedesktop.impl.portal.FileChooser = donwaztok
 EOF
 
 systemctl --user daemon-reload 2>/dev/null || true
@@ -41,4 +42,4 @@ systemctl --user restart xdg-desktop-portal-donwaztok.service 2>/dev/null || tru
 echo "[portal] Donwaztok FileChooser installed."
 echo "  portal: $PORTAL_DIR/donwaztok.portal"
 echo "  service: xdg-desktop-portal-donwaztok.service"
-echo "  preferred: FileChooser = donwaztok;gtk"
+echo "  preferred: FileChooser = donwaztok"
