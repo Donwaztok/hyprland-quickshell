@@ -1280,6 +1280,10 @@ def _is_useful_mount(point: str) -> bool:
     )
     if any(point == s or point.startswith(s + "/") for s in skip_prefixes):
         return False
+    # grub-btrfs briefly mounts the root filesystem at /tmp/grub-btrfs.*
+    # while it rebuilds the boot menu. Same volume as System, not a device.
+    if any(part.startswith("grub-btrfs") for part in point.split("/")):
+        return False
     # Deep bind mounts under home (editor sandboxes, etc.)
     home = str(Path.home())
     if point.startswith(home + "/") and point.count("/") >= home.count("/") + 2:

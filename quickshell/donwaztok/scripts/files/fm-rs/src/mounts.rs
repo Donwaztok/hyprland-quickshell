@@ -60,6 +60,11 @@ fn is_useful_mount(point: &str) -> bool {
             return false;
         }
     }
+    // grub-btrfs briefly mounts the root filesystem at /tmp/grub-btrfs.*
+    // while it rebuilds the boot menu. Same volume as System, not a device.
+    if point.split('/').any(|part| part.starts_with("grub-btrfs")) {
+        return false;
+    }
     let home = dirs_home().to_string_lossy().into_owned();
     if point.starts_with(&format!("{home}/"))
         && point.matches('/').count() >= home.matches('/').count() + 2
