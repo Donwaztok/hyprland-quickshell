@@ -1,6 +1,8 @@
 //! File operations: mkdir, rename, delete, copy, move, undo-move, open, info.
 
-use crate::entry::{mime_for, suffix_no_dot};
+use crate::entry::{
+    mime_for, suffix_lower, suffix_no_dot, ARCHIVE_EXTS, IMAGE_EXTS, LINUX_BIN_EXTS, PE_ICON_EXTS,
+};
 use crate::protocol::{err_exit, expand_user, out_ok, progress};
 use crate::trash::{is_trash_uri, trash_original, trash_root};
 use std::fs::{self, File};
@@ -358,7 +360,12 @@ fn open_one(path: &str) -> Result<serde_json::Value, String> {
         p = c;
     }
     if !p.exists() {
-        return Err(format!("Not found: {path}"));
+        let name = p
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .filter(|n| !n.is_empty())
+            .unwrap_or_else(|| path.to_string());
+        return Err(format!("Not found: {name}"));
     }
     if p.is_dir() {
         return Err("Refusing to open a directory via open".into());
@@ -392,21 +399,44 @@ fn open_one(path: &str) -> Result<serde_json::Value, String> {
         }));
     }
 
-    let (code, msg) = run_cmd(&["gio", "open", &p.to_string_lossy()]);
-    if code == 0 {
+    // gio sniffs empty files as application/x-zerosize and refuses them, even
+    // when the name is notes.txt or a just-renamed "New File".
+    if should_open_in_editor(&p) {
+        launch_text_editor(&p)?;
         return Ok(serde_json::json!({
             "ok": true,
-            "mode": "gio",
+            "mode": "editor",
             "path": p.to_string_lossy(),
         }));
     }
 
-    let (code2, msg2) = run_cmd(&["xdg-open", &p.to_string_lossy()]);
+    let path_s = p.to_string_lossy().into_owned();
+    let (code, msg) = run_cmd(&["gio", "open", &path_s]);
+    if code == 0 {
+        return Ok(serde_json::json!({
+            "ok": true,
+            "mode": "gio",
+            "path": path_s,
+        }));
+    }
+
+    // Before xdg-open: it often just calls gio again, or "succeeds" by handing the
+    // file to a browser. Text and extensionless configs belong in the editor.
+    if is_missing_handler(&msg) && looks_like_text(&p) {
+        launch_text_editor(&p)?;
+        return Ok(serde_json::json!({
+            "ok": true,
+            "mode": "editor",
+            "path": path_s,
+        }));
+    }
+
+    let (code2, msg2) = run_cmd(&["xdg-open", &path_s]);
     if code2 == 0 {
         return Ok(serde_json::json!({
             "ok": true,
             "mode": "xdg-open",
-            "path": p.to_string_lossy(),
+            "path": path_s,
         }));
     }
 
@@ -416,21 +446,193 @@ fn open_one(path: &str) -> Result<serde_json::Value, String> {
         return Ok(serde_json::json!({
             "ok": true,
             "mode": "exec-fallback",
-            "path": p.to_string_lossy(),
+            "path": path_s,
         }));
     }
 
-    let err_msg = if !msg.is_empty() {
+    let raw = if !msg.is_empty() {
         msg
     } else if !msg2.is_empty() {
         msg2
     } else {
-        format!(
-            "No application found for {}",
-            p.file_name().map(|n| n.to_string_lossy()).unwrap_or_default()
-        )
+        String::new()
     };
-    Err(err_msg)
+    Err(friendly_open_error(&raw, &p))
+}
+
+fn file_len(path: &Path) -> u64 {
+    fs::metadata(path).map(|m| m.len()).unwrap_or(0)
+}
+
+fn is_non_text_ext(path: &Path) -> bool {
+    let suffix = suffix_lower(path);
+    let s = suffix.as_str();
+    IMAGE_EXTS.contains(&s)
+        || ARCHIVE_EXTS.contains(&s)
+        || PE_ICON_EXTS.contains(&s)
+        || LINUX_BIN_EXTS.contains(&s)
+        || matches!(
+            s,
+            ".so" | ".dmg"
+                | ".iso"
+                | ".apk"
+                | ".deb"
+                | ".rpm"
+                | ".pak"
+                | ".img"
+                | ".bin"
+                | ".dat"
+                | ".asar"
+                | ".dll"
+                | ".exe"
+        )
+}
+
+fn mime_is_text(mime: &str) -> bool {
+    mime.starts_with("text/")
+        || matches!(
+            mime,
+            "application/json"
+                | "application/xml"
+                | "application/javascript"
+                | "application/x-javascript"
+                | "application/toml"
+                | "application/x-yaml"
+                | "application/yaml"
+                | "application/x-desktop"
+                | "application/x-shellscript"
+                | "inode/x-empty"
+                | "application/x-zerosize"
+        )
+}
+
+/// gio open rejects empty files (`application/x-zerosize`), including after a rename
+/// that leaves the file empty or without a known handler.
+fn should_open_in_editor(path: &Path) -> bool {
+    !is_non_text_ext(path) && file_len(path) == 0
+}
+
+fn looks_like_text(path: &Path) -> bool {
+    if is_non_text_ext(path) {
+        return false;
+    }
+    let len = file_len(path);
+    if len == 0 {
+        return true;
+    }
+    // Extension guesses like text/x-scala for .sc are wrong for game assets.
+    // Only treat a non-empty file as text when the bytes look like text.
+    if len > 256 * 1024 {
+        return false;
+    }
+    let mut buf = [0u8; 8192];
+    let Ok(mut f) = File::open(path) else {
+        return false;
+    };
+    let Ok(n) = f.read(&mut buf) else {
+        return false;
+    };
+    let sample = &buf[..n];
+    !sample.contains(&0) && std::str::from_utf8(sample).is_ok()
+}
+
+fn is_missing_handler(msg: &str) -> bool {
+    let l = msg.to_lowercase();
+    l.contains("x-zerosize")
+        || l.contains("inode/x-empty")
+        || l.contains("aplicativo padrão")
+        || l.contains("nenhum aplicativo")
+        || l.contains("no application")
+        || l.contains("no default")
+        || l.contains("falha ao encontrar")
+        || l.contains("failed to find default")
+}
+
+fn strip_gio_prefix(msg: &str) -> String {
+    let msg = msg.trim();
+    let Some(rest) = msg.strip_prefix("gio:") else {
+        return msg.to_string();
+    };
+    let rest = rest.trim();
+    if let Some(idx) = rest.find(": ") {
+        let reason = rest[idx + 2..].trim();
+        if !reason.is_empty() {
+            return reason.to_string();
+        }
+    }
+    rest.to_string()
+}
+
+fn friendly_open_error(msg: &str, path: &Path) -> String {
+    let name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .filter(|n| !n.is_empty())
+        .unwrap_or_else(|| path.display().to_string());
+    if msg.trim().is_empty() {
+        return format!("No application found for {name}");
+    }
+    let reason = strip_gio_prefix(msg);
+    let lower = reason.to_lowercase();
+    if lower.contains("inexistente") || lower.contains("no such file") || lower.contains("not found")
+    {
+        return format!("Not found: {name}");
+    }
+    if is_missing_handler(&reason) {
+        return format!("No application found for {name}");
+    }
+    if reason.chars().count() > 160 {
+        return format!("Could not open {name}");
+    }
+    reason
+}
+
+fn launch_text_editor(path: &Path) -> Result<(), String> {
+    let p = path.to_string_lossy().into_owned();
+    let mime = mime_for(path, false);
+    let desktop = if mime_is_text(&mime) {
+        query_default_desktop(&mime)
+    } else {
+        None
+    }
+    .or_else(|| query_default_desktop("text/plain"))
+    .unwrap_or_else(|| "donwaztok-text.desktop".to_string());
+
+    let (code, msg) = run_cmd(&["gtk-launch", &desktop, &p]);
+    if code == 0 {
+        return Ok(());
+    }
+    if desktop.starts_with("donwaztok-text") {
+        let (code2, msg2) = run_cmd(&[
+            "qs",
+            "-c",
+            "donwaztok",
+            "ipc",
+            "call",
+            "textEditor",
+            "open",
+            &p,
+        ]);
+        if code2 == 0 {
+            return Ok(());
+        }
+        let err = if !msg2.is_empty() { msg2 } else { msg };
+        return Err(friendly_open_error(&err, path));
+    }
+    Err(friendly_open_error(&msg, path))
+}
+
+fn query_default_desktop(mime: &str) -> Option<String> {
+    let (code, out) = run_cmd(&["xdg-mime", "query", "default", mime]);
+    if code != 0 {
+        return None;
+    }
+    let desk = out.lines().next().unwrap_or("").trim().to_string();
+    if desk.ends_with(".desktop") {
+        Some(desk)
+    } else {
+        None
+    }
 }
 
 fn user_name(uid: u32) -> String {

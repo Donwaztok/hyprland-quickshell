@@ -695,6 +695,15 @@ Item {
         selectedPaths = [];
     }
 
+    /** Empty files are application/x-zerosize to gio, which has no default app. */
+    function shouldEditEmpty(entry: var): bool {
+        if (!entry || entry.isDir || !TextEditorService.isDefault)
+            return false;
+        if (Number(entry.size) !== 0)
+            return false;
+        return !entry.isArchive && !entry.isWindowsExe && !entry.isImage && !entry.isAppImage && !entry.isLinuxBin;
+    }
+
     function openEntry(entry: var): void {
         if (!entry)
             return;
@@ -716,7 +725,7 @@ Item {
             FileManagerService.smartExtract(entry.path, currentPath, root);
             return;
         }
-        if (TextEditorService.shouldOpenInternally(entry.path, entry.mimeType || "")) {
+        if (TextEditorService.shouldOpenInternally(entry.path, entry.mimeType || "") || shouldEditEmpty(entry)) {
             TextEditorService.open(entry.path);
             return;
         }
@@ -1111,19 +1120,24 @@ Item {
     function commitRename(newName: string): void {
         if (renameCommitting)
             return;
+        // Set before clearing renameTarget so a bubbling Enter cannot also open the old path.
+        renameCommitting = true;
         const name = String(newName || renameDraft || "").trim();
         if (!renameTarget.length || !name.length) {
+            renameCommitting = false;
             renameTarget = "";
             renameDraft = "";
             return;
         }
         if (name.includes("/") || name === "." || name === "..") {
+            renameCommitting = false;
             showAppToast(qsTr("Rename"), qsTr("Invalid name"), "error");
             return;
         }
         const parent = renameTarget.substring(0, renameTarget.lastIndexOf("/")) || "/";
         const dst = parent === "/" ? `/${name}` : `${parent}/${name}`;
         if (dst === renameTarget) {
+            renameCommitting = false;
             renameTarget = "";
             renameDraft = "";
             return;
@@ -1131,6 +1145,7 @@ Item {
         const src = normalizePath(renameTarget);
         const dest = normalizePath(dst);
         if (!src.length || !dest.length || src === dest) {
+            renameCommitting = false;
             renameTarget = "";
             renameDraft = "";
             return;

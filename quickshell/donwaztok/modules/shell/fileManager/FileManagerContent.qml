@@ -2749,6 +2749,8 @@ Item {
                         session.openSelection();
                 }
                 event.accepted = true;
+            } else if (session.renameCommitting || session.renameTarget.length) {
+                event.accepted = true;
             } else if (session.selectedPaths.length > 0) {
                 session.openSelection();
                 event.accepted = true;
