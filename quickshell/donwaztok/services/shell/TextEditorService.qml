@@ -67,6 +67,7 @@ Singleton {
     readonly property var textExts: ({
         "txt": true,
         "text": true,
+        "cht": true,
         "md": true,
         "markdown": true,
         "mdx": true,
