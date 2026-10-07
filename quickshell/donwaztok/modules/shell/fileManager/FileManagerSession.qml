@@ -626,12 +626,12 @@ Item {
         selectAnchor = path;
     }
 
-    function selectRange(path: string): void {
+    function selectRange(path: string, source: var): void {
         if (!selectAnchor.length) {
             selectOnly(path);
             return;
         }
-        const list = filteredEntries;
+        const list = (source && typeof source.length === "number") ? source : filteredEntries;
         let i0 = -1;
         let i1 = -1;
         for (let i = 0; i < list.length; ++i) {
@@ -685,8 +685,9 @@ Item {
             selectAnchor = src[src.length - 1];
     }
 
-    function selectAll(): void {
-        selectedPaths = filteredEntries.map(e => e.path);
+    function selectAll(source: var): void {
+        const list = (source && typeof source.length === "number") ? source : filteredEntries;
+        selectedPaths = list.map(e => e.path);
         if (selectedPaths.length)
             selectAnchor = selectedPaths[selectedPaths.length - 1];
     }

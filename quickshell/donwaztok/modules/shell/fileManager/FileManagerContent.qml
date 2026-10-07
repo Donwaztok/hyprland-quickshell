@@ -113,13 +113,14 @@ Item {
         }
         if (!session.selectedPaths.length)
             return false;
+        const visible = root.pickerVisibleEntries || [];
         if (root.pickerDirectory)
             return session.selectedPaths.every(p => {
-                const e = session.entries.find(x => x.path === p);
+                const e = visible.find(x => x && x.path === p);
                 return e && e.isDir;
             });
         return session.selectedPaths.every(p => {
-            const e = session.entries.find(x => x.path === p);
+            const e = visible.find(x => x && x.path === p);
             return e && !e.isDir;
         });
     }
@@ -258,9 +259,20 @@ Item {
                 uris = [session.currentPath];
             }
         } else {
-            uris = session.selectedPaths.slice();
-            if (!root.pickerMultiple && uris.length > 1)
-                uris = [uris[0]];
+            const visible = root.pickerVisibleEntries || [];
+            const allowed = {};
+            for (let i = 0; i < visible.length; ++i) {
+                const e = visible[i];
+                if (!e || !e.path)
+                    continue;
+                if (root.pickerDirectory ? e.isDir : !e.isDir)
+                    allowed[e.path] = true;
+            }
+            uris = session.selectedPaths.filter(p => allowed[p]);
+            if (!root.pickerMultiple && uris.length > 1) {
+                const anchor = session.selectAnchor;
+                uris = [allowed[anchor] ? anchor : uris[uris.length - 1]];
+            }
         }
         root.writePickerResult(0, uris);
         root.requestClose();
@@ -498,17 +510,16 @@ Item {
         const idx = view.indexAt(p.x, p.y);
         if (idx < 0)
             return "";
-        const list = session.filteredEntries;
-        if (idx >= list.length)
-            return "";
         // indexAt can return a neighbor for empty padding — require the point inside the delegate.
+        // Use the delegate itself: the view model is pickerVisibleEntries, which can be a
+        // subset of filteredEntries when a portal filter is active.
         const item = view.itemAtIndex ? view.itemAtIndex(idx) : view.itemAt(p.x, p.y);
-        if (!item)
+        if (!item || !item.modelData)
             return "";
         const local = item.mapFromItem(fileArea, areaX, areaY);
         if (local.x < 0 || local.y < 0 || local.x >= item.width || local.y >= item.height)
             return "";
-        return list[idx].path || "";
+        return item.modelData.path || "";
     }
 
     function indexRectInArea(index: int): var {
@@ -536,7 +547,7 @@ Item {
         if (w < 1 || h < 1)
             return [];
         const rect = Qt.rect(Math.min(mx, cx), Math.min(my, cy), w, h);
-        const list = session.filteredEntries;
+        const list = root.pickerVisibleEntries;
         const out = [];
         for (let i = 0; i < list.length; ++i) {
             if (root.rectsOverlap(rect, root.indexRectInArea(i)))
@@ -619,7 +630,7 @@ Item {
         if (root.isCtrlDown(mouseMods))
             session.toggleSelect(path);
         else if (root.isShiftDown(mouseMods))
-            session.selectRange(path);
+            session.selectRange(path, root.pickerVisibleEntries);
         else
             session.selectOnly(path);
     }
@@ -883,7 +894,7 @@ Item {
         sequences: [StandardKey.SelectAll]
         context: Qt.WindowShortcut
         enabled: !root.inputBlocked && !root.dialogOpen
-        onActivated: session.selectAll()
+        onActivated: session.selectAll(root.pickerVisibleEntries)
     }
     Shortcut {
         sequences: [StandardKey.Copy]
@@ -1617,8 +1628,8 @@ Item {
             CtxBtn {
                 label: qsTr("Select all")
                 iconName: "select_all"
-                rowEnabled: session.filteredEntries.length > 0
-                onActivated: session.selectAll()
+                rowEnabled: root.pickerVisibleEntries.length > 0
+                onActivated: session.selectAll(root.pickerVisibleEntries)
             }
             CtxBtn {
                 visible: !root.sidebarExpanded
@@ -1678,8 +1689,8 @@ Item {
             CtxBtn {
                 label: qsTr("Select all")
                 iconName: "select_all"
-                rowEnabled: session.filteredEntries.length > 0
-                onActivated: session.selectAll()
+                rowEnabled: root.pickerVisibleEntries.length > 0
+                onActivated: session.selectAll(root.pickerVisibleEntries)
             }
             CtxBtn {
                 visible: session.isTrashView
@@ -2698,7 +2709,7 @@ Item {
             session.goUp();
             event.accepted = true;
         } else if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) {
-            session.selectAll();
+            session.selectAll(root.pickerVisibleEntries);
             event.accepted = true;
         } else if (event.key === Qt.Key_F2) {
             root.shortcutRename();
