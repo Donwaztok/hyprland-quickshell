@@ -334,6 +334,10 @@ Singleton {
     function pasteClipboard(destPath: string, owner: var): void {
         if (!clipboardPaths.length || !clipboardMode.length)
             return;
+        if (owner && owner.beginTransfer) {
+            owner.beginTransfer(clipboardPaths.slice(), destPath || home, clipboardMode === "cut", true);
+            return;
+        }
         const kind = clipboardMode === "cut" ? "move" : "copy";
         const dest = destPath || home;
         startJob(kind, kind === "cut" ? qsTr("Moving…") : qsTr("Copying…"), fm([kind, dest].concat(clipboardPaths)), owner, "");
@@ -341,6 +345,36 @@ Singleton {
             clipboardPaths = [];
             clipboardMode = "";
         }
+    }
+
+    function probeConflicts(paths: var, destPath: string, owner: var): void {
+        if (!paths || !paths.length)
+            return;
+        const dest = destPath || home;
+        conflictProc.running = false;
+        conflictProc.owner = owner || null;
+        conflictProc.command = fm(["conflicts", dest].concat(paths));
+        conflictProc.running = true;
+    }
+
+    function transferDecisions(decisions: var, destPath: string, move: bool, owner: var): void {
+        const list = decisions || [];
+        if (!list.length)
+            return;
+        const dest = destPath || home;
+        const args = [move ? "move" : "copy", dest];
+        for (let i = 0; i < list.length; ++i) {
+            const item = list[i];
+            if (!item || !item.path)
+                continue;
+            const policy = item.policy === "replace" || item.policy === "skip" ? item.policy : "keep";
+            args.push("--decision");
+            args.push(policy + ":" + item.path);
+        }
+        if (args.length <= 2)
+            return;
+        const kind = move ? "move" : "copy";
+        startJob(kind, move ? qsTr("Moving…") : qsTr("Copying…"), fm(args), owner, "");
     }
 
     function trashSelection(paths: var, owner: var): void {
@@ -440,6 +474,10 @@ Singleton {
     function transferPaths(paths: var, destPath: string, move: bool, owner: var): void {
         if (!paths || !paths.length)
             return;
+        if (owner && owner.beginTransfer) {
+            owner.beginTransfer(paths, destPath || home, !!move, false);
+            return;
+        }
         const dest = destPath || home;
         const kind = move ? "move" : "copy";
         startJob(kind, move ? qsTr("Moving…") : qsTr("Copying…"), fm([kind, dest].concat(paths)), owner, "");
@@ -477,6 +515,43 @@ Singleton {
         infoProc.owner = owner || null;
         infoProc.command = fm(["info"].concat(paths));
         infoProc.running = true;
+    }
+
+    Process {
+        id: conflictProc
+        property var owner: null
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const owner = conflictProc.owner;
+                conflictProc.owner = null;
+                let data = {
+                    ok: false,
+                    error: qsTr("Could not check existing files")
+                };
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed && typeof parsed === "object")
+                        data = parsed;
+                } catch (e) {}
+                if (owner && owner.onConflictsReady)
+                    owner.onConflictsReady(data);
+            }
+        }
+        onExited: exitCode => {
+            if (exitCode === 0)
+                return;
+            Qt.callLater(() => {
+                if (!conflictProc.owner)
+                    return;
+                const owner = conflictProc.owner;
+                conflictProc.owner = null;
+                if (owner && owner.onConflictsReady)
+                    owner.onConflictsReady({
+                        ok: false,
+                        error: qsTr("Could not check existing files")
+                    });
+            });
+        }
     }
 
     Process {

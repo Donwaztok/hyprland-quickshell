@@ -176,46 +176,231 @@ fn copy_tree_with_progress(
     Ok(())
 }
 
-pub fn do_copy(sources: &[String], dest_dir: &str) {
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ConflictPolicy {
+    Keep,
+    Replace,
+    Skip,
+}
+
+struct PlannedPath {
+    policy: ConflictPolicy,
+    src: PathBuf,
+}
+
+fn name_taken(path: &Path) -> bool {
+    path.symlink_metadata().is_ok()
+}
+
+fn is_real_dir(path: &Path) -> bool {
+    fs::symlink_metadata(path)
+        .map(|m| m.file_type().is_dir())
+        .unwrap_or(false)
+}
+
+fn paths_equal(a: &Path, b: &Path) -> bool {
+    if a == b {
+        return true;
+    }
+    match (fs::canonicalize(a), fs::canonicalize(b)) {
+        (Ok(x), Ok(y)) => x == y,
+        _ => false,
+    }
+}
+
+fn path_is_inside(parent: &Path, child: &Path) -> bool {
+    let Ok(parent) = fs::canonicalize(parent) else {
+        return false;
+    };
+    let Ok(child) = fs::canonicalize(child) else {
+        return false;
+    };
+    child.starts_with(&parent) && child != parent
+}
+
+fn remove_any(path: &Path) -> Result<(), String> {
+    if is_real_dir(path) {
+        fs::remove_dir_all(path).map_err(|e| e.to_string())
+    } else {
+        fs::remove_file(path).map_err(|e| e.to_string())
+    }
+}
+
+fn unique_sibling(dest: &Path, src: &Path) -> Result<PathBuf, String> {
+    let stem = src
+        .file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "file".into());
+    let suffix = src
+        .extension()
+        .map(|e| format!(".{}", e.to_string_lossy()))
+        .unwrap_or_default();
+    for n in 1..10_000 {
+        let candidate = dest.join(format!("{stem} ({n}){suffix}"));
+        if !name_taken(&candidate) {
+            return Ok(candidate);
+        }
+    }
+    Err(format!("Too many copies of {stem}"))
+}
+
+fn parse_policy(raw: &str) -> Result<ConflictPolicy, String> {
+    match raw {
+        "keep" => Ok(ConflictPolicy::Keep),
+        "replace" => Ok(ConflictPolicy::Replace),
+        "skip" => Ok(ConflictPolicy::Skip),
+        _ => Err(format!("Unknown conflict policy: {raw}")),
+    }
+}
+
+fn parse_decision(raw: &str) -> Result<PlannedPath, String> {
+    let (policy, path) = raw
+        .split_once(':')
+        .ok_or_else(|| format!("Bad decision: {raw}"))?;
+    if path.is_empty() {
+        return Err(format!("Bad decision: {raw}"));
+    }
+    Ok(PlannedPath {
+        policy: parse_policy(policy)?,
+        src: expand_user(path),
+    })
+}
+
+/// Where this source should land. `None` means skip.
+fn place_target(dest: &Path, src: &Path, policy: ConflictPolicy, is_move: bool) -> Result<Option<PathBuf>, String> {
+    let name = src
+        .file_name()
+        .ok_or_else(|| format!("Missing file name: {}", src.display()))?;
+    let direct = dest.join(name);
+    let identical = paths_equal(src, &direct);
+    if is_move && identical {
+        return Ok(None);
+    }
+    match policy {
+        ConflictPolicy::Skip => Ok(None),
+        ConflictPolicy::Replace if identical => Ok(None),
+        ConflictPolicy::Keep if !name_taken(&direct) => Ok(Some(direct)),
+        ConflictPolicy::Keep => unique_sibling(dest, src).map(Some),
+        ConflictPolicy::Replace => {
+            if name_taken(&direct) {
+                if path_is_inside(&direct, src) {
+                    return Err(format!(
+                        "Refusing to replace {} with an item inside it",
+                        direct.display()
+                    ));
+                }
+                let src_dir = is_real_dir(src);
+                let tgt_dir = is_real_dir(&direct);
+                let tgt_link = fs::symlink_metadata(&direct)
+                    .map(|m| m.file_type().is_symlink())
+                    .unwrap_or(false);
+                if src_dir || tgt_dir || tgt_link {
+                    remove_any(&direct)?;
+                }
+            }
+            Ok(Some(direct))
+        }
+    }
+}
+
+fn move_onto(src: &Path, target: &Path) -> Result<(), String> {
+    if fs::rename(src, target).is_ok() {
+        return Ok(());
+    }
+    if is_real_dir(target) {
+        remove_any(target)?;
+        if fs::rename(src, target).is_ok() {
+            return Ok(());
+        }
+    }
+    if is_real_dir(src) {
+        copy_tree_with_progress(src, target, &mut 0, 1)?;
+        fs::remove_dir_all(src).map_err(|e| e.to_string())?;
+    } else {
+        fs::copy(src, target).map_err(|e| e.to_string())?;
+        fs::remove_file(src).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+fn transfer(is_move: bool, dest_dir: &str, planned: &[PlannedPath]) {
     let dest = expand_user(dest_dir);
     if !dest.is_dir() {
         err_exit(&format!("Not a directory: {dest_dir}"));
     }
-    let srcs: Vec<PathBuf> = sources.iter().map(|s| expand_user(s)).collect();
-    let total = srcs.iter().map(|s| path_size(s)).sum::<u64>().max(1);
+    let active: Vec<&PlannedPath> = planned
+        .iter()
+        .filter(|item| item.policy != ConflictPolicy::Skip)
+        .collect();
+    let total = if is_move {
+        1
+    } else {
+        active.iter().map(|item| path_size(&item.src)).sum::<u64>().max(1)
+    };
     let mut copied = 0u64;
     let mut results = Vec::new();
-    progress(0.0, "Preparing copy…");
-    for src in &srcs {
-        let mut target = dest.join(src.file_name().unwrap_or_default());
-        if target.exists() {
-            let stem = src
-                .file_stem()
-                .map(|s| s.to_string_lossy().into_owned())
-                .unwrap_or_default();
-            let suffix = src
-                .extension()
-                .map(|e| format!(".{}", e.to_string_lossy()))
-                .unwrap_or_default();
-            let mut n = 1;
-            while target.exists() {
-                target = dest.join(format!("{stem} ({n}){suffix}"));
-                n += 1;
-            }
+    let mut items = Vec::new();
+    let n = active.len().max(1) as f64;
+    progress(0.0, if is_move { "Preparing move…" } else { "Preparing copy…" });
+    for (i, item) in active.iter().enumerate() {
+        let src = &item.src;
+        if !name_taken(src) {
+            err_exit(&format!("Missing: {}", src.display()));
         }
-        if src.is_dir() {
+        let label_name = src.file_name().unwrap_or_default().to_string_lossy();
+        let target = match place_target(&dest, src, item.policy, is_move) {
+            Ok(Some(path)) => path,
+            Ok(None) => continue,
+            Err(e) => err_exit(&e),
+        };
+        if is_move {
+            progress(i as f64 / n, &format!("Moving {label_name}"));
+            let from = src.to_string_lossy().into_owned();
+            if let Err(e) = move_onto(src, &target) {
+                err_exit(&e);
+            }
+            let to = target.to_string_lossy().into_owned();
+            results.push(to.clone());
+            items.push(serde_json::json!({ "from": from, "to": to }));
+        } else if is_real_dir(src) {
             if let Err(e) = copy_tree_with_progress(src, &target, &mut copied, total) {
                 err_exit(&e);
             }
-        } else if let Err(e) =
-            copy_file_with_progress(src, &target, &mut copied, total, &format!("Copying {}", src.file_name().unwrap_or_default().to_string_lossy()))
-        {
+            results.push(target.to_string_lossy().into_owned());
+        } else if let Err(e) = copy_file_with_progress(
+            src,
+            &target,
+            &mut copied,
+            total,
+            &format!("Copying {label_name}"),
+        ) {
             err_exit(&e);
+        } else {
+            results.push(target.to_string_lossy().into_owned());
         }
-        results.push(target.to_string_lossy().into_owned());
     }
     progress(1.0, "Done");
-    out_ok(serde_json::json!({ "ok": true, "results": results }));
+    if is_move {
+        out_ok(serde_json::json!({
+            "ok": true,
+            "results": results,
+            "items": items,
+            "count": items.len(),
+        }));
+    } else {
+        out_ok(serde_json::json!({ "ok": true, "results": results }));
+    }
+}
+
+pub fn do_copy(sources: &[String], dest_dir: &str) {
+    let planned: Vec<PlannedPath> = sources
+        .iter()
+        .map(|s| PlannedPath {
+            policy: ConflictPolicy::Keep,
+            src: expand_user(s),
+        })
+        .collect();
+    transfer(false, dest_dir, &planned);
 }
 
 pub fn do_move(sources: &[String], dest_dir: &str) {
@@ -223,42 +408,72 @@ pub fn do_move(sources: &[String], dest_dir: &str) {
     if !dest.is_dir() {
         err_exit(&format!("Not a directory: {dest_dir}"));
     }
-    let mut results = Vec::new();
-    let mut items = Vec::new();
-    let n = sources.len().max(1) as f64;
-    for (i, raw) in sources.iter().enumerate() {
+    for raw in sources {
         let src = expand_user(raw);
-        let target = dest.join(src.file_name().unwrap_or_default());
-        if target.exists() {
+        let Some(name) = src.file_name() else {
+            continue;
+        };
+        let target = dest.join(name);
+        if name_taken(&target) && !paths_equal(&src, &target) {
             err_exit(&format!("Already exists: {}", target.display()));
         }
-        progress(i as f64 / n, &format!("Moving {}", src.file_name().unwrap_or_default().to_string_lossy()));
-        let from = src.to_string_lossy().into_owned();
-        if fs::rename(&src, &target).is_err() {
-            // Cross-device fallback
-            if src.is_dir() && !src.is_symlink() {
-                if let Err(e) = copy_tree_with_progress(&src, &target, &mut 0, 1) {
-                    err_exit(&e);
-                }
-                let _ = fs::remove_dir_all(&src);
-            } else {
-                if let Err(e) = fs::copy(&src, &target) {
-                    err_exit(&e.to_string());
-                }
-                let _ = fs::remove_file(&src);
-            }
-        }
-        let to = target.to_string_lossy().into_owned();
-        results.push(to.clone());
-        items.push(serde_json::json!({ "from": from, "to": to }));
     }
-    progress(1.0, "Done");
-    out_ok(serde_json::json!({
-        "ok": true,
-        "results": results,
-        "items": items,
-        "count": items.len(),
-    }));
+    let planned: Vec<PlannedPath> = sources
+        .iter()
+        .map(|s| PlannedPath {
+            policy: ConflictPolicy::Keep,
+            src: expand_user(s),
+        })
+        .collect();
+    transfer(true, dest_dir, &planned);
+}
+
+pub fn do_copy_decisions(decisions: &[String], dest_dir: &str) {
+    let planned = match decisions.iter().map(|d| parse_decision(d)).collect::<Result<Vec<_>, _>>() {
+        Ok(v) => v,
+        Err(e) => err_exit(&e),
+    };
+    transfer(false, dest_dir, &planned);
+}
+
+pub fn do_move_decisions(decisions: &[String], dest_dir: &str) {
+    let planned = match decisions.iter().map(|d| parse_decision(d)).collect::<Result<Vec<_>, _>>() {
+        Ok(v) => v,
+        Err(e) => err_exit(&e),
+    };
+    transfer(true, dest_dir, &planned);
+}
+
+pub fn do_conflicts(dest_dir: &str, sources: &[String]) {
+    let dest = expand_user(dest_dir);
+    if !dest.is_dir() {
+        err_exit(&format!("Not a directory: {dest_dir}"));
+    }
+    let mut seen_names = std::collections::HashSet::new();
+    let mut conflicts = Vec::new();
+    for raw in sources {
+        let src = expand_user(raw);
+        let Some(name) = src.file_name() else {
+            continue;
+        };
+        let target = dest.join(name);
+        let key = name.to_string_lossy().to_lowercase();
+        let duplicate = !seen_names.insert(key);
+        let taken = name_taken(&target);
+        if !taken && !duplicate {
+            continue;
+        }
+        conflicts.push(serde_json::json!({
+            "src": src.to_string_lossy(),
+            "name": name.to_string_lossy(),
+            "target": target.to_string_lossy(),
+            "samePath": taken && paths_equal(&src, &target),
+            "srcIsDir": is_real_dir(&src),
+            "targetIsDir": taken && is_real_dir(&target),
+            "batch": !taken && duplicate,
+        }));
+    }
+    out_ok(serde_json::json!({ "ok": true, "conflicts": conflicts }));
 }
 
 pub fn do_undo_move(pairs: &[String]) {

@@ -39,7 +39,7 @@ Item {
     property var propertiesInfo: ({})
     property bool searchOpen: false
     readonly property bool renameOpen: session.renameTarget.length > 0
-    readonly property bool dialogOpen: confirmDeleteOpen || confirmEmptyTrashOpen || propertiesOpen || root.renameOpen
+    readonly property bool dialogOpen: confirmDeleteOpen || confirmEmptyTrashOpen || propertiesOpen || root.renameOpen || session.conflictOpen
     readonly property bool inputBlocked: session.pathEditing || root.renameOpen || searchField.activeFocus
     readonly property bool navBlocked: session.pathEditing || root.renameOpen
     readonly property bool renameBlocked: session.pathEditing || root.renameOpen || session.isTrashView || root.pickerMode
@@ -2627,6 +2627,12 @@ Item {
         else if (event.key === Qt.Key_Control)
             root.ctrlHeld = true;
         root.noteInput("key:" + event.key + ":mod" + event.modifiers);
+        if (session.conflictOpen) {
+            if (event.key === Qt.Key_Escape)
+                session.cancelConflict();
+            event.accepted = true;
+            return;
+        }
         if (root.confirmDeleteOpen) {
             if (event.key === Qt.Key_Escape) {
                 root.confirmDeleteOpen = false;
@@ -4430,6 +4436,201 @@ Item {
                             font.weight: Font.Medium
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // Name conflict while copying or moving
+    Rectangle {
+        anchors.fill: parent
+        visible: session.conflictOpen
+        z: 100
+        color: Qt.alpha(Colours.palette.m3scrim, 0.45)
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: session.cancelConflict()
+        }
+
+        StyledRect {
+            anchors.centerIn: parent
+            implicitWidth: Math.min(440, parent.width - 48)
+            implicitHeight: conflictDialogCol.implicitHeight + Theme.Appearance.padding.large * 2
+            radius: Theme.Appearance.rounding.large
+            color: Colours.palette.m3surfaceContainerHigh
+            z: 1
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {}
+            }
+
+            ColumnLayout {
+                id: conflictDialogCol
+                x: Theme.Appearance.padding.large
+                y: Theme.Appearance.padding.large
+                width: parent.width - Theme.Appearance.padding.large * 2
+                spacing: Theme.Appearance.spacing.normal
+
+                MaterialIcon {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: "difference"
+                    color: Colours.palette.m3primary
+                    font.pointSize: Theme.Appearance.font.size.extraLarge
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: {
+                        const c = session.conflictCurrent;
+                        if (c && c.targetIsDir)
+                            return qsTr("Folder already exists");
+                        return qsTr("File already exists");
+                    }
+                    horizontalAlignment: Text.AlignHCenter
+                    font.pointSize: Theme.Appearance.font.size.larger
+                    font.weight: Font.DemiBold
+                    color: Colours.palette.m3onSurface
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: {
+                        const c = session.conflictCurrent;
+                        const name = c && c.name ? c.name : "";
+                        if (c && c.batch)
+                            return qsTr("Another item named “%1” is part of this transfer.").arg(name);
+                        if (c && c.samePath)
+                            return qsTr("“%1” is already in this folder.").arg(name);
+                        return qsTr("“%1” already exists in this folder.").arg(name);
+                    }
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    color: Colours.palette.m3onSurfaceVariant
+                    font.pointSize: Theme.Appearance.font.size.small
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: session.conflictItems.length > 1
+                    text: qsTr("%1 of %2").arg(session.conflictIndex + 1).arg(session.conflictItems.length)
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Colours.palette.m3outline
+                    font.pointSize: Theme.Appearance.font.size.small
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    implicitHeight: 28
+                    visible: session.conflictItems.length - session.conflictIndex > 1
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: Theme.Appearance.spacing.small
+
+                        MaterialIcon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: session.conflictApplyAll ? "check_box" : "check_box_outline_blank"
+                            color: session.conflictApplyAll ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                            font.pointSize: Theme.Appearance.font.size.large
+                        }
+
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 32
+                            text: qsTr("Apply to all")
+                            color: Colours.palette.m3onSurface
+                            font.pointSize: Theme.Appearance.font.size.small
+                        }
+                    }
+
+                    StateLayer {
+                        radius: Theme.Appearance.rounding.small
+                        function onClicked(): void {
+                            session.conflictApplyAll = !session.conflictApplyAll;
+                        }
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    implicitHeight: 36
+                    radius: Theme.Appearance.rounding.full
+                    color: Colours.palette.m3surfaceContainerHighest
+
+                    StateLayer {
+                        color: Colours.palette.m3onSurface
+                        function onClicked(): void {
+                            session.chooseConflict("skip");
+                        }
+                    }
+
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: qsTr("Skip")
+                        color: Colours.palette.m3onSurface
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    implicitHeight: 36
+                    radius: Theme.Appearance.rounding.full
+                    color: Colours.palette.m3primary
+
+                    StateLayer {
+                        color: Colours.palette.m3onPrimary
+                        function onClicked(): void {
+                            session.chooseConflict("keep");
+                        }
+                    }
+
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: qsTr("Keep both")
+                        color: Colours.palette.m3onPrimary
+                        font.weight: Font.Medium
+                    }
+                }
+
+                StyledRect {
+                    Layout.fillWidth: true
+                    visible: {
+                        const c = session.conflictCurrent;
+                        return !(c && c.samePath);
+                    }
+                    implicitHeight: visible ? 36 : 0
+                    radius: Theme.Appearance.rounding.full
+                    color: Colours.palette.m3error
+
+                    StateLayer {
+                        color: Colours.palette.m3onError
+                        function onClicked(): void {
+                            session.chooseConflict("replace");
+                        }
+                    }
+
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: qsTr("Replace")
+                        color: Colours.palette.m3onError
+                        font.weight: Font.Medium
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: {
+                        const c = session.conflictCurrent;
+                        if (c && c.samePath)
+                            return qsTr("Keep both adds a copy with a new name. Skip leaves it as it is.");
+                        return qsTr("Replace overwrites the existing item. Skip leaves it untouched. Keep both adds a new name.");
+                    }
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    color: Colours.palette.m3outline
+                    font.pointSize: Theme.Appearance.font.size.small
                 }
             }
         }

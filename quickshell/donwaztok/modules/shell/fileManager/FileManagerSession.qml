@@ -36,6 +36,23 @@ Item {
     property var pendingSelectPaths: []
     /** Blocks re-entrant Enter/OK on the rename dialog. */
     property bool renameCommitting: false
+    property bool conflictOpen: false
+    property bool conflictProbing: false
+    property bool conflictApplyAll: false
+    property bool conflictMove: false
+    property bool conflictFromClipboard: false
+    property string conflictDest: ""
+    property var conflictSources: []
+    property var conflictItems: []
+    property int conflictIndex: 0
+    property var conflictChoices: ({})
+
+    readonly property var conflictCurrent: {
+        const list = conflictItems || [];
+        if (!conflictOpen || conflictIndex < 0 || conflictIndex >= list.length)
+            return null;
+        return list[conflictIndex];
+    }
 
     readonly property bool appToastVisible: toasts.length > 0
     readonly property bool undoToastVisible: {
@@ -866,8 +883,7 @@ Item {
         if (!transferable.length)
             return;
 
-        const doCopy = !!forceCopy;
-        FileManagerService.transferPaths(transferable, dest, !doCopy, root);
+        beginTransfer(transferable, dest, !forceCopy, false);
     }
 
     function copySelection(): void {
@@ -905,7 +921,135 @@ Item {
     }
 
     function pasteClipboard(): void {
-        FileManagerService.pasteClipboard(currentPath, root);
+        if (isTrashView || !FileManagerService.clipboardPaths.length)
+            return;
+        beginTransfer(FileManagerService.clipboardPaths.slice(), currentPath, FileManagerService.clipboardMode === "cut", true);
+    }
+
+    function parentOf(path: string): string {
+        const p = FileManagerService.normalizeFsPath(String(path || ""));
+        if (!p.length || p === "/")
+            return "";
+        const slash = p.lastIndexOf("/");
+        return slash <= 0 ? "/" : p.slice(0, slash);
+    }
+
+    function beginTransfer(paths: var, destPath: string, move: bool, fromClipboard: bool): void {
+        if (isTrashView || conflictOpen || conflictProbing)
+            return;
+        const src = [];
+        const seen = {};
+        const list = paths || [];
+        for (let i = 0; i < list.length; ++i) {
+            const p = FileManagerService.normalizeFsPath(String(list[i] || ""));
+            if (!p.length || p.startsWith("trash://") || seen[p])
+                continue;
+            seen[p] = true;
+            src.push(p);
+        }
+        const dest = FileManagerService.normalizeFsPath(String(destPath || currentPath || ""));
+        if (!src.length || !dest.length)
+            return;
+        conflictSources = src;
+        conflictDest = dest;
+        conflictMove = !!move;
+        conflictFromClipboard = !!fromClipboard;
+        conflictChoices = {};
+        conflictItems = [];
+        conflictIndex = 0;
+        conflictApplyAll = false;
+        conflictProbing = true;
+        FileManagerService.probeConflicts(src, dest, root);
+    }
+
+    function onConflictsReady(data: var): void {
+        if (!conflictProbing)
+            return;
+        conflictProbing = false;
+        if (!data || data.ok === false) {
+            showAppToast(qsTr("Files"), (data && data.error) || qsTr("Could not check existing files"), "error");
+            return;
+        }
+        let conflicts = Array.isArray(data.conflicts) ? data.conflicts : [];
+        if (conflictMove)
+            conflicts = conflicts.filter(c => c && !c.samePath);
+        if (!conflicts.length) {
+            commitTransfer();
+            return;
+        }
+        conflictItems = conflicts;
+        conflictIndex = 0;
+        conflictApplyAll = false;
+        conflictOpen = true;
+    }
+
+    function cancelConflict(): void {
+        conflictOpen = false;
+        conflictProbing = false;
+        conflictItems = [];
+        conflictIndex = 0;
+        conflictChoices = {};
+        conflictSources = [];
+        conflictApplyAll = false;
+    }
+
+    function chooseConflict(policy: string): void {
+        if (!conflictOpen)
+            return;
+        const items = conflictItems || [];
+        const choice = policy === "replace" || policy === "skip" ? policy : "keep";
+        const start = conflictIndex;
+        const end = conflictApplyAll ? items.length : Math.min(items.length, start + 1);
+        const choices = conflictChoices || {};
+        const next = {};
+        const keys = Object.keys(choices);
+        for (let i = 0; i < keys.length; ++i)
+            next[keys[i]] = choices[keys[i]];
+        for (let i = start; i < end; ++i) {
+            const item = items[i];
+            if (item && item.src)
+                next[item.src] = choice;
+        }
+        conflictChoices = next;
+        if (end >= items.length) {
+            conflictOpen = false;
+            commitTransfer();
+            return;
+        }
+        conflictIndex = end;
+        conflictApplyAll = false;
+    }
+
+    function commitTransfer(): void {
+        const sources = conflictSources || [];
+        const choices = conflictChoices || {};
+        const dest = conflictDest;
+        const move = conflictMove;
+        const fromClipboard = conflictFromClipboard;
+        const decisions = [];
+        for (let i = 0; i < sources.length; ++i) {
+            const path = sources[i];
+            if (move && parentOf(path) === dest)
+                continue;
+            const policy = choices[path] || "keep";
+            if (policy === "skip")
+                continue;
+            decisions.push({
+                path: path,
+                policy: policy
+            });
+        }
+        conflictItems = [];
+        conflictIndex = 0;
+        conflictChoices = {};
+        conflictSources = [];
+        if (!decisions.length)
+            return;
+        FileManagerService.transferDecisions(decisions, dest, move, root);
+        if (fromClipboard && move) {
+            FileManagerService.clipboardPaths = [];
+            FileManagerService.clipboardMode = "";
+        }
     }
 
     function trashSelection(): void {

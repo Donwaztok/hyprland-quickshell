@@ -67,12 +67,23 @@ enum Commands {
     Delete {
         paths: Vec<String>,
     },
+    /// Names in DEST that already match a source basename.
+    Conflicts {
+        dest: String,
+        sources: Vec<String>,
+    },
     Copy {
         dest: String,
+        /// `keep|replace|skip:/absolute/path` — one per source when the user chose.
+        #[arg(long = "decision", value_name = "POLICY:PATH")]
+        decision: Vec<String>,
         sources: Vec<String>,
     },
     Move {
         dest: String,
+        /// `keep|replace|skip:/absolute/path` — one per source when the user chose.
+        #[arg(long = "decision", value_name = "POLICY:PATH")]
+        decision: Vec<String>,
         sources: Vec<String>,
     },
     #[command(name = "undo-move")]
@@ -158,17 +169,37 @@ fn run(cli: Cli) {
             }
             ops::do_delete(&paths)
         }
-        Commands::Copy { dest, sources } => {
+        Commands::Conflicts { dest, sources } => {
             if sources.is_empty() {
+                err_exit("conflicts requires sources");
+            }
+            ops::do_conflicts(&dest, &sources)
+        }
+        Commands::Copy {
+            dest,
+            decision,
+            sources,
+        } => {
+            if !decision.is_empty() {
+                ops::do_copy_decisions(&decision, &dest);
+            } else if !sources.is_empty() {
+                ops::do_copy(&sources, &dest);
+            } else {
                 err_exit("copy requires sources");
             }
-            ops::do_copy(&sources, &dest)
         }
-        Commands::Move { dest, sources } => {
-            if sources.is_empty() {
+        Commands::Move {
+            dest,
+            decision,
+            sources,
+        } => {
+            if !decision.is_empty() {
+                ops::do_move_decisions(&decision, &dest);
+            } else if !sources.is_empty() {
+                ops::do_move(&sources, &dest);
+            } else {
                 err_exit("move requires sources");
             }
-            ops::do_move(&sources, &dest)
         }
         Commands::UndoMove { pairs } => ops::do_undo_move(&pairs),
         Commands::Eject { mount } => mounts::do_eject(&mount),
