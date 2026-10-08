@@ -30,4 +30,5 @@ require("lua.custom.execs")
 
 -- 6. Keybinds (load last)
 require("lua.hyprland.keybinds")
+require("lua.hyprland.donwaztok")
 require("lua.custom.keybinds")
