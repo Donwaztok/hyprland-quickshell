@@ -46,7 +46,7 @@ hyprland                          # Wayland compositor
 wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
 udiskie                           # removable media + tray (udisks2); was in old hyprland.conf
 xorg-setxkbmap                    # setxkbmap — XWayland / intl sync (old dotfiles + current exec-once)
-libayatana-appindicator           # GTK StatusNotifier tray (udiskie, solaar, nm-applet, blueman on Wayland)
+libayatana-appindicator           # GTK StatusNotifier tray (udiskie, nm-applet, blueman on Wayland)
 network-manager-applet            # nm-applet --indicator (bar tray; donwaztok status network/wifi off)
 blueman                           # blueman-applet (bar tray; donwaztok status bluetooth off)
 
@@ -104,7 +104,6 @@ wlogout                           # Wayland logout screen
 cursor-bin                        # Cursor IDE
 eog                               # Eye of GNOME (image viewer)
 kitty                             # GPU-accelerated terminal
-solaar                            # Logitech device manager (battery, etc.)
 thunderbird                       # email client
 zapzap                            # WhatsApp client
 zen-browser-bin                   # privacy-focused browser (Firefox fork)

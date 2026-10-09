@@ -273,7 +273,7 @@ Singleton {
         if (raw.includes(":/") || raw.startsWith("/") || raw.startsWith("file:"))
             return raw;
 
-        // Theme icon name (solaar battery-*, udiskie drive-*, etc.)
+        // Theme icon name (udiskie drive-*, etc.)
         const resolved = Quickshell.iconPath(raw);
         if (resolved && resolved.length && !resolved.includes("image-missing"))
             return resolved;

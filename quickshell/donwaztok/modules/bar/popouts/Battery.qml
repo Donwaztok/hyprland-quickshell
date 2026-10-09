@@ -1,10 +1,13 @@
 pragma ComponentBehavior: Bound
 
 import qs.components
+import qs.services
 import qs.services.shell
 import qs.config
+import Quickshell
 import Quickshell.Services.UPower
 import QtQuick
+import QtQuick.Layouts
 
 Column {
     id: root
@@ -13,10 +16,87 @@ Column {
     width: Config.bar.sizes.batteryWidth
 
     StyledText {
+        visible: UPower.displayDevice.isLaptopBattery || DeviceBatteries.devices.length === 0
         text: UPower.displayDevice.isLaptopBattery ? qsTr("Remaining: %1%").arg(Math.round(UPower.displayDevice.percentage * 100)) : qsTr("No battery detected")
     }
 
+    Column {
+        width: parent.width
+        visible: DeviceBatteries.devices.length > 0
+        spacing: Appearance.spacing.small
+
+        StyledText {
+            text: qsTr("Wireless devices")
+            font.weight: 500
+        }
+
+        Repeater {
+            model: ScriptModel {
+                values: DeviceBatteries.devices
+            }
+
+            RowLayout {
+                required property var modelData
+
+                width: root.width
+                spacing: Appearance.spacing.small
+
+                MaterialIcon {
+                    Layout.alignment: Qt.AlignVCenter
+                    text: modelData.icon
+                    color: modelData.percent >= 0 && modelData.percent <= DeviceBatteries.lowLevel ? Colours.palette.m3error : Colours.palette.m3onSurface
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.small / 4
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: modelData.name
+                        elide: Text.ElideRight
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: {
+                            if (modelData.percent < 0)
+                                return modelData.detail || qsTr("Connected, no battery report");
+                            if (modelData.state === "charging")
+                                return qsTr("Charging · %1%").arg(modelData.percent);
+                            if (modelData.state === "full")
+                                return qsTr("Charged · %1%").arg(modelData.percent);
+                            return qsTr("%1%").arg(modelData.percent);
+                        }
+                        color: Colours.palette.m3onSurfaceVariant
+                        font.pointSize: Appearance.font.size.small
+                        elide: Text.ElideRight
+                    }
+
+                    StyledRect {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 4
+                        visible: modelData.percent >= 0
+                        radius: Appearance.rounding.full
+                        color: Colours.palette.m3secondaryContainer
+
+                        StyledRect {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: parent.width * Math.max(0, Math.min(modelData.percent, 100)) / 100
+                            radius: Appearance.rounding.full
+                            color: modelData.percent <= DeviceBatteries.lowLevel ? Colours.palette.m3error : Colours.palette.m3primary
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     StyledText {
+        visible: UPower.displayDevice.isLaptopBattery
+
         function formatSeconds(s: int, fallback: string): string {
             const day = Math.floor(s / 86400);
             const hr = Math.floor(s / 3600) % 60;
@@ -33,7 +113,18 @@ Column {
             return comps.join(", ") || fallback;
         }
 
-        text: UPower.displayDevice.isLaptopBattery ? qsTr("Time %1: %2").arg(UPower.onBattery ? "remaining" : "until charged").arg(UPower.onBattery ? formatSeconds(UPower.displayDevice.timeToEmpty, "Calculating...") : formatSeconds(UPower.displayDevice.timeToFull, "Fully charged!")) : qsTr("Power profile: %1").arg(PowerProfile.toString(PowerProfiles.profile))
+        text: qsTr("Time %1: %2").arg(UPower.onBattery ? "remaining" : "until charged").arg(UPower.onBattery ? formatSeconds(UPower.displayDevice.timeToEmpty, "Calculating...") : formatSeconds(UPower.displayDevice.timeToFull, "Fully charged!"))
+    }
+
+    StyledRect {
+        visible: UPower.displayDevice.isLaptopBattery || DeviceBatteries.devices.length > 0
+        width: parent.width
+        implicitHeight: 1
+        color: Colours.palette.m3outlineVariant
+    }
+
+    StyledText {
+        text: qsTr("Power profile: %1").arg(PowerProfile.toString(PowerProfiles.profile))
     }
 
     Loader {
