@@ -314,6 +314,13 @@ Singleton {
         mountsProc.running = true;
     }
 
+    // Tray "Mount disc image" — FileManager opens the Donwaztok picker.
+    signal mountDiscImageRequested
+
+    function requestMountDiscImage(): void {
+        root.mountDiscImageRequested();
+    }
+
     function smartExtract(archivePath: string, destPath: string, owner: var): void {
         if (!archivePath || !archivePath.length)
             return;

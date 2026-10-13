@@ -14,6 +14,28 @@ StackView {
     required property Item popouts
     required property QsMenuHandle trayItem
 
+    // udiskie "Mount disc image" uses Gtk.FileChooserDialog, which never
+    // goes through the Donwaztok file-chooser portal.
+    function activateTrayEntry(entry: var): void {
+        if (!entry)
+            return;
+        if (entry.hasChildren) {
+            root.push(subMenuComp.createObject(null, {
+                handle: entry,
+                isSubMenu: true
+            }));
+            return;
+        }
+        const label = String(entry.text || "").trim().toLowerCase();
+        if (label.indexOf("disc image") >= 0 || label.indexOf("imagem de disco") >= 0) {
+            FileManagerService.requestMountDiscImage();
+            root.popouts.hasCurrent = false;
+            return;
+        }
+        entry.triggered();
+        root.popouts.hasCurrent = false;
+    }
+
     implicitWidth: currentItem.implicitWidth
     implicitHeight: currentItem.implicitHeight
 
@@ -98,16 +120,7 @@ StackView {
                             disabled: !item.modelData.enabled
 
                             function onClicked(): void {
-                                const entry = item.modelData;
-                                if (entry.hasChildren)
-                                    root.push(subMenuComp.createObject(null, {
-                                        handle: entry,
-                                        isSubMenu: true
-                                    }));
-                                else {
-                                    item.modelData.triggered();
-                                    root.popouts.hasCurrent = false;
-                                }
+                                root.activateTrayEntry(item.modelData);
                             }
                         }
 

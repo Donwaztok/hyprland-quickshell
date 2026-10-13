@@ -45,6 +45,162 @@ Scope {
         return "{\"ok\":true,\"id\":\"" + id + "\"}";
     }
 
+    property string discImageRequestId: ""
+    property bool discImageActive: false
+    property int discImageTicks: 0
+
+    function abortDiscImage(message: string): void {
+        root.discImageActive = false;
+        discPoll.stop();
+        if (message && String(message).length)
+            Toaster.toast(qsTr("Mount disc image"), message, "album", 3);
+    }
+
+    function mountDiscImage(): void {
+        if (root.discImageActive)
+            return;
+        root.discImageRequestId = Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);
+        root.discImageActive = true;
+        root.discImageTicks = 0;
+        discMkdir.exec(["mkdir", "-p", `${Paths.runtime}/${root.discImageRequestId}`]);
+    }
+
+    function consumeDiscImageResult(): void {
+        if (!root.discImageActive)
+            return;
+        let data = null;
+        try {
+            data = JSON.parse(discResult.text() || "");
+        } catch (e) {
+            return;
+        }
+        if (!data || data.response === undefined || data.response === null)
+            return;
+        const response = Number(data.response);
+        root.discImageActive = false;
+        discPoll.stop();
+        if (response !== 0)
+            return;
+        const uris = data.uris || [];
+        if (!uris.length)
+            return;
+        let path = String(uris[0] || "");
+        if (path.startsWith("file://"))
+            path = decodeURIComponent(path.slice("file://".length));
+        if (!path.length)
+            return;
+        discLoop.exec(["udisksctl", "loop-setup", "--file", path, "--no-user-interaction"]);
+    }
+
+    Connections {
+        target: FileManagerService
+
+        function onMountDiscImageRequested(): void {
+            root.mountDiscImage();
+        }
+    }
+
+    Process {
+        id: discMkdir
+
+        onExited: code => {
+            if (!root.discImageActive)
+                return;
+            if (code !== 0) {
+                root.abortDiscImage(qsTr("Could not open the file chooser"));
+                return;
+            }
+            discRequest.path = `${Paths.runtime}/${root.discImageRequestId}/request.json`;
+            discRequest.setText(JSON.stringify({
+                id: root.discImageRequestId,
+                mode: "open",
+                title: qsTr("Mount disc image"),
+                acceptLabel: qsTr("Mount"),
+                multiple: false,
+                directory: false,
+                currentFolder: FileManagerService.home,
+                currentName: "",
+                filters: [
+                    {
+                        name: qsTr("Disc images"),
+                        patterns: ["*.iso", "*.img", "*.raw", "*.vhd", "*.vmdk", "*.qcow2"]
+                    },
+                    {
+                        name: qsTr("All files"),
+                        patterns: ["*"]
+                    }
+                ],
+                files: []
+            }));
+        }
+    }
+
+    FileView {
+        id: discRequest
+
+        printErrors: false
+        atomicWrites: true
+
+        onSaved: {
+            if (!root.discImageActive)
+                return;
+            root.openPicker(root.discImageRequestId);
+            discResult.path = `${Paths.runtime}/${root.discImageRequestId}/result.json`;
+            root.discImageTicks = 0;
+            discPoll.start();
+        }
+
+        onSaveFailed: root.abortDiscImage(qsTr("Could not open the file chooser"))
+    }
+
+    FileView {
+        id: discResult
+
+        printErrors: false
+
+        onLoaded: root.consumeDiscImageResult()
+    }
+
+    Timer {
+        id: discPoll
+
+        interval: 200
+        repeat: true
+
+        onTriggered: {
+            if (!root.discImageActive) {
+                stop();
+                return;
+            }
+            root.discImageTicks += 1;
+            if (root.discImageTicks > 3000) {
+                root.abortDiscImage("");
+                return;
+            }
+            discResult.reload();
+        }
+    }
+
+    Process {
+        id: discLoop
+
+        stdout: StdioCollector {
+            id: discLoopOut
+        }
+        stderr: StdioCollector {
+            id: discLoopErr
+        }
+
+        onExited: code => {
+            if (code === 0) {
+                FileManagerService.refreshMounts();
+                return;
+            }
+            const msg = String(discLoopErr.text || discLoopOut.text || "").trim();
+            Toaster.toast(qsTr("Mount disc image"), msg.length ? msg : qsTr("Could not set up the disc image"), "album", 3);
+        }
+    }
+
     function hyprTitle(): string {
         const top = Hyprland.activeToplevel;
         if (!top)
@@ -294,6 +450,11 @@ Scope {
 
         function pick(requestId: string): string {
             return root.openPicker(requestId);
+        }
+
+        function mountDiscImage(): string {
+            root.mountDiscImage();
+            return "{\"ok\":true}";
         }
 
         function status(): string {
