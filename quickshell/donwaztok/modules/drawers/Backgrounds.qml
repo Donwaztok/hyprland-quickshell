@@ -20,7 +20,7 @@ Shape {
     anchors.rightMargin: Math.max(Config.border.thickness, bar.rightMargin)
     anchors.topMargin: Math.max(Config.border.thickness, bar.topMargin)
     anchors.bottomMargin: Math.max(Config.border.thickness, bar.bottomMargin)
-    preferredRendererType: Shape.CurveRenderer
+    preferredRendererType: Shape.GeometryRenderer
 
     Notifications.Background {
         wrapper: root.panels.notifications

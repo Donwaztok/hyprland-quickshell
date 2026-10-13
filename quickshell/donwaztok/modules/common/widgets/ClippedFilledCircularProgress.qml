@@ -59,7 +59,7 @@ Item {
 
         Shape {
             anchors.fill: parent
-            preferredRendererType: Shape.CurveRenderer
+            preferredRendererType: Shape.GeometryRenderer
 
             ShapePath {
                 id: primaryPath

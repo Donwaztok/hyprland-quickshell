@@ -36,7 +36,7 @@ Item {
     }
 
     Shape {
-        preferredRendererType: Shape.CurveRenderer
+        preferredRendererType: Shape.GeometryRenderer
 
         ShapePath {
             fillColor: "transparent"

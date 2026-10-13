@@ -36,7 +36,7 @@ Item {
     Shape {
         id: shape
         anchors.fill: parent
-        preferredRendererType: Shape.CurveRenderer
+        preferredRendererType: Shape.GeometryRenderer
 
         ShapePath {
             id: shapePath

@@ -13,7 +13,7 @@ Item {
     implicitHeight: currentItem ? content.implicitHeight + Appearance.padding.normal + content.anchors.bottomMargin : 0
 
     Shape {
-        preferredRendererType: Shape.CurveRenderer
+        preferredRendererType: Shape.GeometryRenderer
 
         ShapePath {
             id: path

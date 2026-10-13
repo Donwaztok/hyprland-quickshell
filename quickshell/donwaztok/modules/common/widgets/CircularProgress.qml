@@ -52,7 +52,7 @@ Item {
         anchors.fill: parent
         layer.enabled: true
         layer.smooth: true
-        preferredRendererType: Shape.CurveRenderer
+        preferredRendererType: Shape.GeometryRenderer
         ShapePath {
             id: secondaryPath
             strokeColor: root.colSecondary

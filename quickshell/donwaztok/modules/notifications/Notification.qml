@@ -231,7 +231,7 @@ StyledRect {
                 anchors.centerIn: appIcon
                 width: appIcon.implicitWidth + progressShape.strokeWidth * 2
                 height: appIcon.implicitHeight + progressShape.strokeWidth * 2
-                preferredRendererType: Shape.CurveRenderer
+                preferredRendererType: Shape.GeometryRenderer
 
                 ShapePath {
                     id: progressShape
