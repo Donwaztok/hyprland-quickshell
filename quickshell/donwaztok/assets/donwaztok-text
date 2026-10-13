@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Desktop launchers drop %f when no file is selected. Always pass a path
+# so `textEditor open` receives the argument it requires.
+exec qs -c donwaztok ipc call textEditor open "${1:-}"

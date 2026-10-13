@@ -177,7 +177,7 @@ Singleton {
     readonly property bool isDefault: editorId === root.appId
 
     readonly property string desktopEntryText: {
-        const exec = "qs -c donwaztok ipc call textEditor open %f";
+        const exec = `${Quickshell.shellDir}/assets/donwaztok-text %f`;
         let mimes = "";
         for (let i = 0; i < root.defaultMimes.length; ++i)
             mimes += root.defaultMimes[i] + ";";
