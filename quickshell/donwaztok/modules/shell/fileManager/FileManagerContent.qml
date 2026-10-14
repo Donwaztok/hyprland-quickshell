@@ -3093,7 +3093,47 @@ Item {
                     }
 
                     Item {
+                        id: upBtn
                         anchors.left: placesMenuBtn.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: root.pickerMode
+                        width: visible ? 36 : 0
+                        height: 36
+
+                        readonly property bool canGo: {
+                            if (root.navBlocked || root.dialogOpen)
+                                return false;
+                            if (session.isTrashView)
+                                return true;
+                            const path = session.currentPath || "";
+                            return path.length > 0 && path !== "/";
+                        }
+
+                        opacity: canGo ? 1 : 0.38
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "arrow_upward"
+                            color: Colours.palette.m3onSurface
+                        }
+
+                        StateLayer {
+                            enabled: upBtn.canGo
+                            radius: Theme.Appearance.rounding.small
+
+                            function onClicked(): void {
+                                session.goUp();
+                                root.forceActiveFocus();
+                            }
+
+                            QC.ToolTip.visible: containsMouse && upBtn.canGo
+                            QC.ToolTip.delay: 400
+                            QC.ToolTip.text: qsTr("Parent folder")
+                        }
+                    }
+
+                    Item {
+                        anchors.left: upBtn.right
                         anchors.right: emptyTrashBtn.left
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
