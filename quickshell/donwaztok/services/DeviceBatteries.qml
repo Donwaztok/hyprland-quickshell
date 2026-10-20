@@ -184,34 +184,38 @@ Singleton {
         if (!root.configReady)
             return;
 
-        const previous = root.alertLevels || {};
-        const next = {};
+        // Tier already announced per device (0 none, 1 low, 2 critical), keyed by
+        // normalized name so it survives devices dropping out between refreshes
+        // or reappearing under another key. Only recovering above the low level
+        // re-arms the alert.
+        const alerted = Object.assign({}, root.alertLevels || {});
         const list = root.devices;
         for (let i = 0; i < list.length; i++) {
             const device = list[i];
             const percent = device.percent;
-            next[device.key] = percent;
-            if (percent < 0 || device.state === "charging" || device.state === "full")
+            if (percent < 0)
                 continue;
 
-            const prev = Object.prototype.hasOwnProperty.call(previous, device.key) ? previous[device.key] : 101;
-            let crossed = null;
-            if (percent <= root.lowLevel && prev > root.lowLevel) {
-                crossed = {
-                    title: qsTr("Low battery"),
-                    urgency: "normal"
-                };
+            const id = root.normalizeName(device.name) || device.key;
+            const tier = percent <= root.criticalLevel ? 2 : percent <= root.lowLevel ? 1 : 0;
+            const prevTier = alerted[id] ?? 0;
+            if (tier === 0) {
+                alerted[id] = 0;
+                continue;
             }
-            if (percent <= root.criticalLevel && prev > root.criticalLevel) {
-                crossed = {
-                    title: qsTr("Critical battery"),
-                    urgency: "critical"
-                };
-            }
-            if (crossed)
-                root.notify(device, crossed);
+            if (tier <= prevTier || device.state === "charging" || device.state === "full")
+                continue;
+
+            alerted[id] = tier;
+            root.notify(device, tier === 2 ? {
+                title: qsTr("Critical battery"),
+                urgency: "critical"
+            } : {
+                title: qsTr("Low battery"),
+                urgency: "normal"
+            });
         }
-        root.alertLevels = next;
+        root.alertLevels = alerted;
     }
 
     function notify(device, level): void {
