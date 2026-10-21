@@ -2,6 +2,8 @@
 """List wireless USB devices that do not publish a battery to UPower.
 
 Logitech receivers already show up as hidpp power supplies, so they are skipped.
+A Logitech keyboard or mouse plugged in by cable is charging, but the kernel does
+not publish its battery in wired mode, so it is listed without a percentage.
 The 8BitDo Ultimate 2 reports a percentage only in DirectInput mode (USB 6012),
 in the 34-byte pad report. XInput mode (USB 310b) does not carry charge.
 The HyperX Cloud Stinger Core dongle does not answer a battery query.
@@ -35,6 +37,14 @@ def has_power_supply(device_path: str) -> bool:
 
 def classify(vendor: str, product: str, name: str) -> str:
     lowered = name.lower()
+    if vendor == "046d":
+        if "receiver" in lowered:
+            return ""
+        if "keyboard" in lowered or "pro x 60" in lowered:
+            return "keyboard"
+        if "mouse" in lowered:
+            return "mouse"
+        return ""
     if vendor == "2dc8" or "8bitdo" in lowered:
         return "controller"
     if vendor == "0951" and ("hyperx" in lowered or "stinger" in lowered or "headset" in lowered):
@@ -127,8 +137,6 @@ def main() -> None:
         name = read_text(os.path.join(device_path, "product"))
         if not vendor or not name:
             continue
-        if vendor == "046d":
-            continue
         if has_power_supply(device_path):
             continue
         kind = classify(vendor, product, name)
@@ -143,6 +151,9 @@ def main() -> None:
                 percent, state = parsed
         elif vendor == "2dc8":
             detail = "XInput mode does not report charge"
+        elif vendor == "046d":
+            state = "charging"
+            detail = "Charging via cable"
         elif vendor == "0951":
             detail = "Dongle does not report charge"
         devices.append({
