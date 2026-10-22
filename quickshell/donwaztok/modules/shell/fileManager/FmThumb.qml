@@ -13,7 +13,7 @@ import QtQuick
  * - Qt-native images load directly
  * - webp/avif/jxl/ico via magick → PNG cache
  * - Windows .exe/.dll via PE icon extract
- * - AppImage / .desktop / Linux bins via fm.py → PNG cache
+ * - AppImage / .desktop / Linux bins via bin/fm → PNG cache
  */
 Item {
     id: root

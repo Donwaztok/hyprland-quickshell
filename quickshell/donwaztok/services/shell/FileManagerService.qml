@@ -10,7 +10,6 @@ Singleton {
     id: root
 
     readonly property string binary: Quickshell.shellPath("bin/fm")
-    readonly property string script: Quickshell.shellPath("scripts/files/fm.py") // legacy; prefer binary
     readonly property string home: {
         const h = Paths.home || Quickshell.env("HOME") || "";
         return h.length ? h : "/";

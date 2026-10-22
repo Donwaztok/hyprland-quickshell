@@ -95,8 +95,8 @@ across surfaces or needs a plan: `/opsx:propose` → `/opsx:apply` → `ui-revie
   `modules/shell/textEditor/TextEditorContent.qml`, `modules/controlcenter/network/VpnDetails.qml`):
   grep first, then read with offset/limit.
 - Do not open `bin/`, `scripts/files/fm-rs/target/`, `__pycache__/` or `assets/` unless asked.
-- Before reusing a widget, check it is live (`grep -rlw <Name> --include='*.qml' .`);
-  `openspec/changes/remove-dead-code/tasks.md` lists the files not referenced anywhere.
+- Before reusing a widget, check it is live (`grep -rlw <Name> --include='*.qml' .`).
+  Unreferenced files were removed on 2026-10-22; delete new dead code instead of keeping it.
 
 ## Gotchas
 
