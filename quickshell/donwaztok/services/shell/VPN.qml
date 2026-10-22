@@ -192,13 +192,12 @@ Singleton {
         }
     }
 
-    Process {
-        id: nmMonitor
+    Connections {
+        target: Nmcli
+        enabled: root.enabled
 
-        running: root.enabled
-        command: ["nmcli", "monitor"]
-        stdout: SplitParser {
-            onRead: statusCheckTimer.restart()
+        function onNetworkChanged(): void {
+            statusCheckTimer.restart();
         }
     }
 
@@ -321,6 +320,7 @@ Singleton {
 
     FileView {
         path: `${root.fvpnCacheDir}/job.json`
+        printErrors: false // no job file is the normal idle state
         watchChanges: true
         onFileChanged: reload()
         onLoaded: {

@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  Project: Donwaztok — a Hyprland desktop shell written in QML on Quickshell. It lives in the
+  ~/.config dotfiles repo at quickshell/donwaztok (the shell root, `shell.qml`). Single user, single
+  machine (two monitors: DP-1 1920x1080 and HDMI-A-1 2560x1080). No build step for QML: Quickshell
+  hot-reloads on save. The only compiled piece is the Rust file-manager helper (scripts/files/fm-rs → bin/fm).
+
+  Code layout and conventions: see CLAUDE.md. UI and performance rules: docs/UI-PATTERNS.md.
+
+  Two upstream styles coexist:
+  - caelestia-style (dominant, ~175 files): services/shell, components/, utils/, config/, and most of
+    modules/ (bar, drawers, dashboard, launcher, controlcenter, shell apps). Tokens: Colours.palette /
+    Colours.tPalette, Appearance (qs.components), Config.<section>.
+  - end-4 illogical-impulse (legacy, ~45 files): services/*.qml and modules/common (Appearance.colors,
+    Config.options, RippleButton, StyledText…).
+
+  Verification: there are no automated tests. A change is verified by (1) `qs log -c donwaztok` showing no
+  new warnings or errors for the touched files after the hot reload, and (2) opening the affected surface
+  and checking it in the light and dark schemes.
+
+  Language: talk to the user in pt-BR. Code, comments, OpenSpec and docs are English. UI strings in English
+  through qsTr().
+
+rules:
+  proposal:
+    - Reference existing capabilities from openspec/specs/ when modifying behavior; cite them by capability + requirement title
+    - Name the design system the change touches (caelestia or end-4) and justify any new use of the end-4 side
+    - State whether the change can affect idle cost (timers, Process polling, always-on layers, animations)
+  design:
+    - Follow docs/UI-PATTERNS.md; name the rule when deviating
+    - For anything that polls, say who consumes the data and how polling stops when nobody does
+    - For new surfaces, say how they are loaded lazily and unloaded when hidden
+  tasks:
+    - Group tasks by area (services, modules, components, scripts)
+    - Always end with "## Verification" listing `qs log -c donwaztok` checks for the touched files and the surfaces to open by hand
+    - When fm-rs/src changes, include `scripts/files/fm-rs/build.sh`

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(qs log:*)",
+      "Bash(qs ipc -c donwaztok show:*)",
+      "Bash(openspec list:*)",
+      "Bash(openspec status:*)",
+      "Bash(openspec show:*)",
+      "Bash(openspec instructions:*)",
+      "Bash(openspec validate:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
+    ],
+    "deny": [
+      "Read(./bin/**)",
+      "Read(./scripts/files/fm-rs/target/**)",
+      "Read(./**/__pycache__/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/qs-log-check.py\"", "timeout": 20 }]
+      }
+    ]
+  }
+}

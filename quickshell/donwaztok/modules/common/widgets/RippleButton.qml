@@ -141,7 +141,8 @@ Button {
             animation: Appearance?.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
-        layer.enabled: true
+        // Mask only clips the ripple; an always-on layer costs one offscreen texture per button.
+        layer.enabled: ripple.opacity > 0
         layer.effect: OpacityMask {
             maskSource: Rectangle {
                 width: buttonBackground.width

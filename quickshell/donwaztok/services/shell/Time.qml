@@ -23,6 +23,7 @@ Singleton {
 
     SystemClock {
         id: clock
-        precision: SystemClock.Seconds
+        // No consumer shows seconds; minute precision avoids re-evaluating every clock binding each second.
+        precision: SystemClock.Minutes
     }
 }

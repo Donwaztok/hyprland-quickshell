@@ -25,6 +25,8 @@ Singleton {
     property int currentSsidQueryIndex: 0
     property var pendingConnection: null
     signal connectionFailed(string ssid)
+    // Debounced `nmcli monitor` activity; other services listen here instead of running their own monitor.
+    signal networkChanged
     property var wirelessDeviceDetails: null
     property var ethernetDeviceDetails: null
     property list<var> ethernetDevices: []
@@ -1342,9 +1344,19 @@ Singleton {
                 LC_ALL: "C.UTF-8"
             })
         stdout: SplitParser {
-            onRead: root.refreshOnConnectionChange()
+            onRead: monitorDebounce.restart()
         }
         onExited: monitorRestartTimer.start()
+    }
+
+    // One connection change prints many monitor lines; refresh once per burst.
+    Timer {
+        id: monitorDebounce
+        interval: 300
+        onTriggered: {
+            root.networkChanged();
+            root.refreshOnConnectionChange();
+        }
     }
 
     Timer {
