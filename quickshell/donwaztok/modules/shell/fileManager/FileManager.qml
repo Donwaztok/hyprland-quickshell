@@ -16,6 +16,13 @@ Scope {
 
     property int windowCount: 0
     property var latest: null
+    property var windows: [] // open windows, oldest first
+
+    function closeLatest(): void {
+        const w = root.windows[root.windows.length - 1];
+        if (w)
+            w.destroy();
+    }
     readonly property var defaultApps: DefaultApps
 
     function openWindow(path: string): void {
@@ -311,7 +318,10 @@ Scope {
                     win.destroy();
             }
 
+            Component.onCompleted: root.windows = [...root.windows, win]
+
             Component.onDestruction: {
+                root.windows = root.windows.filter(w => w !== win);
                 root.windowCount = Math.max(0, root.windowCount - 1);
                 FileManagerService.openWindowCount = Math.max(0, FileManagerService.openWindowCount - 1);
                 if (root.latest === content)
@@ -443,10 +453,15 @@ Scope {
         }
 
         function toggle(): void {
-            root.openWindow("");
+            if (root.windows.length)
+                root.closeLatest();
+            else
+                root.openWindow("");
         }
 
-        function close(): void {}
+        function close(): void {
+            root.closeLatest();
+        }
 
         function pick(requestId: string): string {
             return root.openPicker(requestId);

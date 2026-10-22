@@ -61,6 +61,13 @@ Scope {
         root.windows = next;
     }
 
+    // Goes through the window's own close path, so unsaved changes still ask first.
+    function closeLatest(): void {
+        const w = root.windows[root.windows.length - 1];
+        if (w)
+            w.visible = false;
+    }
+
     function hyprTitle(): string {
         const top = Hyprland.activeToplevel;
         if (!top)
@@ -192,7 +199,14 @@ Scope {
         }
 
         function toggle(): void {
-            root.openWindow("");
+            if (root.windows.length)
+                root.closeLatest();
+            else
+                root.openWindow("");
+        }
+
+        function close(): void {
+            root.closeLatest();
         }
 
         function find(): void {

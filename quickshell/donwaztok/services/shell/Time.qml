@@ -6,10 +6,10 @@ import QtQuick
 
 Singleton {
     property alias enabled: clock.enabled
-    readonly property date date: clock.date
-    readonly property int hours: clock.hours
-    readonly property int minutes: clock.minutes
-    readonly property int seconds: clock.seconds
+    readonly property date date: clock?.date ?? new Date()
+    readonly property int hours: clock?.hours ?? 0
+    readonly property int minutes: clock?.minutes ?? 0
+    readonly property int seconds: clock?.seconds ?? 0
 
     readonly property string timeStr: format(Config.services.useTwelveHourClock ? "hh:mm:A" : "hh:mm")
     readonly property list<string> timeComponents: timeStr.split(":")
@@ -18,7 +18,7 @@ Singleton {
     readonly property string amPmStr: timeComponents[2] ?? ""
 
     function format(fmt: string): string {
-        return Qt.formatDateTime(clock.date, fmt);
+        return Qt.formatDateTime(clock?.date ?? new Date(), fmt);
     }
 
     SystemClock {

@@ -18,11 +18,13 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
   `modules/Shortcuts.qml`: `dashboard`, `launcher`, `sidebar`, `utilities`, `session`,
   `controlCenter`…); the rest through IPC (`qs ipc -c donwaztok show`; `osdVolume trigger`,
   `region screenshot`/`dismiss`, `cheatsheet open`/`close`). Drawers do not open while a
-  fullscreen window is focused. Close test windows with
-  `hyprctl dispatch 'hl.dsp.window.close({ window = "address:<addr>" })'` (the file manager and
-  text editor IPC `close`/`toggle` do not close).
-- Polkit: Hyprland starts `polkit-gnome` (`hypr/lua/hyprland/execs.lua`), so the shell's own
-  agent fails to register and `modules/shell/polkit` never shows.
+  fullscreen window is focused. Apps: `fileManager`/`textEditor` `open`, `close` (latest
+  window) and `toggle`. Polkit: `pkexec true` in the background, cancel with `pkill -x pkexec`.
+  Clicks: `ydotool mousemove --absolute` takes half the global coordinates here; check with
+  `hyprctl cursorpos` before `ydotool click 0xC0`. Never type into a window with `wtype` unless
+  focus is certain.
+- The shell is the only polkit agent; do not start another one (`hypr/lua/hyprland/execs.lua`),
+  or the shell's agent fails to register ("An authentication agent already exists").
 - The Rust file-manager helper is the only compiled piece:
   `scripts/files/fm-rs/build.sh` builds it into `bin/fm` (used by
   `services/shell/FileManagerService.qml`). Rebuild after changing `fm-rs/src`.
@@ -117,5 +119,6 @@ across surfaces or needs a plan: `/opsx:propose` → `/opsx:apply` → `ui-revie
 - Reloading the shell resets in-memory state in singletons.
 - QML singletons are created on first reference: an unreferenced service never runs, and
   referencing one from a new place starts its timers and processes.
-- `services/shell/Time.qml` logs "Unable to assign [undefined]" on some reloads before the
-  clock exists; it is transient.
+- Bindings in a singleton can run before its child objects exist; guard them
+  (`clock?.date ?? new Date()` in `services/shell/Time.qml`) or the log fills with
+  "Unable to assign [undefined]" on reload.
