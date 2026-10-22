@@ -5,6 +5,7 @@ import qs.components.misc
 import qs.config
 import qs.utils
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Notifications
 import QtQuick
@@ -292,6 +293,26 @@ Singleton {
         function unlock(item: Item): void {
             locks.delete(item);
             if (closed)
+                close();
+        }
+
+        // The app's "default" action opens the page/tab that sent it and requests activation,
+        // which Hyprland follows to the window and workspace (misc:focus_on_activate).
+        function activate(): void {
+            const action = actions.find(a => a.identifier === "default")
+                ?? (actions.length === 1 ? actions[0] : null);
+            if (action?.invoke) {
+                action.invoke();
+                return;
+            }
+            // No live action (restored after a reload, or none sent): focus the app's window.
+            const cls = hints?.["desktop-entry"] || appName;
+            if (cls) {
+                // Lua long string so regex backslashes reach Hyprland untouched; escaping rules out "]]"
+                const escaped = cls.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+                Hyprland.dispatch(`hl.dsp.focus({ window = [[class:(?i)^(${escaped})$]] })`);
+            }
+            if (!resident)
                 close();
         }
 

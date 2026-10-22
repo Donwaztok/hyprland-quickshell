@@ -137,6 +137,13 @@ Item {
                 else
                     modelData.close();
             }
+            onClicked: event => {
+                if (!Config.notifs.actionOnClick || event.button !== Qt.LeftButton)
+                    return;
+                // Close first so the drawer's focus grab does not block the app's activation
+                root.visibilities.sidebar = false;
+                modelData.activate();
+            }
 
             Component.onCompleted: modelData.lock(this)
             Component.onDestruction: modelData.unlock(this)

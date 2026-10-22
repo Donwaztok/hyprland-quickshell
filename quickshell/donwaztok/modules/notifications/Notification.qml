@@ -119,9 +119,7 @@ StyledRect {
             if (!Config.notifs.actionOnClick || event.button !== Qt.LeftButton)
                 return;
 
-            const actions = root.modelData.actions;
-            if (actions?.length === 1)
-                actions[0].invoke();
+            root.modelData.activate();
         }
 
         Item {
