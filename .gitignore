@@ -65,3 +65,5 @@ donwaztok/config.json
 **/*.tmp
 **/*.swp
 **/*~
+# Built locally by quickshell/donwaztok/scripts/files/fm-rs/build.sh
+quickshell/donwaztok/bin/

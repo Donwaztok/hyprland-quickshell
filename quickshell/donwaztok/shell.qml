@@ -25,7 +25,10 @@ ShellRoot {
         ConflictKiller.load()
         Cliphist.refresh()
         Wallpapers.load()
-        Updates.load()
+        // bin/fm is not versioned; build it on first start (needs cargo).
+        Quickshell.execDetached(["bash", "-c", `[ -x "$1/bin/fm" ] || "$1/scripts/files/fm-rs/build.sh" `
+            + `|| notify-send -a Shell "File manager" "Building bin/fm failed; see scripts/files/fm-rs/build.sh"`,
+            "_", Quickshell.shellPath("")])
     }
 
 

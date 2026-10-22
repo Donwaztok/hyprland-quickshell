@@ -294,12 +294,6 @@ Singleton {
                 property bool secondPrecision: false
             }
 
-            property JsonObject updates: JsonObject {
-                property bool enableCheck: true
-                property int checkInterval: 120 // minutes
-                property int adviseUpdateThreshold: 75 // packages
-                property int stronglyAdviseUpdateThreshold: 200 // packages
-            }
 
             property JsonObject windows: JsonObject {
                 property bool showTitlebar: true // Client-side decoration for shell apps

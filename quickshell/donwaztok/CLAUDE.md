@@ -27,7 +27,8 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
   or the shell's agent fails to register ("An authentication agent already exists").
 - The Rust file-manager helper is the only compiled piece:
   `scripts/files/fm-rs/build.sh` builds it into `bin/fm` (used by
-  `services/shell/FileManagerService.qml`). Rebuild after changing `fm-rs/src`.
+  `services/shell/FileManagerService.qml`). `bin/` is not versioned: `shell.qml` builds it on start
+  when missing. Rebuild by hand after changing `fm-rs/src`.
 - Idle cost check: per-thread CPU of the `qs` process over 20 s (`/proc/<pid>/task/*/stat`)
   and its children (`ps --ppid <pid>`); `strace`/`perf` are not available.
 
