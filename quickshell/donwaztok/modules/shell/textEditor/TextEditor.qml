@@ -37,7 +37,8 @@ Scope {
         if (!title.length)
             return;
         const escaped = title.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
-        Hyprland.dispatch(`focuswindow title:^(${escaped})$`);
+        // Lua long string so regex backslashes reach Hyprland untouched; escaping rules out "]]"
+        Hyprland.dispatch(`hl.dsp.focus({ window = [[title:^(${escaped})$]] })`);
     }
 
     function track(win: var): void {
