@@ -1,5 +1,5 @@
-import qs.modules.common
-import qs.modules.common.widgets
+import qs.components
+import qs.config
 import QtQuick
 
 Item {
@@ -12,7 +12,7 @@ Item {
     required property real mouseY
     required property color color
     required property color overlayColor
-    property bool showAimLines: Config.options.regionSelector.rect.showAimLines
+    property bool showAimLines: Config.shellOptions?.regionSelector?.rect?.showAimLines ?? true
 
     // Overlay to darken screen
     // Base dark overlay around region

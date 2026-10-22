@@ -1,5 +1,4 @@
-import qs.modules.common
-import qs.modules.common.widgets
+import qs.config
 import QtQuick
 import QtQuick.Shapes
 import Quickshell
@@ -9,7 +8,7 @@ Item {
     required property color color
     required property color overlayColor
     required property list<point> points
-    property int strokeWidth: Config.options.regionSelector.circle.strokeWidth
+    property int strokeWidth: Config.shellOptions?.regionSelector?.circle?.strokeWidth ?? 6
 
     function updatePoints() {
         if (!root.dragging) return;

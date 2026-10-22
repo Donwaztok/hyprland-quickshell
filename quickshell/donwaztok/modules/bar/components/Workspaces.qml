@@ -2,10 +2,9 @@ pragma ComponentBehavior: Bound
 
 import qs
 import qs.services
-import qs.modules.common
 import qs.modules.common.models
-import qs.modules.common.widgets
-import qs.modules.common.functions
+import qs.services.shell as Shell
+import qs.components
 import qs.config as DwCfg
 import QtQuick
 import QtQuick.Controls
@@ -25,8 +24,10 @@ Item {
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.resolvedScreen) ?? Hyprland.focusedMonitor
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
     readonly property int effectiveActiveWorkspaceId: root.monitor?.activeWorkspace?.id ?? Hyprland.focusedWorkspace?.id ?? 1
-    readonly property color activeIndicatorColor: root.overrideActiveColor ?? Appearance.colors.colPrimary
-    readonly property color inactiveIndicatorColor: root.overrideInactiveColor ?? Appearance.m3colors.m3onSurfaceVariant
+    // Same as the former end-4 barPixelSize.small (scaled by options.bar.size).
+    readonly property int numberPixelSize: Math.max(12, Math.round(15 * (DwCfg.Config.shellOptions?.bar?.size ?? 1)))
+    readonly property color activeIndicatorColor: root.overrideActiveColor ?? Shell.Colours.palette.m3primary
+    readonly property color inactiveIndicatorColor: root.overrideInactiveColor ?? Shell.Colours.palette.m3onSurfaceVariant
 
     readonly property string workspaceStyle: DwCfg.Config.bar.workspaces.style || "gnome"
     readonly property bool isGnomeStyle: root.workspaceStyle === "gnome"
@@ -274,16 +275,21 @@ Item {
                     width: root.classicSlotWidth
                     height: root.classicSlotWidth
                     radius: width / 2
-                    color: ColorUtils.transparentize(Appearance.m3colors.m3secondaryContainer, 0.4)
+                    color: Qt.alpha(Shell.Colours.palette.m3secondaryContainer, 0.6)
                     opacity: (root.workspaceOccupied[index] && root.effectiveActiveWorkspaceId !== (root.workspaceGroup * root.workspacesShown + index + 1)) ? 1 : 0
-                    Behavior on opacity { animation: Appearance.animation.elementMove.numberAnimation.createObject(this) }
+                    Behavior on opacity {
+                        Anim {
+                            duration: DwCfg.Appearance.anim.durations.expressiveDefaultSpatial
+                            easing.bezierCurve: DwCfg.Appearance.anim.curves.expressiveDefaultSpatial
+                        }
+                    }
                 }
             }
         }
         Rectangle {
             z: 2
-            radius: Appearance.rounding.full
-            color: Appearance.colors.colPrimary
+            radius: DwCfg.Appearance.rounding.full
+            color: Shell.Colours.palette.m3primary
             anchors.verticalCenter: parent.verticalCenter
             AnimatedTabIndexPair { id: classicIdx; index: root.workspaceIndexInGroup }
             property real slotW: root.classicSlotWidth - root.activeWorkspaceMargin * 2
@@ -321,17 +327,17 @@ Item {
                             anchors.centerIn: parent
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: Appearance.font.barPixelSize.small - ((text.length - 1) * (text !== "10") * 2)
-                            font.family: DwCfg.Config.bar.workspaces.useNerdFont ? Appearance.font.family.iconNerd : "sans-serif"
+                            font.pointSize: (root.numberPixelSize - ((text.length - 1) * (text !== "10") * 2)) * 0.75 // px → pt at 96 dpi
+                            font.family: DwCfg.Config.bar.workspaces.useNerdFont ? (DwCfg.Config.shellOptions?.appearance?.fonts?.iconNerd ?? "JetBrains Mono NF") : "sans-serif"
                             text: (DwCfg.Config.bar.workspaces.numberMap || [])[classicCell.wsValue - 1] || classicCell.wsValue
-                            color: root.effectiveActiveWorkspaceId === classicCell.wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[classicCell.wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
+                            color: root.effectiveActiveWorkspaceId === classicCell.wsValue ? Shell.Colours.palette.m3onPrimary : (root.workspaceOccupied[classicCell.wsIndex] ? Shell.Colours.palette.m3onSecondaryContainer : Shell.Colours.palette.m3outline)
                         }
                         Rectangle {
                             anchors.centerIn: parent
                             width: root.classicSlotWidth * 0.18
                             height: width
                             radius: width / 2
-                            color: root.effectiveActiveWorkspaceId === classicCell.wsValue ? Appearance.m3colors.m3onPrimary : (root.workspaceOccupied[classicCell.wsIndex] ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer1Inactive)
+                            color: root.effectiveActiveWorkspaceId === classicCell.wsValue ? Shell.Colours.palette.m3onPrimary : (root.workspaceOccupied[classicCell.wsIndex] ? Shell.Colours.palette.m3onSecondaryContainer : Shell.Colours.palette.m3outline)
                             opacity: (DwCfg.Config.bar.workspaces.alwaysShowNumbers || root.showNumbers || (DwCfg.Config.bar.workspaces.showAppIcons && classicCell.biggestWindow)) ? 0 : 1
                         }
                         IconImage {

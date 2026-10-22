@@ -20,13 +20,17 @@ Surfaces SHALL take colours from `Colours.palette` or `Colours.tPalette` (or, in
 - **THEN** text keeps contrast against its surface on every surface
 
 ### Requirement: New UI uses the caelestia primitives
-New or rewritten surfaces SHALL be built from `qs.components` (`StyledRect`, `StyledText`,
-`MaterialIcon`, `StateLayer`, `qs.components.controls`) and `qs.config` (`Config.<section>`,
-`Appearance`). They SHALL NOT add new uses of `qs.modules.common.widgets`.
+All shell surfaces SHALL be built from `qs.components` (`StyledRect`, `StyledText`, `MaterialIcon`,
+`StateLayer`, `qs.components.controls`) and `qs.config` (`Config.<section>`, `Appearance`). No file outside
+`services/` SHALL import `qs.modules.common.widgets`.
 
 #### Scenario: Adding a settings row
 - **WHEN** a new toggle is added to a control center pane
 - **THEN** it uses `SwitchRow`/`StyledSwitch` from `qs.components.controls`, not `ConfigSwitch`
+
+#### Scenario: Polkit prompt
+- **WHEN** a polkit authentication dialog opens
+- **THEN** its buttons, field and motion match the control center (caelestia primitives and `Appearance.anim`)
 
 ### Requirement: Shared motion
 Animations SHALL use `Anim`/`CAnim` with durations and curves from `Appearance.anim`, so the global

@@ -11,6 +11,7 @@ Singleton {
     property alias active: polkitAgent.isActive
     property alias flow: polkitAgent.flow
     property bool interactionAvailable: false
+    property bool failed: false // last attempt was rejected; cleared on the next submit or request
     property string cleanMessage: {
         if (!root.flow) return "";
         return root.flow.message.endsWith(".")
@@ -31,11 +32,13 @@ Singleton {
     function submit(string) {
         root.flow.submit(string)
         root.interactionAvailable = false
+        root.failed = false
     }
 
     Connections {
         target: root.flow
         function onAuthenticationFailed() {
+            root.failed = true;
             root.interactionAvailable = true;
         }
     }
@@ -43,6 +46,7 @@ Singleton {
     PolkitAgent {
         id: polkitAgent
         onAuthenticationRequestStarted: {
+            root.failed = false;
             root.interactionAvailable = true;
         }
     }

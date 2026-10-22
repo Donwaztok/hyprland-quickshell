@@ -46,11 +46,11 @@ An offscreen layer (`layer.enabled` with `OpacityMask` or `MultiEffect`) SHALL b
 effect it renders is visible. The full-screen drawer shadow in `modules/drawers/Drawers.qml` is exempt.
 
 #### Scenario: Idle button
-- **WHEN** a `RippleButton` shows no ripple
-- **THEN** its background has no layer and no `OpacityMask`
+- **WHEN** a button that clips a ripple with a mask shows no ripple
+- **THEN** its background has no layer and no mask effect
 
 #### Scenario: Pressed button
-- **WHEN** the user presses a `RippleButton`
+- **WHEN** the user presses that button
 - **THEN** the layer is enabled for the ripple and disabled again once the ripple has faded out
 
 ### Requirement: Hidden surfaces are unloaded

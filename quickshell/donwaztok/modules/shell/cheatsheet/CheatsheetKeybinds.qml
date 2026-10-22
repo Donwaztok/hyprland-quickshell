@@ -2,8 +2,6 @@ pragma ComponentBehavior: Bound
 
 import qs.services
 import qs.services.shell
-import qs.modules.common
-import qs.modules.common.widgets as IIWidgets
 import qs.components
 import qs.components.effects
 import qs.config as Theme
@@ -77,12 +75,12 @@ Item {
         "Hash": "#",
         "Return": "Enter",
     },
-    !!Config.options.cheatsheet.superKey ? {
-        "Super": Config.options.cheatsheet.superKey,
+    !!Theme.Config.shellOptions.cheatsheet.superKey ? {
+        "Super": Theme.Config.shellOptions.cheatsheet.superKey,
     } : {},
-    Config.options.cheatsheet.useMacSymbol ? macSymbolMap : {},
-    Config.options.cheatsheet.useFnSymbol ? functionSymbolMap : {},
-    Config.options.cheatsheet.useMouseSymbol ? mouseSymbolMap : {},
+    Theme.Config.shellOptions.cheatsheet.useMacSymbol ? macSymbolMap : {},
+    Theme.Config.shellOptions.cheatsheet.useFnSymbol ? functionSymbolMap : {},
+    Theme.Config.shellOptions.cheatsheet.useMouseSymbol ? mouseSymbolMap : {},
     )
 
     component MouseKeycap: StyledRect {
@@ -210,14 +208,14 @@ Item {
                                                 return mods;
                                             }
 
-                                            delegate: IIWidgets.KeyboardKey {
+                                            delegate: KeyboardKey {
                                                 required property var modelData
                                                 readonly property bool accent: {
                                                     const superLabel = root.keySubstitutions["Super"] || "Super";
                                                     return modelData === superLabel || modelData === "Super";
                                                 }
                                                 key: modelData
-                                                pixelSize: Config.options.cheatsheet.fontSize.key
+                                                pixelSize: Theme.Config.shellOptions.cheatsheet.fontSize.key
                                                 horizontalPadding: 8
                                                 verticalPadding: 3
                                                 borderRadius: 6
@@ -235,10 +233,10 @@ Item {
                                             color: Colours.palette.m3onSurfaceVariant
                                         }
 
-                                        IIWidgets.KeyboardKey {
+                                        KeyboardKey {
                                             visible: !root.keyBlacklist.includes(bindRow.modelData.key) && !bindRow.isMouse
                                             key: root.keySubstitutions[bindRow.modelData.key] || bindRow.modelData.key
-                                            pixelSize: Config.options.cheatsheet.fontSize.key
+                                            pixelSize: Theme.Config.shellOptions.cheatsheet.fontSize.key
                                             horizontalPadding: 8
                                             verticalPadding: 3
                                             borderRadius: 6

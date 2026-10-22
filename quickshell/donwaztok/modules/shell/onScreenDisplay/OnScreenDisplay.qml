@@ -1,8 +1,9 @@
 import qs
 import qs.services
-import qs.modules.common
-import qs.modules.common.widgets
-import qs.config as DwCfg
+import qs.services.shell as Shell
+import qs.components
+import qs.components.effects
+import qs.config
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -30,13 +31,13 @@ Scope {
 
     function triggerOsd(timeout) {
         GlobalStates.osdVolumeOpen = true;
-        osdTimeout.interval = timeout > 0 ? timeout : Config.options.osd.timeout;
+        osdTimeout.interval = timeout > 0 ? timeout : (Config.shellOptions?.osd?.timeout ?? 1000);
         osdTimeout.restart();
     }
 
     Timer {
         id: osdTimeout
-        interval: Config.options.osd.timeout
+        interval: Config.shellOptions?.osd?.timeout ?? 1000
         repeat: false
         running: false
         onTriggered: {
@@ -101,10 +102,9 @@ Scope {
             id: osdRoot
             color: "transparent"
 
-            readonly property string caPos: DwCfg.Config.loaded ? DwCfg.Config.bar.position : "top"
-            readonly property int caInset: DwCfg.Config.loaded
-                ? DwCfg.Config.bar.sizes.thickness + DwCfg.Config.border.thickness
-                : Appearance.sizes.baseBarHeight
+            readonly property string caPos: Config.loaded ? Config.bar.position : "top"
+            readonly property int caInset: Config.loaded ? Config.bar.sizes.thickness + Config.border.thickness : 40
+            readonly property int gap: 5
 
             Connections {
                 target: root
@@ -126,10 +126,10 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
             margins {
-                top: caPos === "top" ? caInset : Appearance.sizes.hyprlandGapsOut
-                bottom: caPos === "bottom" ? caInset : Appearance.sizes.hyprlandGapsOut
-                left: caPos === "left" ? caInset : Appearance.sizes.hyprlandGapsOut
-                right: caPos === "right" ? caInset : Appearance.sizes.hyprlandGapsOut
+                top: caPos === "top" ? caInset : gap
+                bottom: caPos === "bottom" ? caInset : gap
+                left: caPos === "left" ? caInset : gap
+                right: caPos === "right" ? caInset : gap
             }
 
             implicitWidth: columnLayout.implicitWidth
@@ -174,31 +174,37 @@ Scope {
                             implicitWidth: protectionMessageBackground.implicitWidth
                             opacity: root.protectionMessage !== "" ? 1 : 0
 
-                            StyledRectangularShadow {
-                                target: protectionMessageBackground
+                            Behavior on opacity {
+                                Anim {
+                                    duration: Appearance.anim.durations.small
+                                }
                             }
-                            Rectangle {
+
+                            Elevation {
+                                anchors.fill: protectionMessageBackground
+                                radius: protectionMessageBackground.radius
+                                level: 2
+                            }
+                            StyledRect {
                                 id: protectionMessageBackground
                                 anchors.centerIn: parent
-                                color: Appearance.m3colors.m3error
-                                property real padding: 10
-                                implicitHeight: protectionMessageRowLayout.implicitHeight + padding * 2
-                                implicitWidth: protectionMessageRowLayout.implicitWidth + padding * 2
+                                color: Shell.Colours.palette.m3error
+                                implicitHeight: protectionMessageRowLayout.implicitHeight + Appearance.padding.normal * 2
+                                implicitWidth: protectionMessageRowLayout.implicitWidth + Appearance.padding.large * 2
                                 radius: Appearance.rounding.normal
 
                                 RowLayout {
                                     id: protectionMessageRowLayout
                                     anchors.centerIn: parent
-                                    MaterialSymbol {
-                                        id: protectionMessageIcon
+                                    spacing: Appearance.spacing.small
+                                    MaterialIcon {
                                         text: "dangerous"
-                                        iconSize: Appearance.font.pixelSize.hugeass
-                                        color: Appearance.m3colors.m3onError
+                                        fill: 1
+                                        color: Shell.Colours.palette.m3onError
                                     }
                                     StyledText {
-                                        id: protectionMessageTextWidget
                                         horizontalAlignment: Text.AlignHCenter
-                                        color: Appearance.m3colors.m3onError
+                                        color: Shell.Colours.palette.m3onError
                                         wrapMode: Text.Wrap
                                         text: root.protectionMessage
                                     }

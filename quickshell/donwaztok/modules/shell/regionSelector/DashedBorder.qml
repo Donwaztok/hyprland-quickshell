@@ -1,6 +1,4 @@
 import QtQuick
-import qs.modules.common
-import qs.modules.common.functions
 
 Canvas {
     id: root

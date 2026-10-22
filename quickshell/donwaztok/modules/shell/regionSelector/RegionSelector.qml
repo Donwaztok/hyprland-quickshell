@@ -1,9 +1,7 @@
 pragma ComponentBehavior: Bound
 import qs
-import qs.modules.common
-import qs.modules.common.functions
-import qs.modules.common.widgets
 import qs.services
+import qs.config
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -57,7 +55,7 @@ Scope {
     }
 
     function search() {
-        const mode = Config.options.search.imageSearch.useCircleSelection
+        const mode = Config.shellOptions?.search?.imageSearch?.useCircleSelection
             ? RegionSelection.SelectionMode.Circle
             : RegionSelection.SelectionMode.RectCorners;
         root.openSelector(RegionSelection.SnipAction.Search, mode);

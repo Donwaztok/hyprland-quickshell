@@ -13,10 +13,16 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
 - Logs: `qs log -c donwaztok | tail -50`. A PostToolUse hook (`.claude/hooks/qs-log-check.py`)
   waits for the reload after every `.qml` edit and reports log lines that name the edited file;
   fix what it reports. It cannot see surfaces that are not loaded, so open them (below).
-- Open surfaces: drawers with `hyprctl dispatch global donwaztok:<name>` (names in
+- Open surfaces: drawers with `hyprctl dispatch 'hl.dsp.global("donwaztok:<name>")'`
+  (Hyprland is configured in Lua, so `hyprctl dispatch` takes Lua; names in
   `modules/Shortcuts.qml`: `dashboard`, `launcher`, `sidebar`, `utilities`, `session`,
-  `controlCenter`…); apps and the rest through IPC (`qs ipc -c donwaztok show`).
-  Drawers open on the focused monitor and do not open over a focused fullscreen game.
+  `controlCenter`…); the rest through IPC (`qs ipc -c donwaztok show`; `osdVolume trigger`,
+  `region screenshot`/`dismiss`, `cheatsheet open`/`close`). Drawers do not open while a
+  fullscreen window is focused. Close test windows with
+  `hyprctl dispatch 'hl.dsp.window.close({ window = "address:<addr>" })'` (the file manager and
+  text editor IPC `close`/`toggle` do not close).
+- Polkit: Hyprland starts `polkit-gnome` (`hypr/lua/hyprland/execs.lua`), so the shell's own
+  agent fails to register and `modules/shell/polkit` never shows.
 - The Rust file-manager helper is the only compiled piece:
   `scripts/files/fm-rs/build.sh` builds it into `bin/fm` (used by
   `services/shell/FileManagerService.qml`). Rebuild after changing `fm-rs/src`.
@@ -34,8 +40,9 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
 - `modules/` — UI: `bar`, `controlcenter`, `dashboard`, `drawers`, `launcher`,
   `lock`, `notifications`, `sidebar`, `session`… `modules/shell/` holds the
   standalone apps (fileManager, textEditor, polkit, OSD, regionSelector…).
-- `modules/common/` — end-4 side: `Appearance`, `Config` (the `options` view), `widgets/`
-  (`RippleButton`, `StyledText`, `MaterialSymbol`…), `functions/`. Legacy; do not grow it.
+- `modules/common/` — end-4 leftovers, non-visual only: `Appearance` (used by `services/`),
+  `Config` (the `options` view), `functions/`, `models/`, `utils/`. Its widget set was removed
+  on 2026-10-22; every surface uses `components/`.
 - `components/`, `utils/` — caelestia building blocks (`StyledRect`, `StateLayer`,
   `MaterialIcon`, `controls/`, `Anim`, `Paths`, `Toaster`…). Use these for new UI.
 - `config/` — typed config sections, `Appearance` (caelestia) and `DonwaztokConfigStore.qml`.
@@ -43,10 +50,11 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
   Reference them with `Quickshell.shellPath("scripts/...")`.
 - `docs/UI-PATTERNS.md` — binding UI and performance rules. `openspec/` — specs and changes.
 
-The codebase merges two upstream styles: caelestia (dominant, ~175 files) and end-4
-illogical-impulse (legacy: `services/*.qml`, `modules/common`, and a few `modules/shell`
-surfaces). New UI follows caelestia (docs/UI-PATTERNS.md §1); when editing an end-4 file,
-keep its local style.
+The codebase merges two upstream styles: caelestia (all UI) and end-4 illogical-impulse
+(only non-visual: `services/*.qml` and `modules/common`). UI follows caelestia
+(docs/UI-PATTERNS.md §1). Some names exist on both sides (`Appearance`, `Config`, `Audio`,
+`Brightness`); when a file needs both, import one side with an alias
+(`import qs.services.shell as Shell`).
 
 ## Configuration
 

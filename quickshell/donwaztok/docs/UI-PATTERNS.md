@@ -5,19 +5,20 @@ Short, binding rules for building and changing shell surfaces. Requirements behi
 
 ## 1. Pick the design system
 
-New UI uses the **caelestia** side. The end-4 side (`modules/common/widgets`, `Appearance.colors`,
-`Config.options`) is legacy: edit it in place, do not grow it.
+All UI uses the **caelestia** side. The end-4 widget set is gone; `modules/common` keeps only
+non-visual helpers. Options without a typed section are read with `Config.shellOptions?.<path> ?? <default>`
+from `qs.config` (the default must match `config/DonwaztokConfigStore.qml`).
 
-| Need | Use (caelestia) | Not (end-4) |
-|---|---|---|
-| Surface / card | `StyledRect`, `StyledClippingRect` (`qs.components`) | `Rectangle` + `Appearance.colors.colLayerN` |
-| Text, icon | `StyledText`, `MaterialIcon` | `StyledText`/`MaterialSymbol` from `qs.modules.common.widgets` |
-| Hover / press feedback | `StateLayer` | `RippleButton` |
-| Buttons, switches, sliders, fields | `qs.components.controls` (`IconButton`, `TextButton`, `ToggleButton`, `StyledSwitch`, `StyledSlider`, `StyledTextField`…) | `RippleButton`, `GroupButton`, `ConfigSwitch` |
-| Lists, scroll | `StyledListView`, `StyledFlickable`, `StyledScrollBar` | `ListView` with a hand-made scrollbar |
-| Animation | `Anim` / `CAnim` with `Appearance.anim.durations.*` and `.curves.*` | literal durations and easing |
-| Toast | `Toaster.toast(title, message, icon, Toast.Error)` | `notify-send` for in-shell feedback |
-| Config | `Config.<section>.<key>` (`qs.config`), persist with `Config.save()` | `Config.options…` / `setNestedValue` |
+| Need | Use |
+|---|---|
+| Surface / card | `StyledRect`, `StyledClippingRect` (`qs.components`) |
+| Text, icon | `StyledText`, `MaterialIcon` (sizes in `font.pointSize`; setting `pixelSize` too logs a warning) |
+| Hover / press feedback | `StateLayer` |
+| Buttons, switches, sliders, fields | `qs.components.controls` (`IconButton`, `TextButton`, `ToggleButton`, `StyledSwitch`, `StyledSlider`, `StyledTextField`…) |
+| Lists, scroll | `StyledListView`, `StyledFlickable`, `StyledScrollBar` |
+| Animation | `Anim` / `CAnim` with `Appearance.anim.durations.*` and `.curves.*` |
+| Toast | `Toaster.toast(title, message, icon, Toast.Error)` |
+| Config | `Config.<section>.<key>` (`qs.config`), persist with `Config.save()` |
 
 Do not import both `qs.modules.common` and `qs.components` styling into one new file.
 
@@ -52,7 +53,7 @@ The shell runs all day; idle cost matters more than peak cost.
   (`services/shell/Time.qml` is `Minutes`). Values shown in minutes are not polled every few seconds.
 - **No always-on layers.** `layer.enabled` (and `OpacityMask`/`MultiEffect` on it) costs an offscreen
   texture and a re-render on every change. Enable it only while the effect is visible
-  (`layer.enabled: ripple.opacity > 0` in `RippleButton.qml`). The full-screen shadow layer in
+  (e.g. `layer.enabled: ripple.opacity > 0` for a ripple clipped by a mask). The full-screen shadow layer in
   `modules/drawers/Drawers.qml` is the one accepted exception.
 - **Infinite animations are gated.** `loops: Animation.Infinite` always has a `running:` bound to a state
   that becomes false, and the item is invisible when it is.
@@ -70,6 +71,6 @@ The shell runs all day; idle cost matters more than peak cost.
 ## 5. Verification
 
 After the hot reload: `qs log -c donwaztok | tail -50` has no new warning or error for the touched files.
-Open the surface by its shortcut (`hyprctl dispatch global donwaztok:<name>`, names in
+Open the surface by its shortcut (`hyprctl dispatch 'hl.dsp.global("donwaztok:<name>")'`, names in
 `modules/Shortcuts.qml`) or IPC (`qs ipc -c donwaztok show`) and check light and dark.
 For idle-cost changes, compare per-thread CPU of the `qs` process before and after over 20 s of idle.

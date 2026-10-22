@@ -1,5 +1,6 @@
-import qs.modules.common
-import qs.modules.common.widgets
+import qs.components
+import qs.services.shell
+import qs.config
 import QtQuick
 
 Item {
@@ -85,7 +86,7 @@ Item {
         acceptedButtons: Qt.NoButton
     }
 
-    Rectangle {
+    StyledRect {
         id: content
         anchors.centerIn: parent
 
@@ -98,13 +99,19 @@ Item {
         bottomRightRadius: bottomLeftRadius
         topRightRadius: bottomLeftRadius
 
-        color: Appearance.colors.colPrimary
+        color: Colours.palette.m3primary
 
         Behavior on topLeftRadius {
-            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+            Anim {
+                duration: Appearance.anim.durations.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            }
         }
         Behavior on implicitWidth {
-            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+            Anim {
+                duration: Appearance.anim.durations.expressiveDefaultSpatial
+                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+            }
         }
 
         Row {
@@ -116,11 +123,12 @@ Item {
             }
             spacing: root.barMode ? 14 : 12
 
-            MaterialSymbol {
+            MaterialIcon {
                 anchors.verticalCenter: parent.verticalCenter
-                iconSize: root.iconPixelSize
-                color: Appearance.colors.colOnPrimary
-                animateChange: true
+                font.pointSize: root.iconPixelSize * 0.75 // px → pt at 96 dpi
+                color: Colours.palette.m3onPrimary
+                fill: 1
+                animate: true
                 text: root.materialSymbol
             }
 
@@ -129,11 +137,9 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 shown: root.expanded
                 sourceComponent: StyledText {
-                    color: Appearance.colors.colOnPrimary
+                    color: Colours.palette.m3onPrimary
                     text: root.description
-                    font.pixelSize: root.barMode
-                        ? (Appearance.font.pixelSize.small ?? 13)
-                        : (Appearance.font.pixelSize.smaller ?? 12)
+                    font.pointSize: root.barMode ? Appearance.font.size.normal : Appearance.font.size.smaller
                     anchors.right: parent.right
                     anchors.rightMargin: 6
                 }

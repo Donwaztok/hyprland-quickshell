@@ -3,7 +3,10 @@ import qs
 import qs.modules.common
 import qs.modules.common.utils
 import qs.modules.common.functions
-import qs.modules.common.widgets
+import qs.components as C
+import qs.components.controls as CC
+import qs.components.effects as CE
+import qs.config as Theme
 import qs.services
 import QtQuick
 import QtQuick.Controls
@@ -601,12 +604,17 @@ PanelWindow {
                     }
                 }
                 Behavior on opacity {
-                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    C.Anim {
+                        duration: Theme.Appearance.anim.durations.small
+                    }
                 }
                 Behavior on anchors.bottomMargin {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                    C.Anim {
+                        duration: Theme.Appearance.anim.durations.expressiveDefaultSpatial
+                        easing.bezierCurve: Theme.Appearance.anim.curves.expressiveDefaultSpatial
+                    }
                 }
-                spacing: 6
+                spacing: Theme.Appearance.spacing.small
 
                 OptionsToolbar {
                     Synchronizer on action {
@@ -630,22 +638,16 @@ PanelWindow {
                     }
                     implicitWidth: closeFab.implicitWidth
                     implicitHeight: closeFab.implicitHeight
-                    StyledRectangularShadow {
-                        target: closeFab
-                        radius: closeFab.buttonRadius
+                    CE.Elevation {
+                        anchors.fill: closeFab
+                        radius: closeFab.radius
+                        level: 2
                     }
-                    FloatingActionButton {
+                    CC.IconButton {
                         id: closeFab
-                        baseSize: 48
-                        iconText: "close"
-                        onClicked: root.dismiss();
-                        StyledToolTip {
-                            text: qsTr("Close")
-                        }
-                        colBackground: Colours.tPalette.m3primary
-                        colBackgroundHover: ColorUtils.mix(Colours.tPalette.m3primary, Colours.tPalette.m3onPrimary, 0.88)
-                        colRipple: ColorUtils.mix(Colours.tPalette.m3primary, Colours.tPalette.m3onPrimary, 0.75)
-                        colOnBackground: Colours.tPalette.m3onPrimary
+                        icon: "close"
+                        implicitHeight: 48 // matches the CursorGuide pill in bar mode
+                        onClicked: root.dismiss()
                     }
                 }
             }

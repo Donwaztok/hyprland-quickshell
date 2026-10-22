@@ -1,7 +1,8 @@
 pragma ComponentBehavior: Bound
-import qs.modules.common
-import qs.modules.common.widgets
+import qs.components
 import qs.services
+import qs.services.shell as Shell
+import qs.config
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
@@ -10,9 +11,9 @@ Rectangle {
     id: root
     required property var clientDimensions
 
-    property color colBackground: Qt.alpha("#88111111", 0.9)
-    property color colForeground: "#ddffffff"
-    property bool showLabel: Config.options.regionSelector.targetRegions.showLabel
+    property color colBackground: Qt.alpha(Shell.Colours.palette.m3surfaceContainer, 0.85)
+    property color colForeground: Shell.Colours.palette.m3onSurface
+    property bool showLabel: Config.shellOptions?.regionSelector?.targetRegions?.showLabel ?? false
     property bool showIcon: false
     property bool targeted: false
     property color borderColor
@@ -27,12 +28,16 @@ Rectangle {
     radius: 4
 
     Behavior on color {
-        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+        CAnim {
+            duration: Appearance.anim.durations.small
+        }
     }
 
     visible: opacity > 0
     Behavior on opacity {
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        Anim {
+            duration: Appearance.anim.durations.small
+        }
     }
     x: clientDimensions.at[0]
     y: clientDimensions.at[1]
@@ -51,10 +56,10 @@ Rectangle {
         sourceComponent: Rectangle {
             property real verticalPadding: 5
             property real horizontalPadding: 10
-            radius: 10
+            radius: Appearance.rounding.small
             color: root.colBackground
             border.width: 1
-            border.color: Appearance.m3colors.m3outlineVariant
+            border.color: Shell.Colours.palette.m3outlineVariant
             implicitWidth: regionInfoRow.implicitWidth + horizontalPadding * 2
             implicitHeight: regionInfoRow.implicitHeight + verticalPadding * 2
 
@@ -68,7 +73,7 @@ Rectangle {
                     active: root.showIcon
                     visible: active
                     sourceComponent: IconImage {
-                        implicitSize: Appearance.font.pixelSize.larger
+                        implicitSize: 19
                         source: Quickshell.iconPath(AppSearch.guessIcon(root.text), "image-missing")
                     }
                 }

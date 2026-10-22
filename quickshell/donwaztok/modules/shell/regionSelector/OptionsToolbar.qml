@@ -1,56 +1,72 @@
-import qs
-import qs.modules.common
-import qs.modules.common.functions
-import qs.modules.common.widgets
-import qs.services
+import qs.components
+import qs.components.controls
+import qs.components.effects
+import qs.services.shell
+import qs.config
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
-import Quickshell
-import Quickshell.Io
-import Quickshell.Wayland
-import Quickshell.Hyprland
 
-Toolbar {
+// Rect / circle selection mode switch shown at the bottom of the region selector.
+Item {
     id: root
 
     property var action
     property var selectionMode
-    signal dismiss()
+    signal dismiss
 
-    function desiredTabIndex(): int {
-        return root.selectionMode === RegionSelection.SelectionMode.RectCorners ? 0 : 1;
+    implicitWidth: background.implicitWidth
+    implicitHeight: background.implicitHeight
+
+    Elevation {
+        anchors.fill: background
+        radius: background.radius
+        level: 2
     }
 
-    function syncTabIndexFromMode(): void {
-        const want = desiredTabIndex();
-        if (modeTabs.currentIndex !== want)
-            modeTabs.setCurrentIndex(want);
-    }
+    StyledRect {
+        id: background
 
-    ToolbarTabBar {
-        id: modeTabs
-        tabButtonList: [
-            {"icon": "activity_zone", "name": qsTr("Rect")},
-            {"icon": "gesture", "name": qsTr("Circle")}
-        ]
+        implicitWidth: modes.implicitWidth + Appearance.padding.small * 2
+        implicitHeight: 48 // matches the CursorGuide pill in bar mode
+        radius: Appearance.rounding.full
+        color: Colours.tPalette.m3surfaceContainer
 
-        Component.onCompleted: Qt.callLater(() => root.syncTabIndexFromMode())
+        Row {
+            id: modes
 
-        Connections {
-            target: root
-            function onSelectionModeChanged(): void {
-                root.syncTabIndexFromMode();
-            }
-        }
+            anchors.centerIn: parent
+            spacing: Appearance.spacing.small
 
-        Connections {
-            target: modeTabs
-            function onCurrentIndexChanged(): void {
-                const mode = modeTabs.currentIndex === 0 ? RegionSelection.SelectionMode.RectCorners : RegionSelection.SelectionMode.Circle;
-                if (root.selectionMode !== mode)
-                    root.selectionMode = mode;
+            Repeater {
+                model: [
+                    {
+                        icon: "activity_zone",
+                        name: qsTr("Rect"),
+                        mode: RegionSelection.SelectionMode.RectCorners
+                    },
+                    {
+                        icon: "gesture",
+                        name: qsTr("Circle"),
+                        mode: RegionSelection.SelectionMode.Circle
+                    }
+                ]
+
+                IconTextButton {
+                    required property var modelData
+
+                    type: IconTextButton.Tonal
+                    icon: modelData.icon
+                    text: modelData.name
+                    checked: root.selectionMode === modelData.mode
+                    internalChecked: checked // onCheckedChanged alone misses the initial value
+                    verticalPadding: Appearance.padding.normal
+                    horizontalPadding: Appearance.padding.large
+                    activeColour: Colours.palette.m3secondaryContainer
+                    activeOnColour: Colours.palette.m3onSecondaryContainer
+                    inactiveColour: "transparent"
+                    inactiveOnColour: Colours.palette.m3onSurfaceVariant
+
+                    onClicked: root.selectionMode = modelData.mode
+                }
             }
         }
     }
