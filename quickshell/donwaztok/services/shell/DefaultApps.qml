@@ -14,6 +14,7 @@ Singleton {
     readonly property string filesAppId: "donwaztok-files"
     readonly property string filesDesktopFile: "donwaztok-files.desktop"
     readonly property string filesAppName: "Donwaztok Files"
+    readonly property string mediaAppId: "donwaztok-media"
     readonly property string filesDesktopPath: `${Paths.home}/.local/share/applications/${filesDesktopFile}`
     readonly property string terminalsListPath: `${Paths.home}/.config/xdg-terminals.list`
     readonly property list<string> filesMimes: ["inode/directory", "inode/mount-point", "x-scheme-handler/trash"]
@@ -34,6 +35,18 @@ Singleton {
         "video/x-msvideo",
         "video/mpeg",
         "application/ogg"
+    ]
+    readonly property list<string> viewerMimes: [
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "image/bmp",
+        "image/svg+xml",
+        "image/x-icon",
+        "image/vnd.microsoft.icon",
+        "image/avif",
+        "image/tiff"
     ]
 
     property int appsVersion: 0
@@ -61,11 +74,16 @@ Singleton {
         root.appsVersion;
         return root.optionsFor("playback");
     }
+    readonly property var viewerOptionList: {
+        root.appsVersion;
+        return root.optionsFor("viewer");
+    }
 
     readonly property string terminalId: root.idFromCommand(Config.general.apps.terminal, "terminal")
     readonly property string explorerId: root.idFromCommand(Config.general.apps.explorer, "explorer")
     readonly property string audioId: root.idFromCommand(Config.general.apps.audio, "audio")
     readonly property string playbackId: root.idFromCommand(Config.general.apps.playback, "playback")
+    readonly property string viewerId: root.idFromCommand(Config.general.apps.viewer, "viewer")
 
     function binName(path: string): string {
         const s = String(path || "");
@@ -178,6 +196,18 @@ Singleton {
         return bin === "mpv" || bin === "vlc" || bin === "celluloid" || bin === "haruna" || bin === "totem";
     }
 
+    function isViewerApp(entry: var): bool {
+        if (!entry)
+            return false;
+        if (root.hasCategory(entry, {
+                    "Viewer": true,
+                    "Photography": true
+                }))
+            return true;
+        const bin = root.binName(String(entry.id || "")).replace(/\.desktop$/, "");
+        return bin === "eog" || bin === "loupe" || bin === "imv" || bin === "feh" || bin === "gwenview" || bin === "ristretto";
+    }
+
     function commandFromEntry(entry: var, fallback: string): var {
         try {
             const cmd = entry && entry.command ? entry.command : [];
@@ -230,6 +260,14 @@ Singleton {
                 icon: Icons.appIconPath(filesEntry && filesEntry.icon, root.filesAppId)
             });
         }
+        const pinMedia = kind === "playback" || kind === "viewer";
+        const mediaEntry = pinMedia ? root.lookupEntry(root.mediaAppId) : null;
+        if (mediaEntry)
+            extras.push({
+                text: String(mediaEntry.name),
+                value: root.mediaAppId,
+                icon: Icons.appIconPath(mediaEntry.icon, root.mediaAppId)
+            });
         extras.push({
             text: qsTr("System default"),
             value: "system",
@@ -240,6 +278,8 @@ Singleton {
         };
         if (kind === "explorer")
             seen[root.filesAppId] = true;
+        if (mediaEntry)
+            seen[root.mediaAppId] = true;
         const model = DesktopEntries.applications;
         const values = model && model.values ? model.values : [];
         const apps = [];
@@ -256,6 +296,8 @@ Singleton {
                 ok = root.isMixerApp(e);
             else if (kind === "playback")
                 ok = root.isPlayerApp(e);
+            else if (kind === "viewer")
+                ok = root.isViewerApp(e);
             if (!ok)
                 continue;
             seen[e.id] = true;
@@ -266,7 +308,7 @@ Singleton {
             });
         }
         apps.sort((a, b) => a.text.localeCompare(b.text));
-        const current = kind === "terminal" ? root.terminalId : kind === "explorer" ? root.explorerId : kind === "audio" ? root.audioId : root.playbackId;
+        const current = kind === "terminal" ? root.terminalId : kind === "explorer" ? root.explorerId : kind === "audio" ? root.audioId : kind === "viewer" ? root.viewerId : root.playbackId;
         if (current && !seen[current]) {
             const entry = root.lookupEntry(current);
             extras.push({
@@ -306,6 +348,8 @@ Singleton {
             Config.general.apps.audio = cmd;
         else if (kind === "playback")
             Config.general.apps.playback = cmd;
+        else if (kind === "viewer")
+            Config.general.apps.viewer = cmd;
         Config.save();
         root.applyHandler(kind, value);
     }
@@ -323,10 +367,10 @@ Singleton {
             root.applyMime(desk, root.filesMimes);
             return;
         }
-        if (kind === "playback") {
+        if (kind === "playback" || kind === "viewer") {
             const entry = root.lookupEntry(id);
             const desk = root.desktopName(entry && entry.id ? entry.id : id);
-            root.applyMime(desk, root.playbackMimes);
+            root.applyMime(desk, kind === "viewer" ? root.viewerMimes : root.playbackMimes);
         }
     }
 
@@ -389,6 +433,9 @@ Singleton {
         const playback = root.playbackId;
         if (playback && playback !== "system")
             root.applyHandler("playback", playback);
+        const viewer = root.viewerId;
+        if (viewer && viewer !== "system")
+            root.applyHandler("viewer", viewer);
         const terminal = root.terminalId;
         if (terminal && terminal !== "system")
             root.applyHandler("terminal", terminal);

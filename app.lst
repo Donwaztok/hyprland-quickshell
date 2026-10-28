@@ -62,6 +62,9 @@ wget                              # download FastestVPN configs
 polkit-gnome                      # Polkit authentication agent (hypr exec-once)
 sddm                              # display manager (login; independent of KDE apps)
 qt6-5compat                       # Qt5Compat.GraphicalEffects (SDDM Sugar Candy Qt6 / eucalyptus-based theme)
+qt6-multimedia                    # QtMultimedia (Donwaztok media viewer: video/audio)
+qt6-multimedia-ffmpeg             # FFmpeg backend for QtMultimedia
+qt6-imageformats                  # WebP/TIFF/AVIF support for the Donwaztok media viewer
 
 # --------------------------------------------------- // XDG portals
 xdg-desktop-portal                # desktop integration portal

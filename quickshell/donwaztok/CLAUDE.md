@@ -19,7 +19,8 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
   `controlCenter`…); the rest through IPC (`qs ipc -c donwaztok show`; `osdVolume trigger`,
   `region screenshot`/`dismiss`, `cheatsheet open`/`close`). Drawers do not open while a
   fullscreen window is focused. Apps: `fileManager`/`textEditor` `open`, `close` (latest
-  window) and `toggle`. Polkit: `pkexec true` in the background, cancel with `pkill -x pkexec`.
+  window) and `toggle`; `mediaViewer` `open <path>`/`close`. Polkit: `pkexec true` in the
+  background, cancel with `pkill -x pkexec`.
   Clicks: `ydotool mousemove --absolute` takes half the global coordinates here; check with
   `hyprctl cursorpos` before `ydotool click 0xC0`. Never type into a window with `wtype` unless
   focus is certain.

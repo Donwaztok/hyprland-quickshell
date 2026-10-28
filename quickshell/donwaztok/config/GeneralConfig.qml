@@ -9,7 +9,8 @@ JsonObject {
     component Apps: JsonObject {
         property list<string> terminal: ["kitty"]
         property list<string> audio: ["pavucontrol"]
-        property list<string> playback: ["mpv"]
+        property list<string> playback: ["donwaztok-media"]
+        property list<string> viewer: ["donwaztok-media"]
         property list<string> explorer: ["qs", "-c", "donwaztok", "ipc", "call", "fileManager", "open"]
         property string editor: "donwaztok-text"
     }

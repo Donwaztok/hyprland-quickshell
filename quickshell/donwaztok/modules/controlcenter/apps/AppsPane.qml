@@ -105,6 +105,14 @@ Item {
 
                         OptionSelectRow {
                             Layout.fillWidth: true
+                            label: qsTr("Image viewer")
+                            currentValue: DefaultApps.viewerId
+                            options: DefaultApps.viewerOptionList
+                            onOptionChosen: v => DefaultApps.setApp("viewer", v)
+                        }
+
+                        OptionSelectRow {
+                            Layout.fillWidth: true
                             label: qsTr("Volume mixer")
                             currentValue: DefaultApps.audioId
                             options: DefaultApps.audioOptionList

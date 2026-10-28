@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Donwaztok Media
+GenericName=Image and Video Viewer
+Comment=View images and play videos
+Exec=/home/don/.config/quickshell/donwaztok/assets/donwaztok-media %f
+Icon=accessories-image-viewer
+Terminal=false
+StartupNotify=false
+Categories=Graphics;Viewer;AudioVideo;Video;Player;
+MimeType=image/png;image/jpeg;image/gif;image/webp;image/bmp;image/svg+xml;image/x-icon;image/vnd.microsoft.icon;image/avif;image/tiff;video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/mpeg;video/ogg;video/x-flv;video/x-ms-wmv;audio/mpeg;audio/mp4;audio/ogg;audio/flac;audio/x-wav;audio/aac;audio/opus;
+Keywords=image;photo;picture;video;movie;player;viewer;

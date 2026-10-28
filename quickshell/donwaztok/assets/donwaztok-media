@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Desktop launchers drop %f when no file is selected; `mediaViewer open` requires the argument.
+exec qs -c donwaztok ipc call mediaViewer open "${1:-}"

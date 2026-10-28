@@ -1,0 +1,3 @@
+module qs.modules.shell.mediaViewer
+MediaViewer 1.0 MediaViewer.qml
+MediaViewerContent 1.0 MediaViewerContent.qml

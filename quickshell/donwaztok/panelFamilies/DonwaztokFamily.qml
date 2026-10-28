@@ -9,6 +9,7 @@ import qs.modules.shell.audioOutputSwitcher
 import qs.modules.shell.cheatsheet
 import qs.modules.shell.fileManager
 import qs.modules.shell.textEditor
+import qs.modules.shell.mediaViewer
 import qs.modules.shell.onScreenDisplay
 import qs.modules.shell.polkit
 import qs.modules.shell.regionSelector
@@ -25,6 +26,7 @@ Scope {
     AudioOutputSwitcher {}
     FileManager {}
     TextEditor {}
+    MediaViewer {}
     Polkit {}
     RegionSelector {}
     WallpaperLauncherBridge {}

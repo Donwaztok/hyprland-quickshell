@@ -120,6 +120,7 @@ Singleton {
                 terminal: general.apps.terminal,
                 audio: general.apps.audio,
                 playback: general.apps.playback,
+                viewer: general.apps.viewer,
                 explorer: general.apps.explorer,
                 editor: general.apps.editor
             },
