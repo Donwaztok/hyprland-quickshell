@@ -179,3 +179,47 @@ fi
 
 export UNITY_PATH="$HOME/Unity/Hub/Editor/6000.4.8f1/Editor/Unity"
 export PATH="$PATH:$HOME/.maestro/bin"
+
+# Bash scripts (launch_first_available.sh) source this file for PATH; stop before zsh-only syntax.
+[[ -n $ZSH_VERSION ]] || return
+
+# cw: escolhe a pasta (atual, favoritas, recentes do Claude) e abre o claude nela.
+# cw --add guarda a pasta atual nas favoritas (~/.config/claude-folders).
+cw() {
+  local favs=~/.config/claude-folders p d r pick
+  local -a rows seen uniq f
+
+  if [[ $1 == --add ]]; then
+    mkdir -p ${favs:h}
+    print -r -- $PWD >> $favs
+    print "Favorita: $PWD"
+    return
+  fi
+
+  rows=("$PWD"$'\t● atual')
+  if [[ -f $favs ]]; then
+    while IFS= read -r p; do
+      p=${p/#\~/$HOME}
+      [[ -d $p ]] && rows+=("$p"$'\t★ favorita')
+    done < $favs
+  fi
+  # O nome da pasta em ~/.claude/projects perde espaços e apóstrofos: o cwd real vem da sessão mais nova.
+  for d in ~/.claude/projects/*(N/om); do
+    f=($d/*.jsonl(N.om[1]))
+    (( $#f )) || continue
+    p=$(grep -m1 -o '"cwd":"[^"]*"' $f[1])
+    p=${${p#\"cwd\":\"}%\"}
+    [[ -d $p ]] && rows+=("$p"$'\t  recente')
+  done
+
+  # Uma linha por pasta: a primeira que aparece (atual, favorita, recente).
+  for r in $rows; do
+    p=${r%%$'\t'*}
+    (( ${seen[(Ie)$p]} )) && continue
+    seen+=("$p")
+    uniq+=("$r")
+  done
+
+  pick=$(print -rl -- $uniq | fzf --delimiter=$'\t' --tabstop=4 --prompt='claude em > ' --height=40% --reverse) || return 1
+  cd -- "${pick%%$'\t'*}" && claude "$@"
+}

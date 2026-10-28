@@ -236,11 +236,9 @@ hl.bind(
 )
 hl.bind(
     "SUPER + C",
-    hl.dsp.exec_cmd(
-        launchScript
-            .. ' "gtk-launch cursor" "antigravity" "code" "codium" "zed" "zedit" "zeditor" "kate" "gnome-text-editor" "emacs" "command -v nvim && kitty -1 nvim" "command -v micro && kitty -1 micro"'
-    ),
-    { description = "Apps: Code editor" }
+    -- exec zsh keeps the terminal open in the folder cw picked after claude exits.
+    hl.dsp.exec_cmd("kitty -1 zsh -ic 'cw; exec zsh'"),
+    { description = "Apps: Claude (cw)" }
 )
 hl.bind(
     "SUPER + X",

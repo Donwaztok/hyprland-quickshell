@@ -93,6 +93,13 @@ elif [ -d "${HOME}/.fzf" ]; then
   echo -e "\033[0;33m[SKIP]\033[0m fzf already installed."
 fi
 
+# ~/.zshrc only points at the versioned ~/.config/.zshrc (aliases, cw, etc.); the Oh My Zsh template is kept as a backup.
+if command -v zsh &>/dev/null && ! grep -qxF 'source ~/.config/.zshrc' "${HOME}/.zshrc" 2>/dev/null; then
+  [ -f "${HOME}/.zshrc" ] && mv "${HOME}/.zshrc" "${HOME}/.zshrc.bkp"
+  echo 'source ~/.config/.zshrc' > "${HOME}/.zshrc"
+  echo -e "\033[0;32m[ZSH]\033[0m ~/.zshrc now sources ~/.config/.zshrc."
+fi
+
 # -----------------------------------------------------------------------------
 # 5. Themes and appearance (cursor, SDDM, GTK, icons, GRUB)
 # -----------------------------------------------------------------------------
