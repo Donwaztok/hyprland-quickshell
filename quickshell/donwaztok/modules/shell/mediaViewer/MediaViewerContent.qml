@@ -13,10 +13,12 @@ Item {
     id: root
 
     signal requestClose
+    signal requestFullscreen
 
     property string filePath: ""
     property real zoom: 0 // 0 = fit to window
-    property bool chromeShown: true
+    property bool fullscreen: false
+    property bool chromeShown: false
 
     readonly property var imageExts: ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "ico", "avif", "tif", "tiff"]
     readonly property var playExts: ["mp4", "mkv", "webm", "mov", "avi", "m4v", "mpg", "mpeg", "ogv", "wmv", "flv",
@@ -32,7 +34,7 @@ Item {
 
     readonly property var video: root.isPlayable ? videoLoader.item : null
     readonly property bool videoPlaying: !!root.video && root.video.playing
-    readonly property bool chromeVisible: root.chromeShown || barHover.hovered || (root.isPlayable && !root.videoPlaying)
+    readonly property bool chromeVisible: winHover.hovered && (root.chromeShown || barHover.hovered || (root.isPlayable && !root.videoPlaying))
 
     readonly property real fitScale: img.implicitWidth > 0 && img.implicitHeight > 0
         ? Math.min(1, flick.width / img.implicitWidth, flick.height / img.implicitHeight) : 1
@@ -89,6 +91,7 @@ Item {
     }
 
     HoverHandler {
+        id: winHover
         onPointChanged: {
             root.chromeShown = true;
             hideTimer.restart();
@@ -102,8 +105,16 @@ Item {
     }
 
     Shortcut {
-        sequences: [StandardKey.Close, "Ctrl+W", "Escape"]
+        sequences: [StandardKey.Close, "Ctrl+W"]
         onActivated: root.requestClose()
+    }
+    Shortcut {
+        sequences: ["Escape"]
+        onActivated: root.fullscreen ? root.requestFullscreen() : root.requestClose()
+    }
+    Shortcut {
+        sequences: ["F", "F11"]
+        onActivated: root.requestFullscreen()
     }
     Shortcut {
         sequences: ["Right", "PgDown"]
@@ -263,6 +274,13 @@ Item {
         // Separate file so a missing QtMultimedia only breaks playback, not the shell.
         source: "VideoView.qml"
         onLoaded: item.source = root.fileUrl(root.filePath)
+    }
+
+    Connections {
+        target: root.video
+        function onDoubleTapped(): void {
+            root.requestFullscreen();
+        }
     }
 
     Connections {

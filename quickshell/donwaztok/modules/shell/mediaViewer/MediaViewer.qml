@@ -51,6 +51,8 @@ Scope {
                 anchors.fill: parent
                 filePath: win.startPath
                 onRequestClose: win.destroy()
+                fullscreen: win.fullscreen
+                onRequestFullscreen: win.fullscreen = !win.fullscreen
             }
         }
     }

@@ -7,6 +7,8 @@ import QtQuick
 Item {
     id: root
 
+    signal doubleTapped
+
     property alias source: player.source
     property alias position: player.position
     readonly property alias duration: player.duration
@@ -46,7 +48,9 @@ Item {
     }
 
     TapHandler {
+        // Each tap toggles, so a double click pauses and resumes: net unchanged, then fullscreen.
         onTapped: root.toggle()
+        onDoubleTapped: root.doubleTapped()
     }
 
     MaterialIcon {
