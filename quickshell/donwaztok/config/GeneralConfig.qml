@@ -11,6 +11,7 @@ JsonObject {
         property list<string> audio: ["pavucontrol"]
         property list<string> playback: ["donwaztok-media"]
         property list<string> viewer: ["donwaztok-media"]
+        property list<string> mail: ["thunderbird"]
         property list<string> explorer: ["qs", "-c", "donwaztok", "ipc", "call", "fileManager", "open"]
         property string editor: "donwaztok-text"
     }

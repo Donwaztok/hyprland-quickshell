@@ -444,7 +444,7 @@ Singleton {
         const mimes = root.defaultMimes;
         for (let i = 0; i < mimes.length; ++i)
             parts.push(`xdg-mime default '${desk}' '${mimes[i]}'`);
-        mimeProc.command = ["bash", "-lc", parts.join("; ")];
+        mimeProc.command = ["bash", "-lc", DefaultApps.mimeLock + parts.join("; ")];
         mimeProc.running = true;
     }
 

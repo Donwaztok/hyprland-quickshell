@@ -48,6 +48,7 @@ Singleton {
         "image/avif",
         "image/tiff"
     ]
+    readonly property list<string> mailMimes: ["x-scheme-handler/mailto", "message/rfc822", "x-scheme-handler/mid"]
 
     property int appsVersion: 0
 
@@ -78,12 +79,17 @@ Singleton {
         root.appsVersion;
         return root.optionsFor("viewer");
     }
+    readonly property var mailOptionList: {
+        root.appsVersion;
+        return root.optionsFor("mail");
+    }
 
     readonly property string terminalId: root.idFromCommand(Config.general.apps.terminal, "terminal")
     readonly property string explorerId: root.idFromCommand(Config.general.apps.explorer, "explorer")
     readonly property string audioId: root.idFromCommand(Config.general.apps.audio, "audio")
     readonly property string playbackId: root.idFromCommand(Config.general.apps.playback, "playback")
     readonly property string viewerId: root.idFromCommand(Config.general.apps.viewer, "viewer")
+    readonly property string mailId: root.idFromCommand(Config.general.apps.mail, "mail")
 
     function binName(path: string): string {
         const s = String(path || "");
@@ -208,6 +214,12 @@ Singleton {
         return bin === "eog" || bin === "loupe" || bin === "imv" || bin === "feh" || bin === "gwenview" || bin === "ristretto";
     }
 
+    function isMailApp(entry: var): bool {
+        return root.hasCategory(entry, {
+            "Email": true
+        });
+    }
+
     function commandFromEntry(entry: var, fallback: string): var {
         try {
             const cmd = entry && entry.command ? entry.command : [];
@@ -298,6 +310,8 @@ Singleton {
                 ok = root.isPlayerApp(e);
             else if (kind === "viewer")
                 ok = root.isViewerApp(e);
+            else if (kind === "mail")
+                ok = root.isMailApp(e);
             if (!ok)
                 continue;
             seen[e.id] = true;
@@ -308,7 +322,7 @@ Singleton {
             });
         }
         apps.sort((a, b) => a.text.localeCompare(b.text));
-        const current = kind === "terminal" ? root.terminalId : kind === "explorer" ? root.explorerId : kind === "audio" ? root.audioId : kind === "viewer" ? root.viewerId : root.playbackId;
+        const current = kind === "terminal" ? root.terminalId : kind === "explorer" ? root.explorerId : kind === "audio" ? root.audioId : kind === "viewer" ? root.viewerId : kind === "mail" ? root.mailId : root.playbackId;
         if (current && !seen[current]) {
             const entry = root.lookupEntry(current);
             extras.push({
@@ -350,6 +364,8 @@ Singleton {
             Config.general.apps.playback = cmd;
         else if (kind === "viewer")
             Config.general.apps.viewer = cmd;
+        else if (kind === "mail")
+            Config.general.apps.mail = cmd;
         Config.save();
         root.applyHandler(kind, value);
     }
@@ -371,6 +387,14 @@ Singleton {
             const entry = root.lookupEntry(id);
             const desk = root.desktopName(entry && entry.id ? entry.id : id);
             root.applyMime(desk, kind === "viewer" ? root.viewerMimes : root.playbackMimes);
+            return;
+        }
+        if (kind === "mail") {
+            const entry = root.lookupEntry(id);
+            const desk = root.desktopName(entry && entry.id ? entry.id : id);
+            // Thunderbird also checks its own scheme before calling itself the default
+            const extra = /thunderbird/i.test(desk) ? ["x-scheme-handler/net.thunderbird"] : [];
+            root.applyMime(desk, root.mailMimes.concat(extra));
         }
     }
 
@@ -398,6 +422,8 @@ Singleton {
         return "[Desktop Entry]\n" + "Type=Application\n" + "Name=Donwaztok Files\n" + "GenericName=File Manager\n" + "Comment=Browse files\n" + "Exec=" + exec + "\n" + "Icon=donwaztok-files\n" + "Terminal=false\n" + "StartupNotify=false\n" + "Categories=Utility;FileManager;\n" + "MimeType=" + mimes + "\n";
     }
 
+    // TextEditorService takes the same lock: concurrent xdg-mime runs clobber mimeapps.list
+    readonly property string mimeLock: 'exec 9>"$XDG_RUNTIME_DIR/donwaztok-mime.lock"; flock 9; '
     property var mimeQueue: []
 
     function applyMime(desktop: string, mimes: var): void {
@@ -421,7 +447,7 @@ Singleton {
             return;
         const cmd = q[0];
         root.mimeQueue = q.slice(1);
-        mimeProc.command = ["bash", "-lc", cmd];
+        mimeProc.command = ["bash", "-lc", root.mimeLock + cmd];
         mimeProc.running = true;
     }
 
@@ -436,6 +462,9 @@ Singleton {
         const viewer = root.viewerId;
         if (viewer && viewer !== "system")
             root.applyHandler("viewer", viewer);
+        const mail = root.mailId;
+        if (mail && mail !== "system")
+            root.applyHandler("mail", mail);
         const terminal = root.terminalId;
         if (terminal && terminal !== "system")
             root.applyHandler("terminal", terminal);

@@ -113,6 +113,14 @@ Item {
 
                         OptionSelectRow {
                             Layout.fillWidth: true
+                            label: qsTr("Email")
+                            currentValue: DefaultApps.mailId
+                            options: DefaultApps.mailOptionList
+                            onOptionChosen: v => DefaultApps.setApp("mail", v)
+                        }
+
+                        OptionSelectRow {
+                            Layout.fillWidth: true
                             label: qsTr("Volume mixer")
                             currentValue: DefaultApps.audioId
                             options: DefaultApps.audioOptionList

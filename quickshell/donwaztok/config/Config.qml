@@ -121,6 +121,7 @@ Singleton {
                 audio: general.apps.audio,
                 playback: general.apps.playback,
                 viewer: general.apps.viewer,
+                mail: general.apps.mail,
                 explorer: general.apps.explorer,
                 editor: general.apps.editor
             },
