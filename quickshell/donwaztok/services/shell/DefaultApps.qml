@@ -56,6 +56,8 @@ Singleton {
         target: DesktopEntries
         function onApplicationsChanged(): void {
             root.appsVersion += 1;
+            if (!root.adopted && DonwaztokConfigStore.ready)
+                root.adopt();
         }
     }
 
@@ -391,10 +393,16 @@ Singleton {
         }
         if (kind === "mail") {
             const entry = root.lookupEntry(id);
-            const desk = root.desktopName(entry && entry.id ? entry.id : id);
+            if (!entry)
+                return;
+            const desk = root.desktopName(entry.id);
             // Thunderbird also checks its own scheme before calling itself the default
             const extra = /thunderbird/i.test(desk) ? ["x-scheme-handler/net.thunderbird"] : [];
-            root.applyMime(desk, root.mailMimes.concat(extra));
+            // Thunderbird only trusts the userapp-Thunderbird-*.desktop its "Set as default" creates
+            // (the packaged Exec is a wrapper script, not its binary), so keep that one when present
+            const name = String(entry.name || "").replace(/[^A-Za-z0-9]/g, "");
+            const guard = name.length ? `case "$(xdg-mime query default x-scheme-handler/mailto)" in userapp-${name}-*) exit 0;; esac; ` : "";
+            root.applyMime(desk, root.mailMimes.concat(extra), guard);
         }
     }
 
@@ -426,7 +434,7 @@ Singleton {
     readonly property string mimeLock: 'exec 9>"$XDG_RUNTIME_DIR/donwaztok-mime.lock"; flock 9; '
     property var mimeQueue: []
 
-    function applyMime(desktop: string, mimes: var): void {
+    function applyMime(desktop: string, mimes: var, guard: string): void {
         const desk = root.desktopName(desktop);
         if (!desk.length || !mimes || !mimes.length)
             return;
@@ -434,7 +442,7 @@ Singleton {
         for (let i = 0; i < mimes.length; ++i)
             parts.push(`xdg-mime default '${desk}' '${mimes[i]}'`);
         const next = root.mimeQueue.slice();
-        next.push(parts.join("; "));
+        next.push((guard || "") + parts.join("; "));
         root.mimeQueue = next;
         root.pumpMime();
     }
@@ -451,18 +459,26 @@ Singleton {
         mimeProc.running = true;
     }
 
+    property bool adopted: false
+
     function adopt(): void {
         root.ensureFilesDesktopEntry();
-        const explorer = root.explorerId;
+        // Before DesktopEntries loads, ids fall back to bare binary names (thunderbird.desktop, which
+        // does not exist), so wait for onApplicationsChanged to call this again
+        const model = DesktopEntries.applications;
+        if (!model || !model.values || !model.values.length)
+            return;
+        root.adopted = true;
+        const explorer = root.idFromCommand(Config.general.apps.explorer, "explorer");
         if (explorer && explorer !== "system")
             root.applyHandler("explorer", explorer);
-        const playback = root.playbackId;
+        const playback = root.idFromCommand(Config.general.apps.playback, "playback");
         if (playback && playback !== "system")
             root.applyHandler("playback", playback);
-        const viewer = root.viewerId;
+        const viewer = root.idFromCommand(Config.general.apps.viewer, "viewer");
         if (viewer && viewer !== "system")
             root.applyHandler("viewer", viewer);
-        const mail = root.mailId;
+        const mail = root.idFromCommand(Config.general.apps.mail, "mail");
         if (mail && mail !== "system")
             root.applyHandler("mail", mail);
         const terminal = root.terminalId;

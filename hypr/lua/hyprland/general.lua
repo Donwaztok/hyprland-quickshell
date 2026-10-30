@@ -141,6 +141,11 @@ hl.config({
     render = {
         expand_undersized_textures = false,
     },
+
+    ecosystem = {
+        no_donation_nag = true,
+        no_update_news = true,
+    },
 })
 
 -- Animation curves
