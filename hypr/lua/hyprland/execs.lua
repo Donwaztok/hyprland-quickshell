@@ -26,7 +26,7 @@ hl.on("hyprland.start", function()
             .. "'"
     )
     hl.exec_cmd(
-        "wl-paste --type image --watch bash -c 'cliphist store && "
+        "wl-paste --type image --watch bash -c '~/.config/hypr/hyprland/scripts/cliphist_store_image.sh && "
             .. qs("ipc call cliphistService update")
             .. "'"
     )
