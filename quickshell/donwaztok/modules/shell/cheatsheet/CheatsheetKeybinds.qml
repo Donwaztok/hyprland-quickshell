@@ -22,9 +22,11 @@ Item {
         const maxCols = Math.max(1, Math.floor((maxWidth + Theme.Appearance.spacing.large) / (cardWidth + Theme.Appearance.spacing.large)));
         return Math.min(3, maxCols, count);
     }
+    // Independent columns, so a short card does not leave a gap beside a tall one.
+    readonly property var columnGroups: HyprlandKeybinds.groupIntoColumns(sections ?? [], columns).children
 
     implicitWidth: columns * cardWidth + Math.max(0, columns - 1) * Theme.Appearance.spacing.large
-    implicitHeight: flow.implicitHeight
+    implicitHeight: columnsRow.implicitHeight
 
     property var macSymbolMap: ({
         "Ctrl": "󰘴",
@@ -126,141 +128,151 @@ Item {
         }
     }
 
-    Flow {
-        id: flow
-        width: root.implicitWidth
+    Row {
+        id: columnsRow
         spacing: Theme.Appearance.spacing.large
 
         Repeater {
-            model: root.sections
+            model: root.columnGroups
 
-            delegate: StyledRect {
-                id: categoryCard
+            delegate: Column {
+                id: cardsColumn
                 required property var modelData
 
-                property int maxBindWidth: 0
-                readonly property var binds: modelData.keybinds ?? []
+                spacing: Theme.Appearance.spacing.large
 
-                implicitWidth: root.cardWidth
-                implicitHeight: cardColumn.implicitHeight + Theme.Appearance.padding.large * 2
-                radius: Theme.Appearance.rounding.normal
-                color: ControlCenterChrome.settingsGroupCard
-                border.width: 1
-                border.color: ControlCenterChrome.settingsGroupCardBorder
+                Repeater {
+                    model: cardsColumn.modelData.children
 
-                Elevation {
-                    z: -1
-                    anchors.fill: parent
-                    radius: parent.radius
-                    level: Colours.light ? 1 : 2
-                }
+                            delegate: StyledRect {
+                        id: categoryCard
+                        required property var modelData
 
-                ColumnLayout {
-                    id: cardColumn
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: Theme.Appearance.padding.large
-                    spacing: Theme.Appearance.spacing.smaller
+                        property int maxBindWidth: 0
+                        readonly property var binds: modelData.keybinds ?? []
 
-                    StyledText {
-                        text: categoryCard.modelData.name
-                        font.pointSize: Theme.Appearance.font.size.larger
-                        font.weight: Font.DemiBold
-                        color: Colours.palette.m3onSurface
-                    }
+                        implicitWidth: root.cardWidth
+                        implicitHeight: cardColumn.implicitHeight + Theme.Appearance.padding.large * 2
+                        radius: Theme.Appearance.rounding.normal
+                        color: ControlCenterChrome.settingsGroupCard
+                        border.width: 1
+                        border.color: ControlCenterChrome.settingsGroupCardBorder
 
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.Appearance.spacing.small
+                        Elevation {
+                            z: -1
+                            anchors.fill: parent
+                            radius: parent.radius
+                            level: Colours.light ? 1 : 2
+                        }
 
-                        Repeater {
-                            model: categoryCard.binds
+                        ColumnLayout {
+                            id: cardColumn
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: Theme.Appearance.padding.large
+                            spacing: Theme.Appearance.spacing.smaller
 
-                            delegate: RowLayout {
-                                id: bindRow
-                                required property var modelData
-                                readonly property bool isMouse: (modelData.key || "").indexOf("mouse:") === 0
+                            StyledText {
+                                text: categoryCard.modelData.name
+                                font.pointSize: Theme.Appearance.font.size.larger
+                                font.weight: Font.DemiBold
+                                color: Colours.palette.m3onSurface
+                            }
 
+                            ColumnLayout {
                                 Layout.fillWidth: true
-                                spacing: Theme.Appearance.spacing.normal
+                                spacing: Theme.Appearance.spacing.small
 
-                                Item {
-                                    id: keysBox
-                                    Layout.preferredWidth: Math.max(categoryCard.maxBindWidth, implicitWidth)
-                                    implicitWidth: keysRow.implicitWidth
-                                    implicitHeight: keysRow.implicitHeight
+                                Repeater {
+                                    model: categoryCard.binds
 
-                                    Component.onCompleted: {
-                                        categoryCard.maxBindWidth = Math.max(categoryCard.maxBindWidth, implicitWidth);
-                                    }
+                                    delegate: RowLayout {
+                                        id: bindRow
+                                        required property var modelData
+                                        readonly property bool isMouse: (modelData.key || "").indexOf("mouse:") === 0
 
-                                    Row {
-                                        id: keysRow
-                                        spacing: root.keySpacing
+                                        Layout.fillWidth: true
+                                        spacing: Theme.Appearance.spacing.normal
 
-                                        Repeater {
-                                            model: {
-                                                const mods = [];
-                                                const rawMods = bindRow.modelData.mods ?? [];
-                                                for (let i = 0; i < rawMods.length; i++)
-                                                    mods.push(root.keySubstitutions[rawMods[i]] || rawMods[i]);
-                                                return mods;
+                                        Item {
+                                            id: keysBox
+                                            Layout.preferredWidth: Math.max(categoryCard.maxBindWidth, implicitWidth)
+                                            implicitWidth: keysRow.implicitWidth
+                                            implicitHeight: keysRow.implicitHeight
+
+                                            Component.onCompleted: {
+                                                categoryCard.maxBindWidth = Math.max(categoryCard.maxBindWidth, implicitWidth);
                                             }
 
-                                            delegate: KeyboardKey {
-                                                required property var modelData
-                                                readonly property bool accent: {
-                                                    const superLabel = root.keySubstitutions["Super"] || "Super";
-                                                    return modelData === superLabel || modelData === "Super";
+                                            Row {
+                                                id: keysRow
+                                                spacing: root.keySpacing
+
+                                                Repeater {
+                                                    model: {
+                                                        const mods = [];
+                                                        const rawMods = bindRow.modelData.mods ?? [];
+                                                        for (let i = 0; i < rawMods.length; i++)
+                                                            mods.push(root.keySubstitutions[rawMods[i]] || rawMods[i]);
+                                                        return mods;
+                                                    }
+
+                                                    delegate: KeyboardKey {
+                                                        required property var modelData
+                                                        readonly property bool accent: {
+                                                            const superLabel = root.keySubstitutions["Super"] || "Super";
+                                                            return modelData === superLabel || modelData === "Super";
+                                                        }
+                                                        key: modelData
+                                                        pixelSize: Theme.Config.shellOptions.cheatsheet.fontSize.key
+                                                        horizontalPadding: 8
+                                                        verticalPadding: 3
+                                                        borderRadius: 6
+                                                        borderColor: accent ? Qt.alpha(Colours.palette.m3primary, 0.5) : Qt.alpha(Colours.palette.m3outlineVariant, 0.7)
+                                                        keyColor: accent ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
+                                                        textColor: accent ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+                                                    }
                                                 }
-                                                key: modelData
-                                                pixelSize: Theme.Config.shellOptions.cheatsheet.fontSize.key
-                                                horizontalPadding: 8
-                                                verticalPadding: 3
-                                                borderRadius: 6
-                                                borderColor: accent ? Qt.alpha(Colours.palette.m3primary, 0.5) : Qt.alpha(Colours.palette.m3outlineVariant, 0.7)
-                                                keyColor: accent ? Colours.palette.m3primaryContainer : Colours.palette.m3surfaceContainerHigh
-                                                textColor: accent ? Colours.palette.m3onPrimaryContainer : Colours.palette.m3onSurface
+
+                                                StyledText {
+                                                    visible: (bindRow.modelData.mods?.length ?? 0) > 0 && !root.keyBlacklist.includes(bindRow.modelData.key)
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: "+"
+                                                    font.pointSize: Theme.Appearance.font.size.small
+                                                    color: Colours.palette.m3onSurfaceVariant
+                                                }
+
+                                                KeyboardKey {
+                                                    visible: !root.keyBlacklist.includes(bindRow.modelData.key) && !bindRow.isMouse
+                                                    key: root.keySubstitutions[bindRow.modelData.key] || bindRow.modelData.key
+                                                    pixelSize: Theme.Config.shellOptions.cheatsheet.fontSize.key
+                                                    horizontalPadding: 8
+                                                    verticalPadding: 3
+                                                    borderRadius: 6
+                                                    borderColor: Qt.alpha(Colours.palette.m3outlineVariant, 0.7)
+                                                    keyColor: Colours.palette.m3surfaceContainerHighest
+                                                    textColor: Colours.palette.m3onSurface
+                                                }
+
+                                                MouseKeycap {
+                                                    visible: bindRow.isMouse
+                                                    mouseKey: bindRow.modelData.key
+                                                }
                                             }
                                         }
 
                                         StyledText {
-                                            visible: (bindRow.modelData.mods?.length ?? 0) > 0 && !root.keyBlacklist.includes(bindRow.modelData.key)
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: "+"
+                                            Layout.fillWidth: true
+                                            text: bindRow.modelData.comment
                                             font.pointSize: Theme.Appearance.font.size.small
+                                            font.weight: Font.Medium
                                             color: Colours.palette.m3onSurfaceVariant
-                                        }
-
-                                        KeyboardKey {
-                                            visible: !root.keyBlacklist.includes(bindRow.modelData.key) && !bindRow.isMouse
-                                            key: root.keySubstitutions[bindRow.modelData.key] || bindRow.modelData.key
-                                            pixelSize: Theme.Config.shellOptions.cheatsheet.fontSize.key
-                                            horizontalPadding: 8
-                                            verticalPadding: 3
-                                            borderRadius: 6
-                                            borderColor: Qt.alpha(Colours.palette.m3outlineVariant, 0.7)
-                                            keyColor: Colours.palette.m3surfaceContainerHighest
-                                            textColor: Colours.palette.m3onSurface
-                                        }
-
-                                        MouseKeycap {
-                                            visible: bindRow.isMouse
-                                            mouseKey: bindRow.modelData.key
+                                            wrapMode: Text.WordWrap
+                                            elide: Text.ElideRight
+                                            maximumLineCount: 2
                                         }
                                     }
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: bindRow.modelData.comment
-                                    font.pointSize: Theme.Appearance.font.size.small
-                                    font.weight: Font.Medium
-                                    color: Colours.palette.m3onSurfaceVariant
-                                    wrapMode: Text.WordWrap
-                                    elide: Text.ElideRight
-                                    maximumLineCount: 2
                                 }
                             }
                         }

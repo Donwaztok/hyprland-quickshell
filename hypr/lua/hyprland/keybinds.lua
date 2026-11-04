@@ -11,14 +11,14 @@ hl.bind("SUPER + Space", hl.dsp.global("donwaztok:launcher"), {
     release = true,
 })
 hl.bind("SUPER + V", hl.dsp.global("donwaztok:launcherOpenClipboard"), {
-    description = "Shell: Clipboard history >> clipboard",
+    description = "Shell: Clipboard history",
     release = true,
 })
-hl.bind("SUPER + Slash", hl.dsp.global("donwaztok:cheatsheetToggle"), { description = "Shell: Toggle cheatsheet" })
+hl.bind("SUPER + Slash", hl.dsp.global("donwaztok:cheatsheetToggle"), { description = "Shell: Shortcuts" })
 hl.bind(
     "SUPER + Backspace",
     hl.dsp.exec_cmd(qs("ipc call drawers toggle session")),
-    { description = "Shell: Toggle session menu" }
+    { description = "Shell: Session menu" }
 )
 
 hl.bind(
@@ -56,7 +56,7 @@ hl.bind(
     { locked = true, description = "Media: Toggle mic" }
 )
 
-hl.bind("CTRL + SUPER + T", hl.dsp.global("donwaztok:wallpaperSelectorToggle"), { description = "Shell: Toggle wallpaper selector" })
+hl.bind("CTRL + SUPER + T", hl.dsp.global("donwaztok:wallpaperSelectorToggle"), { description = "Shell: Wallpaper selector" })
 hl.bind("CTRL + SUPER + ALT + T", hl.dsp.global("donwaztok:wallpaperSelectorRandom"), { description = "Shell: Random wallpaper" })
 hl.bind(
     "CTRL + SUPER + R",
@@ -67,7 +67,7 @@ hl.bind(
 -- Utilities
 hl.bind("SUPER + SHIFT + S", hl.dsp.global("donwaztok:regionScreenshot"), { description = "Utilities: Screen snip" })
 hl.bind("SUPER + SHIFT + A", hl.dsp.global("donwaztok:regionSearch"), { description = "Utilities: Google Lens snip" })
-hl.bind("SUPER + SHIFT + X", hl.dsp.global("donwaztok:regionOcr"), { description = "Utilities: OCR region >> clipboard" })
+hl.bind("SUPER + SHIFT + X", hl.dsp.global("donwaztok:regionOcr"), { description = "Utilities: OCR to clipboard" })
 hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"), { description = "Utilities: Color picker" })
 
 -- Esc cancels. Ctrl uses non_consuming so Qt still sees ControlModifier for window-pick.
@@ -83,13 +83,13 @@ hl.define_submap("regionSelector", function()
     hl.bind("Control_R", hl.dsp.global("donwaztok:regionCtrlUp"), { release = true, non_consuming = true })
 end)
 
-hl.bind("Print", hl.dsp.exec_cmd("grim - | wl-copy"), { locked = true, description = "Utilities: Screenshot >> clipboard" })
+hl.bind("Print", hl.dsp.exec_cmd("grim - | wl-copy"), { locked = true, description = "Utilities: Screenshot to clipboard" })
 hl.bind(
     "CTRL + Print",
     hl.dsp.exec_cmd(
         "mkdir -p $(xdg-user-dir PICTURES)/Screenshots && grim $(xdg-user-dir PICTURES)/Screenshots/Screenshot_\"$(date '+%Y-%m-%d_%H.%M.%S')\".png"
     ),
-    { locked = true, non_consuming = true, description = "Utilities: Screenshot >> clipboard & file" }
+    { locked = true, non_consuming = true, description = "Utilities: Screenshot to clipboard + file" }
 )
 hl.bind("CTRL + Print", hl.dsp.exec_cmd("grim - | wl-copy"), { locked = true, non_consuming = true })
 
@@ -112,9 +112,9 @@ hl.bind("SUPER + SHIFT + Down", hl.dsp.window.move({ direction = "d" }), hidden)
 
 hl.bind("ALT + F4", hl.dsp.window.close(), hidden)
 hl.bind("SUPER + Q", hl.dsp.window.close(), { description = "Window: Close" })
-hl.bind("SUPER + SHIFT + ALT + Q", hl.dsp.exec_cmd("hyprctl kill"), { description = "Window: Forcefully zap a window" })
-hl.bind("SUPER + W", hl.dsp.window.float({ action = "toggle" }), { description = "Window: Toggle float" })
-hl.bind("SUPER + ALT + Space", hl.dsp.window.float({ action = "toggle" }), { description = "Window: Float/Tile" })
+hl.bind("SUPER + SHIFT + ALT + Q", hl.dsp.exec_cmd("hyprctl kill"), { description = "Window: Force kill" })
+hl.bind("SUPER + W", hl.dsp.window.float({ action = "toggle" }), { description = "Window: Float/Tile" })
+hl.bind("SUPER + ALT + Space", hl.dsp.window.float({ action = "toggle" }), hidden)
 hl.bind("ALT + Return", hl.dsp.window.fullscreen(), { description = "Window: Fullscreen" })
 hl.bind("SUPER + P", hl.dsp.window.pin(), { description = "Window: Pin" })
 
@@ -144,7 +144,7 @@ hl.bind(
 )
 
 -- Session
-hl.bind("SUPER + L", hl.dsp.global("donwaztok:lock"), { description = "Session: Lock" })
+hl.bind("SUPER + L", hl.dsp.global("donwaztok:lock"), { description = "Shell: Lock screen" })
 
 -- Media
 hl.bind(
@@ -165,7 +165,7 @@ hl.bind(
     hidden
 )
 hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd("playerctl previous"), { locked = true, description = "Media: Previous track" })
-hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Media: Play/pause media" })
+hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Media: Play/pause" })
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind(
