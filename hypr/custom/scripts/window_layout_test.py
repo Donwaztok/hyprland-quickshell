@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Self-check for window_layout.py: python3 window_layout_test.py"""
-from window_layout import match, unlz4
+from window_layout import match, shape, unlz4
 
 
 def client(address, cls, title):
@@ -31,5 +31,9 @@ assert placed(match(slots, live, {})) == {"ducke": "2", "eng": "1", "yt": "3"}
 slots = [slot("mail", "thunderbird", "Inbox"), slot("chat", "zapzap", "ZapZap")]
 live = [client("1", "zapzap", "ZapZap"), client("2", "kitty", "Inbox")]
 assert placed(match(slots, live, {})) == {"chat": "1"}
+
+# Shape ignores split sizes but sees a rotation.
+assert shape([[41, 13], [979, 13]]) == shape([[41, 13], [651, 13]]) == [(0, 0), (1, 0)]
+assert shape([[41, 13], [41, 545]]) == [(0, 0), (0, 1)]
 
 print("ok")

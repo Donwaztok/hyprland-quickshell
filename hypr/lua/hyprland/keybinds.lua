@@ -117,6 +117,7 @@ hl.bind("SUPER + W", hl.dsp.window.float({ action = "toggle" }), { description =
 hl.bind("SUPER + ALT + Space", hl.dsp.window.float({ action = "toggle" }), hidden)
 hl.bind("ALT + Return", hl.dsp.window.fullscreen(), { description = "Window: Fullscreen" })
 hl.bind("SUPER + P", hl.dsp.window.pin(), { description = "Window: Pin" })
+hl.bind("SUPER + J", hl.dsp.layout("togglesplit"), { description = "Window: Rotate split" })
 
 -- Workspaces (keycodes 10–19 = keys 1–0; US Intl layout)
 for i = 1, 10 do

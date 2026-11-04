@@ -263,9 +263,36 @@ def apply(slots):
     return len(pairs)
 
 
+def shape(positions):
+    """Each window's column and row rank: the same arrangement gives the same shape at any split size."""
+    xs = sorted({p[0] for p in positions})
+    ys = sorted({p[1] for p in positions})
+    return [(xs.index(p[0]), ys.index(p[1])) for p in positions]
+
+
+def extent(rects):
+    """Width and height of the area covered by (position, size) pairs."""
+    return (
+        max(at[0] + size[0] for at, size in rects) - min(at[0] for at, _ in rects),
+        max(at[1] + size[1] for at, size in rects) - min(at[1] for at, _ in rects),
+    )
+
+
+def toggle_split(address):
+    """togglesplit only acts on the focused window, so focus it and put the view back afterwards."""
+    active = hypr("activewindow").get("address")
+    shown = {m["name"]: m["activeWorkspace"]["name"] for m in hypr("monitors")}
+    dispatch(f'hl.dsp.focus({{ window = "address:{address}" }})')
+    dispatch('hl.dsp.layout("togglesplit")')
+    for m in hypr("monitors"):
+        if shown.get(m["name"], m["activeWorkspace"]["name"]) != m["activeWorkspace"]["name"]:
+            dispatch(f'hl.dsp.focus({{ workspace = {lua_workspace(shown[m["name"]])} }})')
+    if active:
+        dispatch(f'hl.dsp.focus({{ window = "address:{active}" }})')
+
+
 def arrange_tiled(group):
-    """Swap windows until their left-to-right order matches, then restore the split sizes."""
-    # shortcut: dwindle's tree shape is not rebuilt, so 3+ windows can nest differently; save the tree if that shows up
+    """Swap windows until their order matches, fix a rotated split, then restore the split sizes."""
     group.sort(key=lambda g: (g[0]["at"][0], g[0]["at"][1]))
     addresses = [a for _, a in group]
     for i, want in enumerate(addresses):
@@ -275,11 +302,24 @@ def arrange_tiled(group):
             dispatch(f'hl.dsp.window.swap({{ window = "address:{want}", target = "address:{order[i]}" }})')
     if len(group) < 2:
         return
+    saved = [slot["at"] for slot, _ in group]
     live = {c["address"]: c for c in windows()}
+    if len(group) == 2 and shape(saved) != shape([live[a]["at"] for a in addresses]):
+        toggle_split(addresses[0])
+        time.sleep(0.2)
+        live = {c["address"]: c for c in windows()}
+    # shortcut: dwindle's tree is not rebuilt, so 3+ windows arranged differently stay that way; save the tree if that matters
+    if shape(saved) != shape([live[a]["at"] for a in addresses]):
+        return  # forcing saved sizes onto another arrangement crushes one window to a sliver
+    # Proportional, not saved pixels: a hidden workspace that just changed monitor still reports its old geometry.
+    saved_w, saved_h = extent([(slot["at"], slot["size"]) for slot, _ in group])
+    live_w, live_h = extent([(live[a]["at"], live[a]["size"]) for a in addresses])
     for slot, address in group:
+        x = round(slot["size"][0] * live_w / saved_w)
+        y = round(slot["size"][1] * live_h / saved_h)
         size = live[address]["size"]
-        if abs(size[0] - slot["size"][0]) > 2 or abs(size[1] - slot["size"][1]) > 2:
-            dispatch(f'hl.dsp.window.resize({{ x = {slot["size"][0]}, y = {slot["size"][1]}, window = "address:{address}" }})')
+        if abs(size[0] - x) > 2 or abs(size[1] - y) > 2:
+            dispatch(f'hl.dsp.window.resize({{ x = {x}, y = {y}, window = "address:{address}" }})')
 
 
 def restore(boot):
