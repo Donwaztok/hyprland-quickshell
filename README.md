@@ -60,12 +60,12 @@ chmod +x install.sh
 │   ├── shell.qml
 │   ├── config/, components/, modules/, services/ (+ services/m3/)
 │   └── …
-├── kitty/, foot/, fuzzel/, wlogout/, mako/, btop/, fastfetch/, mpv/
+├── kitty/, btop/, fastfetch/, mpv/
 ├── fontconfig/, xdg-desktop-portal/
 └── …
 ```
 
-**What to track in git:** Hypr/shell (`hypr/`, `quickshell/`, `fuzzel/`, portal), terminals, notifications, fonts, app flags, optional KDE/Qt files depending on your setup.
+**What to track in git:** Hypr/shell (`hypr/`, `quickshell/`, portal), terminal, fonts, optional KDE/Qt files depending on your setup.
 
 **Quickshell:** `QML2_IMPORT_PATH` points at `~/.config/quickshell/donwaztok` (see `hypr/hyprland/env.conf`). Do not move `qs.*` trees without fixing imports.
 
@@ -99,7 +99,7 @@ In `hypr/hyprland.conf`:
 
 **State:** `~/.local/state/donwaztok/`. App keyring: **`donwaztok`** (legacy `illogical-impulse` entries may remain after migrating from ii — use `secret-tool` to clear if needed).
 
-**M3 theme:** colors in `quickshell/donwaztok/services/m3/Colours.qml`; Hyprland/Fuzzel/hyprlock in `hypr/` and `fuzzel/`. Light/dark via `gsettings` / scripts exposed in the shell.
+**M3 theme:** colors in `quickshell/donwaztok/services/m3/Colours.qml`; Hyprland in `hypr/`. Light/dark via `gsettings` / scripts exposed in the shell.
 
 **Note:** duplicate names exist under `services/` vs `services/m3/` with different APIs — `qs.services` and `qs.services.m3` imports are not interchangeable.
 

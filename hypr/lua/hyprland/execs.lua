@@ -3,7 +3,8 @@ local qs = require("lua.constants").qsCmd
 hl.on("hyprland.start", function()
     -- Bar, wallpaper
     hl.exec_cmd(qs("&"))
-    hl.exec_cmd("~/.config/hypr/custom/scripts/__restore_video_wallpaper.sh")
+    -- Written by switchwall.sh only while a video wallpaper is set
+    hl.exec_cmd("f=~/.config/hypr/custom/scripts/__restore_video_wallpaper.sh; [ -x \"$f\" ] && \"$f\"")
 
     -- Core components
     hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")

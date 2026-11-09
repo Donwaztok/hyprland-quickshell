@@ -49,11 +49,7 @@ EOF
 }
 
 remove_restore() {
-    cat > "$RESTORE_SCRIPT.tmp" << EOF
-#!/bin/bash
-# Placeholder — no video wallpaper restore.
-EOF
-    mv "$RESTORE_SCRIPT.tmp" "$RESTORE_SCRIPT"
+    rm -f "$RESTORE_SCRIPT" # Hyprland start only runs it when present
 }
 
 set_wallpaper_path() {

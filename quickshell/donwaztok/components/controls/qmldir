@@ -10,7 +10,6 @@ IconTextButton 1.0 IconTextButton.qml
 Menu 1.0 Menu.qml
 MenuItem 1.0 MenuItem.qml
 SplitButton 1.0 SplitButton.qml
-SplitButtonRow 1.0 SplitButtonRow.qml
 StyledInputField 1.0 StyledInputField.qml
 StyledRadioButton 1.0 StyledRadioButton.qml
 StyledScrollBar 1.0 StyledScrollBar.qml

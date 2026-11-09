@@ -5,5 +5,4 @@ singleton HyprlandSettings 1.0 hyprland/HyprlandSettings.qml
 Panes 1.0 Panes.qml
 Session 1.0 Session.qml
 singleton WindowFactory 1.0 WindowFactory.qml
-WindowTitle 1.0 WindowTitle.qml
 NavRail 1.0 NavRail.qml
