@@ -3,6 +3,7 @@ Audio 1.0 Audio.qml
 Background 1.0 Background.qml
 Battery 1.0 Battery.qml
 Bluetooth 1.0 Bluetooth.qml
+Drives 1.0 Drives.qml
 Content 1.0 Content.qml
 LockStatus 1.0 LockStatus.qml
 Network 1.0 Network.qml

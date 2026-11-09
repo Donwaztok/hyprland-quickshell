@@ -164,6 +164,18 @@ Item {
             }
         }
 
+        // Removable media, shown only while one is plugged in
+        WrappedLoader {
+            name: "drives"
+            active: FileManagerService.removableMounts.length > 0
+
+            sourceComponent: MaterialIcon {
+                pointSizeScale: Config.barThicknessScale
+                text: "usb"
+                color: root.colour
+            }
+        }
+
         // Unified network indicator (Material, same glyphs as the popout list).
         WrappedLoader {
             name: "network"

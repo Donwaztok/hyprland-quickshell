@@ -47,6 +47,7 @@ Singleton {
 
     property var mounts: []
     property string mountsSignature: ""
+    readonly property var removableMounts: mounts.filter(m => m.removable)
     /** Number of open Files windows — drives the 1s mounts poll while active. */
     property int openWindowCount: 0
 
@@ -318,6 +319,12 @@ Singleton {
 
     function requestMountDiscImage(): void {
         root.mountDiscImageRequested();
+    }
+
+    signal openPathRequested(string path)
+
+    function requestOpenPath(path: string): void {
+        root.openPathRequested(path);
     }
 
     function smartExtract(archivePath: string, destPath: string, owner: var): void {
@@ -830,6 +837,22 @@ Singleton {
                 setText("[]");
             root.pinnedPlaces = [];
         }
+    }
+
+    // udisks events (plug, mount, eject) refresh the drive list for the bar without polling;
+    // the monitor's start-up banner also triggers the first refresh.
+    Process {
+        running: true
+        command: ["udisksctl", "monitor"]
+        stdout: SplitParser {
+            onRead: mountsDebounce.restart()
+        }
+    }
+
+    Timer {
+        id: mountsDebounce
+        interval: 500
+        onTriggered: root.refreshMounts()
     }
 
     Timer {

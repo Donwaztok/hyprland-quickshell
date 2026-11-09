@@ -87,6 +87,13 @@ Item {
         }
 
         Popout {
+            name: "drives"
+            sourceComponent: Drives {
+                wrapper: root.wrapper
+            }
+        }
+
+        Popout {
             name: "battery"
             sourceComponent: Battery {}
         }

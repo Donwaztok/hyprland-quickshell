@@ -105,6 +105,10 @@ Scope {
         function onMountDiscImageRequested(): void {
             root.mountDiscImage();
         }
+
+        function onOpenPathRequested(path: string): void {
+            root.openWindow(path);
+        }
     }
 
     Process {
