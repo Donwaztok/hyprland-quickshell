@@ -1,4 +1,4 @@
-// Donwaztok panel family: M3 UI (qs.* modules) + qs.modules.shell surfaces (OSD, polkit, region, cheatsheet).
+// Donwaztok panel family: M3 UI (qs.* modules) + qs.modules.shell surfaces (OSD, polkit, Bluetooth agent, region, cheatsheet).
 import QtQuick
 import Quickshell
 
@@ -6,6 +6,7 @@ import "."
 import qs.modules.common
 import qs.modules.background as DwBackground
 import qs.modules.shell.audioOutputSwitcher
+import qs.modules.shell.bluetoothAgent
 import qs.modules.shell.cheatsheet
 import qs.modules.shell.fileManager
 import qs.modules.shell.textEditor
@@ -24,6 +25,7 @@ Scope {
     DonwaztokLockPanel {}
     OnScreenDisplay {}
     AudioOutputSwitcher {}
+    BluetoothAgent {}
     FileManager {}
     TextEditor {}
     MediaViewer {}
