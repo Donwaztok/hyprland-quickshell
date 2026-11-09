@@ -56,8 +56,6 @@ local floatOpacityClasses = {
     "^(kvantummanager)$",
     "^(org.pulseaudio.pavucontrol)$",
     "^(blueman-manager)$",
-    "^(nm-applet)$",
-    "^(nm-connection-editor)$",
 }
 
 for i, spec in ipairs(opacityRules) do

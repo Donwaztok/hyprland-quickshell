@@ -108,7 +108,7 @@ hl.config({
     misc = {
         disable_hyprland_logo = true,
         disable_splash_rendering = true,
-        vrr = 0,
+        vrr = 2, -- adaptive sync only for fullscreen (games); DP-1 is VRR-capable
         mouse_move_enables_dpms = true,
         key_press_enables_dpms = true,
         animate_manual_resizes = false,

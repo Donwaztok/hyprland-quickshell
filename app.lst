@@ -47,7 +47,6 @@ wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
 udiskie                           # removable media + tray (udisks2); was in old hyprland.conf
 xorg-setxkbmap                    # setxkbmap — XWayland / intl sync (old dotfiles + current exec-once)
 libayatana-appindicator           # GTK StatusNotifier tray (udiskie, nm-applet, blueman on Wayland)
-network-manager-applet            # nm-applet --indicator (bar tray; donwaztok status network/wifi off)
 blueman                           # blueman-applet (bar tray; donwaztok status bluetooth off)
 
 # --------------------------------------------------- // GNOME / system
@@ -59,7 +58,6 @@ networkmanager                    # network management
 openvpn                           # OpenVPN client (FastestVPN via fvpn)
 unzip                             # extract FastestVPN .ovpn package
 wget                              # download FastestVPN configs
-polkit-gnome                      # Polkit authentication agent (hypr exec-once)
 sddm                              # display manager (login; independent of KDE apps)
 qt6-5compat                       # Qt5Compat.GraphicalEffects (SDDM Sugar Candy Qt6 / eucalyptus-based theme)
 qt6-multimedia                    # QtMultimedia (Donwaztok media viewer: video/audio)
@@ -80,12 +78,10 @@ libsoup3                          # HTTP client/server library
 uv                                # fast Python package installer
 
 # --------------------------------------------------- // Screenshot / capture
-hyprshot                          # Hyprland screenshot tool
 slurp                             # region selector (Wayland)
 swappy                            # screenshot annotation
 tesseract                         # OCR engine
 tesseract-data-eng                # English language data for Tesseract
-wf-recorder                       # Wayland screen recorder
 
 # --------------------------------------------------- // Toolkit
 upower                            # power management (battery, etc.)
@@ -93,15 +89,12 @@ wtype                             # Wayland keyboard input (xdotool-like)
 ydotool                           # keyboard/mouse automation
 
 # --------------------------------------------------- // Widgets / launcher
-fuzzel                            # Wayland app launcher (rofi-like)
 glib2                             # GLib library
 hypridle                          # Hyprland idle daemon
-hyprlock                          # Hyprland lock screen
 hyprpicker                        # Hyprland color picker
 imagemagick                       # image manipulation
 libqalculate                      # calculator library
 quickshell                        # Hyprland widget/bar
-wlogout                           # Wayland logout screen
 
 # --------------------------------------------------- // Applications
 cursor-bin                        # Cursor IDE

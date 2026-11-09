@@ -1,8 +1,7 @@
 -- Custom autostart (runs once per Hyprland session)
 
 hl.on("hyprland.start", function()
-    -- Tray: NetworkManager + Bluetooth
-    hl.exec_cmd("nm-applet --indicator")
+    -- Tray: Bluetooth (network lives in the shell)
     hl.exec_cmd("blueman-applet")
 
     -- Apps
