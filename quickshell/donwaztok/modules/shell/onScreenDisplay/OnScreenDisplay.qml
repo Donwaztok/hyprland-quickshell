@@ -47,7 +47,7 @@ Scope {
     }
 
     Connections {
-        target: Brightness
+        target: Shell.Brightness
         function onBrightnessChanged() {
             root.protectionMessage = "";
             root.currentIndicator = "brightness";
@@ -57,9 +57,9 @@ Scope {
 
     Connections {
         // Listen to volume changes
-        target: Audio.sink?.audio ?? null
+        target: Shell.Audio.sink?.audio ?? null
         function onVolumeChanged() {
-            if (!Audio.ready)
+            if (!Shell.Audio.ready)
                 return;
             if (GlobalStates.audioOutputSwitcherOpen)
                 return;
@@ -67,7 +67,7 @@ Scope {
             root.triggerOsd();
         }
         function onMutedChanged() {
-            if (!Audio.ready)
+            if (!Shell.Audio.ready)
                 return;
             if (GlobalStates.audioOutputSwitcherOpen)
                 return;
@@ -77,14 +77,14 @@ Scope {
     }
 
     Connections {
-        target: Audio
+        target: Shell.Audio
         function onSinkProtectionTriggered(reason) {
             root.protectionMessage = reason;
             root.currentIndicator = "volume";
             root.triggerOsd();
         }
         function onSinkChanged() {
-            if (!Audio.ready)
+            if (!Shell.Audio.ready)
                 return;
             if (GlobalStates.audioOutputSwitcherOpen)
                 return;

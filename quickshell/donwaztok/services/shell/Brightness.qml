@@ -10,6 +10,8 @@ import QtQuick
 Singleton {
     id: root
 
+    signal brightnessChanged() // user-driven change only, for the OSD
+
     property list<var> ddcMonitors: []
     readonly property var ddcMonitorMap: {
         const map = {};
@@ -123,7 +125,17 @@ Singleton {
         onPressed: root.decreaseBrightness()
     }
 
-    // IpcHandler for "brightness" is registered in ii/services/Brightness.qml to avoid duplicate
+    IpcHandler {
+        target: "brightness"
+
+        function increment(): void {
+            root.increaseBrightness();
+        }
+
+        function decrement(): void {
+            root.decreaseBrightness();
+        }
+    }
 
     component Monitor: QtObject {
         id: monitor
@@ -176,6 +188,7 @@ Singleton {
             }
 
             brightness = value;
+            root.brightnessChanged();
 
             if (isAppleDisplay)
                 Quickshell.execDetached(["asdbctl", "set", rounded]);

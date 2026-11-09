@@ -2,6 +2,7 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import qs.services
+import qs.services.shell as Shell
 import qs.modules.common
 import Quickshell
 import Quickshell.Bluetooth
@@ -229,7 +230,7 @@ Singleton {
             "--hint=int:transient:1"
         ]);
         if (root.soundEnabled)
-            Audio.playSystemSound(level.urgency === "critical" ? "suspend-error" : "dialog-warning");
+            Shell.Audio.playSystemSound(level.urgency === "critical" ? "suspend-error" : "dialog-warning");
     }
 
     onConfigReadyChanged: {

@@ -1,4 +1,4 @@
-import qs.services
+import qs.services.shell
 import QtQuick
 import qs.modules.shell.onScreenDisplay
 

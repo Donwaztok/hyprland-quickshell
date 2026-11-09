@@ -1,6 +1,7 @@
 pragma Singleton
 
 import qs.services
+import qs.services.shell as Shell
 import qs.modules.common
 import Quickshell
 import Quickshell.Services.UPower
@@ -61,7 +62,7 @@ Singleton {
             "--hint=int:transient:1",
         ])
 
-        if (root.soundEnabled) Audio.playSystemSound("dialog-warning");
+        if (root.soundEnabled) Shell.Audio.playSystemSound("dialog-warning");
     }
 
     onIsCriticalAndNotChargingChanged: {
@@ -75,7 +76,7 @@ Singleton {
             "--hint=int:transient:1",
         ]);
 
-        if (root.soundEnabled) Audio.playSystemSound("suspend-error");
+        if (root.soundEnabled) Shell.Audio.playSystemSound("suspend-error");
     }
 
     onIsSuspendingAndNotChargingChanged: {
@@ -94,15 +95,15 @@ Singleton {
             "--hint=int:transient:1",
         ]);
 
-        if (root.soundEnabled) Audio.playSystemSound("complete");
+        if (root.soundEnabled) Shell.Audio.playSystemSound("complete");
     }
 
     onIsPluggedInChanged: {
         if (!root.available || !root.soundEnabled) return;
         if (isPluggedIn) {
-            Audio.playSystemSound("power-plug")
+            Shell.Audio.playSystemSound("power-plug")
         } else {
-            Audio.playSystemSound("power-unplug")
+            Shell.Audio.playSystemSound("power-unplug")
         }
     }
 }

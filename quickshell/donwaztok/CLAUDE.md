@@ -36,10 +36,10 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
 ## Layout
 
 - `shell.qml` — entry point; loads `panelFamilies/DonwaztokFamily.qml`.
-- `services/` — end-4 singletons for system state (Battery, DeviceBatteries, Audio,
+- `services/` — end-4 singletons for system state (Battery, DeviceBatteries,
   Notifications, Hyprland*, Weather…). Imported as `qs.services`.
 - `services/shell/` — caelestia singletons (`qs.services.shell`): network (`Nmcli`, `VPN`),
-  audio, file manager, text editor, wallpapers, `Colours`, `Time`, Hypr helpers.
+  audio, brightness, file manager, text editor, wallpapers, `Colours`, `Time`, Hypr helpers.
   **Has an explicit `qmldir`**: new files must be registered there.
 - `modules/` — UI: `bar`, `controlcenter`, `dashboard`, `drawers`, `launcher`,
   `lock`, `notifications`, `sidebar`, `session`… `modules/shell/` holds the
@@ -56,8 +56,8 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
 
 The codebase merges two upstream styles: caelestia (all UI) and end-4 illogical-impulse
 (only non-visual: `services/*.qml` and `modules/common`). UI follows caelestia
-(docs/UI-PATTERNS.md §1). Some names exist on both sides (`Appearance`, `Config`, `Audio`,
-`Brightness`); when a file needs both, import one side with an alias
+(docs/UI-PATTERNS.md §1). Some names exist on both sides (`Appearance`, `Config`);
+when a file needs both, import one side with an alias
 (`import qs.services.shell as Shell`).
 
 ## Configuration

@@ -43,6 +43,20 @@ Singleton {
     readonly property bool sourceMuted: !!source?.audio?.muted
     readonly property real sourceVolume: source?.audio?.volume ?? 0
 
+    readonly property bool ready: sink?.ready ?? false
+    signal sinkProtectionTriggered(string reason)
+
+    function friendlyDeviceName(node: PwNode): string {
+        return node.nickname || node.description || qsTr("Unknown");
+    }
+
+    function playSystemSound(soundName: string): void {
+        const base = `/usr/share/sounds/${Config.shellOptions.sounds.theme}/stereo/${soundName}`;
+        // ffplay fails silently on the missing one of the two extensions
+        Quickshell.execDetached(["ffplay", "-nodisp", "-autoexit", `${base}.oga`]);
+        Quickshell.execDetached(["ffplay", "-nodisp", "-autoexit", `${base}.ogg`]);
+    }
+
     readonly property alias beatTracker: beatTracker
 
     readonly property var outputEntries: {
@@ -1067,6 +1081,38 @@ Singleton {
 
     PwObjectTracker {
         objects: [...root.sinks, ...root.sources, ...root.streams]
+    }
+
+    Connections { // Protection against sudden volume changes
+        target: root.sink?.audio ?? null
+        property bool lastReady: false
+        property real lastVolume: 0
+        function onVolumeChanged() {
+            const protection = Config.shellOptions.audio.protection;
+            if (!protection.enable)
+                return;
+            const newVolume = root.sink.audio.volume;
+            // when resuming from suspend, don't write volume to avoid pipewire volume reset issues
+            if (isNaN(newVolume) || newVolume === undefined || newVolume === null) {
+                lastReady = false;
+                lastVolume = 0;
+                return;
+            }
+            if (!lastReady) {
+                lastVolume = newVolume;
+                lastReady = true;
+                return;
+            }
+            const maxAllowed = protection.maxAllowed / 100;
+            if (newVolume - lastVolume > protection.maxAllowedIncrease / 100) {
+                root.sink.audio.volume = lastVolume;
+                root.sinkProtectionTriggered(qsTr("Illegal increment"));
+            } else if (newVolume > maxAllowed || newVolume > 2) {
+                root.sinkProtectionTriggered(qsTr("Exceeded max allowed"));
+                root.sink.audio.volume = Math.min(lastVolume, maxAllowed);
+            }
+            lastVolume = root.sink.audio.volume;
+        }
     }
 
     IpcHandler {
