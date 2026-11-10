@@ -20,10 +20,12 @@ Scope {
     readonly property int right: root.bar.rightMargin > 0 ? root.bar.exclusiveZone : Config.border.thickness
     readonly property int bottom: root.bar.bottomMargin > 0 ? root.bar.exclusiveZone : Config.border.thickness
     // A rule with only output and reserved_area merges into the monitor's rule: mode, position and scale stay.
-    readonly property string rule: `hl.monitor({ output = "${root.screen.name}", reserved_area = { top = ${root.top}, bottom = ${root.bottom}, left = ${root.left}, right = ${root.right} } })`
+    // Empty while the screen is going away (its object turns null before this scope is destroyed).
+    readonly property string rule: root.screen ? `hl.monitor({ output = "${root.screen.name}", reserved_area = { top = ${root.top}, bottom = ${root.bottom}, left = ${root.left}, right = ${root.right} } })` : ""
 
     function apply(): void {
-        applyProc.exec(["hyprctl", "eval", root.rule]);
+        if (root.rule.length)
+            applyProc.exec(["hyprctl", "eval", root.rule]);
     }
 
     // Coalesces bursts (bar width animating, several edges changing at once) into one eval.

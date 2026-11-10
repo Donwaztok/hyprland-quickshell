@@ -24,7 +24,7 @@ Item {
     // While detached, also use Config fallbacks so size is never 0 before Loader.item exists,
     // and disable implicit size Behaviors so height does not lag behind the real content.
     readonly property var ccSizes: Config.controlCenter && Config.controlCenter.sizes ? Config.controlCenter.sizes : null
-    readonly property real detachedCcHeight: screen.height * (ccSizes ? ccSizes.heightMult : 0.7)
+    readonly property real detachedCcHeight: (screen?.height ?? 0) * (ccSizes ? ccSizes.heightMult : 0.7)
     readonly property real detachedCcWidth: detachedCcHeight * (ccSizes ? ccSizes.ratio : 16 / 9)
     readonly property real nonAnimWidth: detachedMode === "any"
         ? Math.max(detachedCcWidth, detachedLoader.item?.implicitWidth ?? detachedLoader.implicitWidth ?? 0)

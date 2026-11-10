@@ -20,7 +20,7 @@ Loader {
 
             required property ShellScreen modelData
             // Only a bar on the left edge of this screen pushes the clock right.
-            readonly property bool leftBar: Config.bar.position === "left" && !Strings.testRegexList(Config.bar.excludedScreens, modelData.name)
+            readonly property bool leftBar: Config.bar.position === "left" && !Strings.testRegexList(Config.bar.excludedScreens, modelData?.name ?? "")
 
             screen: modelData
             name: "background"
