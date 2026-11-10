@@ -729,7 +729,9 @@ Singleton {
                     else if (kind === "empty-trash")
                         root.notifyOwner(owner, qsTr("Trash emptied"), "", "delete_sweep");
                     else if (kind === "eject") {
-                        // Quiet: udiskie/system may already show one “Device unmounted”.
+                        // udisks mounts at /run/media/<user>/<label>, so the folder name is the drive's name.
+                        const name = String(data.mount || "").split("/").pop() || qsTr("Drive");
+                        root.notifyOwner(owner, qsTr("Safe to remove"), qsTr("%1 can be removed").arg(name), "eject");
                     } else if (kind === "mount") {
                         // Navigation handled by session.onJobDone
                     }
@@ -842,11 +844,20 @@ Singleton {
     // udisks events (plug, mount, eject) refresh the drive list for the bar without polling;
     // the monitor's start-up banner also triggers the first refresh.
     Process {
+        id: udisksMonitor
+
         running: true
         command: ["udisksctl", "monitor"]
         stdout: SplitParser {
             onRead: mountsDebounce.restart()
         }
+        onExited: udisksMonitorRestart.start()
+    }
+
+    Timer {
+        id: udisksMonitorRestart
+        interval: 2000
+        onTriggered: udisksMonitor.running = true
     }
 
     Timer {

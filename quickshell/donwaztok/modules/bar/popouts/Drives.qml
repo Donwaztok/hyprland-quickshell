@@ -24,6 +24,14 @@ ColumnLayout {
         font.weight: 500
     }
 
+    StyledText {
+        Layout.rightMargin: Appearance.padding.small
+        visible: FileManagerService.removableMounts.length === 0
+        text: qsTr("No removable drives")
+        color: Colours.palette.m3onSurfaceVariant
+        font.pointSize: Appearance.font.size.small
+    }
+
     Repeater {
         model: ScriptModel {
             values: FileManagerService.removableMounts

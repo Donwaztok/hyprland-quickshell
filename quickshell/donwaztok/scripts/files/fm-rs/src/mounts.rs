@@ -440,8 +440,25 @@ fn device_node_exists(device: &str) -> bool {
     !device.is_empty() && Path::new(device).exists()
 }
 
+/// GNOME's "Safely remove" for USB drives: power the drive off after the eject, but only
+/// once none of its filesystems is still mounted (a second partition keeps it on).
+fn power_off_usb(disk: &str) -> bool {
+    if !device_node_exists(disk) {
+        return false;
+    }
+    let (code, tran) = run_cmd(&["lsblk", "-dno", "TRAN", disk]);
+    if code != 0 || tran.trim() != "usb" {
+        return false;
+    }
+    let (code, points) = run_cmd(&["lsblk", "-nro", "MOUNTPOINTS", disk]);
+    if code != 0 || !points.trim().is_empty() {
+        return false;
+    }
+    run_cmd(&["udisksctl", "power-off", "-b", disk, "--no-user-interaction"]).0 == 0
+}
+
 pub fn do_eject(mount_point: &str) {
-    // Real eject (udiskie "Eject" / gio -e) — not plain unmount, not power-off/Unpower.
+    // Unmount through udisks (gio -e as fallback), then power-off for USB drives (power_off_usb).
     let mp = expand_user(mount_point).to_string_lossy().into_owned();
     let home = dirs_home().to_string_lossy().into_owned();
     if mp == "/" || mp == "/home" || mp == home {
@@ -462,23 +479,21 @@ pub fn do_eject(mount_point: &str) {
         String::new()
     };
 
-    // Prefer the same path as the udiskie tray "Eject" action.
-    let (udie_code, udie_msg) = run_cmd(&[
-        "udiskie-umount",
-        "--eject",
-        "--no-detach",
-        "--force",
-        &mp,
-    ]);
+    // Unmount through udisks, the stack udiskie used; the gio calls below are the fallback.
+    let (udie_code, udie_msg) = if source.is_empty() {
+        (1, String::new())
+    } else {
+        run_cmd(&["udisksctl", "unmount", "-b", &source, "--no-user-interaction"])
+    };
     if udie_code == 0 {
         out_ok(serde_json::json!({
             "ok": true,
             "mount": mp,
             "device": source,
             "disk": disk,
-            "poweredOff": false,
+            "poweredOff": power_off_usb(&disk),
             "mode": "eject",
-            "via": "udiskie",
+            "via": "udisksctl",
         }));
         return;
     }
@@ -495,7 +510,7 @@ pub fn do_eject(mount_point: &str) {
             "disk": disk,
             "mode": "eject",
             "alreadyUnmounted": true,
-            "poweredOff": false,
+            "poweredOff": power_off_usb(&disk),
             "via": "gio",
         }));
         return;
@@ -536,7 +551,7 @@ pub fn do_eject(mount_point: &str) {
         "mount": mp,
         "device": source,
         "disk": disk,
-        "poweredOff": false,
+        "poweredOff": power_off_usb(&disk),
         "mode": "eject",
         "via": "gio",
     }));
