@@ -114,6 +114,9 @@ enum Commands {
     Watch {
         path: String,
     },
+    /// Lines on mount-table and block-device changes (services/shell/FileManagerService.qml)
+    #[command(name = "watch-mounts")]
+    WatchMounts,
     /// USB devices whose battery UPower does not know (services/DeviceBatteries.qml)
     #[command(name = "device-batteries")]
     DeviceBatteries,
@@ -226,6 +229,7 @@ fn run(cli: Cli) {
             ops::do_info(&paths)
         }
         Commands::Watch { path } => watch::watch_dir(&path),
+        Commands::WatchMounts => watch::watch_mounts(),
         Commands::DeviceBatteries => batteries::list(),
         Commands::AudioCards => audio::list(),
     }

@@ -3,11 +3,13 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.components.containers
 import qs.services.shell
+import qs.services.shell as Shell
 import qs.config
 import qs.utils
 import qs.modules.bar
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Wayland as Wl
 import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Effects
@@ -80,6 +82,13 @@ Variants {
             anchors.bottom: true
             anchors.left: true
             anchors.right: true
+
+            // The shell's idle inhibitor rides on this always-mapped window; a window of its own costs a
+            // render thread, and one created on demand is not mapped yet when the inhibitor attaches.
+            Wl.IdleInhibitor {
+                window: win
+                enabled: Shell.IdleInhibitor.enabled
+            }
 
             Variants {
                 id: regions

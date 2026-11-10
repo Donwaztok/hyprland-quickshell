@@ -51,6 +51,7 @@ libayatana-appindicator           # GTK StatusNotifier tray (Epic Games launcher
 gnome-keyring                     # password and key storage
 gnome-control-center              # Settings (donwaztok utilities, replaces KDE kcm_*)
 gnome-system-monitor              # task manager (donwaztok apps.taskManager)
+udisks2                           # mount/eject/ISO in donwaztok Files (bin/fm); started on demand, keep it
 # --------------------------------------------------- // Network / VPN
 networkmanager                    # network management
 openvpn                           # OpenVPN client (FastestVPN via fvpn)

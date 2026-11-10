@@ -2,8 +2,8 @@ pragma Singleton
 
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 
+// State and IPC only: the inhibitor itself is on the drawers window (modules/drawers/Drawers.qml).
 Singleton {
     id: root
 
@@ -22,16 +22,6 @@ Singleton {
         property date enabledSince
 
         reloadableId: "idleInhibitor"
-    }
-
-    IdleInhibitor {
-        enabled: props.enabled
-        window: PanelWindow {
-            implicitWidth: 0
-            implicitHeight: 0
-            color: "transparent"
-            mask: Region {}
-        }
     }
 
     IpcHandler {

@@ -841,23 +841,24 @@ Singleton {
         }
     }
 
-    // udisks events (plug, mount, eject) refresh the drive list for the bar without polling;
-    // the monitor's start-up banner also triggers the first refresh.
+    // Mount-table and block-device events (plug, mount, eject) refresh the drive list for the bar
+    // without polling; the watcher's ready line also triggers the first refresh. Kernel events, not
+    // `udisksctl monitor`, so udisksd starts (on D-Bus demand) only to mount or eject.
     Process {
-        id: udisksMonitor
+        id: mountsMonitor
 
         running: true
-        command: ["udisksctl", "monitor"]
+        command: [root.binary, "watch-mounts"]
         stdout: SplitParser {
             onRead: mountsDebounce.restart()
         }
-        onExited: udisksMonitorRestart.start()
+        onExited: mountsMonitorRestart.start()
     }
 
     Timer {
-        id: udisksMonitorRestart
+        id: mountsMonitorRestart
         interval: 2000
-        onTriggered: udisksMonitor.running = true
+        onTriggered: mountsMonitor.running = true
     }
 
     Timer {
