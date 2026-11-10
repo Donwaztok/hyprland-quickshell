@@ -479,7 +479,7 @@ pub fn do_eject(mount_point: &str) {
         String::new()
     };
 
-    // Unmount through udisks, the stack udiskie used; the gio calls below are the fallback.
+    // Unmount through udisks; the gio calls below are the fallback.
     let (udie_code, udie_msg) = if source.is_empty() {
         (1, String::new())
     } else {
@@ -574,7 +574,7 @@ pub fn do_mount(device: &str) {
     }
 
     // After eject, gvfs often has no Volume for the block id ("Nenhum volume para o ID dado").
-    // Prefer udisksctl (same stack as udiskie), then udiskie-mount, then gio.
+    // Prefer udisksctl, then gio.
     let mut last_msg = String::new();
     let mut mounted_ok = false;
 
@@ -602,16 +602,6 @@ pub fn do_mount(device: &str) {
                 }));
                 return;
             }
-        }
-    }
-
-    if !mounted_ok {
-        let (code, msg) = run_cmd(&["udiskie-mount", &dev]);
-        if !msg.is_empty() {
-            last_msg = msg;
-        }
-        if code == 0 {
-            mounted_ok = true;
         }
     }
 

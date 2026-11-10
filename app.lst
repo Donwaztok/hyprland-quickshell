@@ -44,9 +44,8 @@ ttf-twemoji                       # Twitter/Unicode emoji font
 # --------------------------------------------------- // Hyprland
 hyprland                          # Wayland compositor
 wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
-udiskie                           # removable media + tray (udisks2); was in old hyprland.conf
 xorg-setxkbmap                    # setxkbmap — XWayland / intl sync (old dotfiles + current exec-once)
-libayatana-appindicator           # GTK StatusNotifier tray (udiskie, nm-applet, blueman on Wayland)
+libayatana-appindicator           # GTK StatusNotifier tray (blueman, Epic Games launcher)
 blueman                           # blueman-applet (bar tray; donwaztok status bluetooth off)
 python-dbus                       # Bluetooth pairing agent (quickshell/donwaztok/scripts/bluetooth/agent.py)
 python-gobject                    # GLib main loop for the Bluetooth pairing agent

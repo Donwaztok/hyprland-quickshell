@@ -16,9 +16,6 @@ hl.on("hyprland.start", function()
             .. "XDG_SESSION_TYPE GTK_USE_PORTAL && systemctl --user start hyprland-session.target"
     )
 
-    -- Tray
-    hl.exec_cmd("udiskie --no-automount --smart-tray --menu-update-workaround")
-
     -- Clipboard
     hl.exec_cmd("cliphist wipe")
     hl.exec_cmd(
