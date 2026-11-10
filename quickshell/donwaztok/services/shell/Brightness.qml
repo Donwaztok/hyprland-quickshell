@@ -158,7 +158,7 @@ Singleton {
         id: monitor
 
         required property ShellScreen modelData
-        readonly property var ddcInfo: root.ddcMonitorMap[modelData.name] ?? null
+        readonly property var ddcInfo: root.ddcMonitorMap[modelData?.name] ?? null
         readonly property bool isDdc: ddcInfo !== null
         readonly property string busNum: ddcInfo?.busNum ?? ""
         readonly property bool isAppleDisplay: root.appleDisplayPresent && modelData.model.startsWith("StudioDisplay")
