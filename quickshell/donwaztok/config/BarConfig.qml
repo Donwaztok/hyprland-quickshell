@@ -9,7 +9,7 @@ JsonObject {
     property int dragThreshold: 20
     property Popouts popouts: Popouts {}
     property Tray tray: Tray {}
-    property Status status: Status {}
+    property IconPlacement icons: IconPlacement {}
     property Clock clock: Clock {}
     property Sizes sizes: Sizes {}
     property Workspaces workspaces: Workspaces {}
@@ -48,17 +48,14 @@ JsonObject {
         property bool recolour: false
         property bool compact: true
         property list<var> iconSubs: []
-        property list<string> hiddenIcons: []
     }
 
-    component Status: JsonObject {
-        property bool showAudio: false
-        property bool showMicrophone: false
-        property bool showKbLayout: false
-        property bool showNetwork: true
-        property bool showBluetooth: true
-        property bool showBattery: true
-        property bool showLockStatus: false
+    // Where each bar icon shows, in order. Shell icons use the ids in utils/BarIcons.qml; tray apps use
+    // "app:<status notifier id>". All three empty means "not migrated yet".
+    component IconPlacement: JsonObject {
+        property list<string> status: []
+        property list<string> tray: []
+        property list<string> hidden: []
     }
 
     component Clock: JsonObject {

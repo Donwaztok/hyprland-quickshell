@@ -119,16 +119,15 @@ Item {
 
         Repeater {
             model: ScriptModel {
-                values: SystemTray.items.values.filter(i => !Config.bar.tray.hiddenIcons.includes(i.id))
+                values: SystemTray.items.values.filter(i => !Config.bar.icons.hidden.includes(`app:${i.id}`))
             }
 
             Popout {
                 id: trayMenu
 
                 required property SystemTrayItem modelData
-                required property int index
 
-                name: `traymenu${index}`
+                name: `traymenu:${modelData?.id ?? ""}`
                 sourceComponent: trayMenuComp
 
                 Connections {

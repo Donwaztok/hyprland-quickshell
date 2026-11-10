@@ -24,13 +24,6 @@ Item {
     property bool persistent: Config.bar.persistent ?? true
     property bool showOnHover: Config.bar.showOnHover ?? true
     property int dragThreshold: Config.bar.dragThreshold ?? 20
-    property bool showAudio: Config.bar.status.showAudio ?? true
-    property bool showMicrophone: Config.bar.status.showMicrophone ?? true
-    property bool showKbLayout: Config.bar.status.showKbLayout ?? false
-    property bool showNetwork: Config.bar.status.showNetwork ?? true
-    property bool showBluetooth: Config.bar.status.showBluetooth ?? true
-    property bool showBattery: Config.bar.status.showBattery ?? true
-    property bool showLockStatus: Config.bar.status.showLockStatus ?? true
     property bool trayBackground: Config.bar.tray.background ?? false
     property bool trayCompact: Config.bar.tray.compact ?? false
     property bool trayRecolour: Config.bar.tray.recolour ?? false
@@ -63,13 +56,6 @@ Item {
         Config.bar.persistent = root.persistent;
         Config.bar.showOnHover = root.showOnHover;
         Config.bar.dragThreshold = root.dragThreshold;
-        Config.bar.status.showAudio = root.showAudio;
-        Config.bar.status.showMicrophone = root.showMicrophone;
-        Config.bar.status.showKbLayout = root.showKbLayout;
-        Config.bar.status.showNetwork = root.showNetwork;
-        Config.bar.status.showBluetooth = root.showBluetooth;
-        Config.bar.status.showBattery = root.showBattery;
-        Config.bar.status.showLockStatus = root.showLockStatus;
         Config.bar.tray.background = root.trayBackground;
         Config.bar.tray.compact = root.trayCompact;
         Config.bar.tray.recolour = root.trayRecolour;
@@ -198,76 +184,12 @@ Item {
 
                 PreferencesGroup {
                     title: qsTr("Status icons")
-                    description: qsTr("Which status indicators appear on the bar.")
+                    description: qsTr("Where each icon shows on the bar: the status area, the tray, or nowhere.")
+                    info: qsTr("Drag icons between groups or reorder them. With the keyboard, arrows move the focused icon and Enter opens its menu.")
 
-                    SwitchRow {
-                        flatStyle: true
-                        label: qsTr("Speakers")
-                        checked: root.showAudio
-                        onToggled: checked => {
-                            root.showAudio = checked;
-                            root.saveConfig();
-                        }
-                    }
-
-                    SwitchRow {
-                        flatStyle: true
-                        label: qsTr("Microphone")
-                        checked: root.showMicrophone
-                        onToggled: checked => {
-                            root.showMicrophone = checked;
-                            root.saveConfig();
-                        }
-                    }
-
-                    SwitchRow {
-                        flatStyle: true
-                        label: qsTr("Keyboard layout")
-                        checked: root.showKbLayout
-                        onToggled: checked => {
-                            root.showKbLayout = checked;
-                            root.saveConfig();
-                        }
-                    }
-
-                    SwitchRow {
-                        flatStyle: true
-                        label: qsTr("Network")
-                        checked: root.showNetwork
-                        onToggled: checked => {
-                            root.showNetwork = checked;
-                            root.saveConfig();
-                        }
-                    }
-
-                    SwitchRow {
-                        flatStyle: true
-                        label: qsTr("Bluetooth")
-                        checked: root.showBluetooth
-                        onToggled: checked => {
-                            root.showBluetooth = checked;
-                            root.saveConfig();
-                        }
-                    }
-
-                    SwitchRow {
-                        flatStyle: true
-                        label: qsTr("Battery")
-                        checked: root.showBattery
-                        onToggled: checked => {
-                            root.showBattery = checked;
-                            root.saveConfig();
-                        }
-                    }
-
-                    SwitchRow {
-                        flatStyle: true
-                        label: qsTr("Caps lock")
-                        checked: root.showLockStatus
-                        onToggled: checked => {
-                            root.showLockStatus = checked;
-                            root.saveConfig();
-                        }
+                    BarIconsEditor {
+                        Layout.margins: Appearance.padding.normal
+                        flickable: contentFlickable
                     }
                 }
 

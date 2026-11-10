@@ -16,7 +16,8 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
 - Open surfaces: drawers with `hyprctl dispatch 'hl.dsp.global("donwaztok:<name>")'`
   (Hyprland is configured in Lua, so `hyprctl dispatch` takes Lua; names in
   `modules/Shortcuts.qml`: `dashboard`, `launcher`, `sidebar`, `utilities`, `session`,
-  `controlCenter`…); the rest through IPC (`qs ipc -c donwaztok show`; `osdVolume trigger`,
+  `controlCenter`…), a control center pane with `qs ipc -c donwaztok call controlCenter openPane <id>`
+  (ids in `modules/controlcenter/PaneRegistry.qml`); the rest through IPC (`qs ipc -c donwaztok show`; `osdVolume trigger`,
   `region screenshot`/`dismiss`, `cheatsheet open`/`close`). Drawers do not open while a
   fullscreen window is focused. Apps: `fileManager`/`textEditor` `open`, `close` (latest
   window) and `toggle`; `mediaViewer` `open <path>`/`close`. Polkit: `pkexec true` in the
@@ -37,7 +38,7 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
 
 - `shell.qml` — entry point; loads `panelFamilies/DonwaztokFamily.qml`.
 - `services/` — end-4 singletons for system state (Battery, DeviceBatteries,
-  Notifications, Hyprland*, Weather…). Imported as `qs.services`.
+  Hyprland*, Weather…). Imported as `qs.services`.
 - `services/shell/` — caelestia singletons (`qs.services.shell`): network (`Nmcli`, `VPN`),
   audio, brightness, file manager, text editor, wallpapers, `Colours`, `Time`, Hypr helpers.
   **Has an explicit `qmldir`**: new files must be registered there.
@@ -72,6 +73,13 @@ with two views:
   `Config.setNestedValue("section.key", value)`. Ready flag: `Config.ready`.
 
 Use the view of the area you are editing; do not import both `Config`s into one file.
+
+Bar icons: `bar.icons` holds three ordered lists, `status`, `tray` and `hidden`. Shell icons use the ids
+in `utils/BarIcons.qml` (`audio`, `microphone`, `kblayout`, `network`, `bluetooth`, `drives`, `battery`,
+`lockstatus`); tray apps use `app:<status notifier id>`, and a running app in no list shows at the end of
+the tray. Edited in Control Center › Taskbar (`modules/controlcenter/taskbar/BarIconsEditor.qml`). A
+config from before these lists is migrated once on load (`migrateBarIcons` in `config/Config.qml`),
+which first copies it to `config.json.bak-bar-icons`.
 
 ## Conventions
 
@@ -119,8 +127,12 @@ across surfaces or needs a plan: `/opsx:propose` → `/opsx:apply` → `ui-revie
 - Logitech `hidpp_battery_N` paths in UPower are not stable across reconnects;
   key per-device state by normalized name, not by `nativePath`.
 - Reloading the shell resets in-memory state in singletons.
+- Hot reload does not pick up a new inline `component` in a file that is already loaded: the log says
+  "X is not a type". Restart the shell (`qs kill -c donwaztok`, then start it again as in
+  `hypr/lua/hyprland/execs.lua`). `config.json` keys that were removed from the file also keep their old
+  in-memory values until a restart.
 - QML singletons are created on first reference: an unreferenced service never runs, and
   referencing one from a new place starts its timers and processes.
-- Bindings in a singleton can run before its child objects exist; guard them
-  (`clock?.date ?? new Date()` in `services/shell/Time.qml`) or the log fills with
-  "Unable to assign [undefined]" on reload.
+- Bindings in a singleton can run before its child objects exist; guard them (`clock?.date ?? new Date()`
+  in `services/shell/Time.qml`) against "Unable to assign [undefined]" at startup. A few such warnings right
+  after a reload come from the old generation's clock/Hyprland events during teardown and are harmless.

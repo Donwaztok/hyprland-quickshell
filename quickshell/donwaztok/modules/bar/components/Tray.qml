@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.services.shell
 import qs.config
+import qs.utils
 import Quickshell
 import Quickshell.Services.SystemTray
 import QtQuick
@@ -18,6 +19,8 @@ StyledRect {
     readonly property int spaceSm: Math.max(1, Math.round(Appearance.spacing.small * Config.barThicknessScale))
     readonly property alias layout: layoutDims
     readonly property alias items: items
+    // Bar.qml hit-tests the hovered slot in whichever layout is showing.
+    readonly property Item activeLayout: barVertical ? layoutColumn : layoutRow
 
     Item {
         id: layoutDims
@@ -70,16 +73,38 @@ StyledRect {
         spacing: root.spaceSm
 
         opacity: root.expanded || !Config.bar.tray.compact ? 1 : 0
+        // Collapsed it sits under the chevron; opacity alone still takes clicks (touch has no hover to expand).
+        enabled: root.expanded || !Config.bar.tray.compact
 
         Repeater {
             id: items
 
             model: ScriptModel {
-                values: SystemTray.items.values.filter(i => !Config.bar.tray.hiddenIcons.includes(i.id))
+                // Config.bar.icons.tray order: shell ids as strings, apps as their SystemTrayItem. Running apps
+                // that are in no list yet go last; apps not running are skipped.
+                values: {
+                    const running = SystemTray.items.values;
+                    const icons = Config.bar.icons;
+                    const out = [];
+                    for (const id of icons.tray) {
+                        if (BarIcons.isApp(id)) {
+                            const app = running.find(i => i.id === BarIcons.appId(id));
+                            if (app)
+                                out.push(app);
+                        } else if (id in BarIcons.shell) {
+                            out.push(id);
+                        }
+                    }
+                    for (const app of running)
+                        if (!icons.tray.includes(`app:${app.id}`) && !icons.hidden.includes(`app:${app.id}`))
+                            out.push(app);
+                    return out;
+                }
             }
 
             delegate: Item {
                 required property var modelData
+                readonly property string popoutName: trayItem.popoutName
                 Layout.preferredHeight: root.trayItemSize
                 Layout.preferredWidth: root.effectiveInnerWidth - root.padding * 2
                 Layout.alignment: Qt.AlignHCenter
@@ -87,6 +112,8 @@ StyledRect {
                 implicitHeight: root.trayItemSize
 
                 TrayItem {
+                    id: trayItem
+
                     modelData: parent.modelData
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -108,6 +135,8 @@ StyledRect {
         spacing: root.spaceSm
 
         opacity: root.expanded || !Config.bar.tray.compact ? 1 : 0
+        // Collapsed it sits under the chevron; opacity alone still takes clicks (touch has no hover to expand).
+        enabled: root.expanded || !Config.bar.tray.compact
 
         add: Transition {
             Anim { properties: "scale"; from: 0; to: 1; easing.bezierCurve: Appearance.anim.curves.standardDecel }

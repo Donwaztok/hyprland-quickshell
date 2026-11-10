@@ -151,7 +151,7 @@ Popup {
     contentItem: StyledRect {
         id: tooltipRect
 
-        implicitWidth: tooltipText.implicitWidth + Appearance.padding.normal * 2
+        implicitWidth: tooltipText.width + Appearance.padding.normal * 2
         implicitHeight: tooltipText.implicitHeight + Appearance.padding.smaller * 2
 
         color: Colours.palette.m3surfaceContainerHighest
@@ -170,6 +170,9 @@ Popup {
             id: tooltipText
 
             anchors.centerIn: parent
+            // Long text wraps instead of running off the screen.
+            width: Math.min(implicitWidth, 320)
+            wrapMode: Text.Wrap
 
             text: root.text
             color: Colours.palette.m3onSurface

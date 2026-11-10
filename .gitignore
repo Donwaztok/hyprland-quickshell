@@ -21,6 +21,7 @@
 !donwaztok/
 !donwaztok/**
 donwaztok/config.json
+donwaztok/config.json.bak-*
 
 # Arquivos soltos em .config (end-4)
 !starship.toml

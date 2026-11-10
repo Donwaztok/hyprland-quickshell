@@ -13,17 +13,41 @@ ColumnLayout {
 
     required property string title
     property string description: ""
+    // One or two sentences shown from an info icon next to the title.
+    property string info: ""
     default property alias data: cardColumn.data
 
     spacing: Appearance.spacing.smaller
     Layout.fillWidth: true
 
-    StyledText {
+    RowLayout {
         Layout.fillWidth: true
-        text: root.title
-        font.pointSize: Appearance.font.size.larger
-        font.weight: Font.DemiBold
-        color: Colours.palette.m3onSurface
+        spacing: Appearance.spacing.smaller
+
+        StyledText {
+            Layout.fillWidth: !infoLoader.active
+            text: root.title
+            font.pointSize: Appearance.font.size.larger
+            font.weight: Font.DemiBold
+            color: Colours.palette.m3onSurface
+        }
+
+        Loader {
+            id: infoLoader
+
+            Layout.fillWidth: true
+            active: root.info !== ""
+            sourceComponent: Item {
+                implicitWidth: infoButton.implicitWidth
+                implicitHeight: infoButton.implicitHeight
+
+                InfoButton {
+                    id: infoButton
+
+                    text: root.info
+                }
+            }
+        }
     }
 
     StyledText {

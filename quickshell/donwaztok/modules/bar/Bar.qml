@@ -61,8 +61,6 @@ Item {
 
         const id = ch.id;
         const item = ch.item;
-        const along = isVertical ? ch.y : ch.x;
-        const itemSize = isVertical ? item.implicitHeight : item.implicitWidth;
 
         if (id === "statusIcons" && Config.bar.popouts.statusIcons) {
             const items = item.items;
@@ -81,20 +79,25 @@ Item {
             }
         } else if (id === "tray" && Config.bar.popouts.tray) {
             if (!Config.bar.tray.compact || (item.expanded && !item.expandIcon.contains(mapToItem(item.expandIcon, item.implicitWidth / 2, isVertical ? coord : item.implicitHeight / 2)))) {
-                const layoutSize = isVertical ? item.layout.implicitHeight : item.layout.implicitWidth;
-                const index = Math.floor(((coord - along - item.padding * 2 + item.spacing) / layoutSize) * item.items.count);
-                const trayItem = item.items.itemAt(index);
-                if (trayItem) {
-                    popouts.currentName = `traymenu${index}`;
+                // Slots differ in size once shell icons sit in the tray, so find the slot under the pointer.
+                const lay = item.activeLayout;
+                const mapped = mapToItem(lay, isVertical ? width / 2 : coord, isVertical ? coord : height / 2);
+                const trayItem = lay.childAt(isVertical ? lay.width / 2 : mapped.x, isVertical ? mapped.y : lay.height / 2);
+                if (trayItem?.popoutName) {
+                    popouts.currentName = trayItem.popoutName;
                     popouts.currentCenter = Qt.binding(() => isVertical ? trayItem.mapToItem(root, 0, trayItem.implicitHeight / 2).y : trayItem.mapToItem(root, trayItem.implicitWidth / 2, 0).x);
                     popouts.hasCurrent = true;
-                } else {
+                } else if (isVertical ? (mapped.y < 0 || mapped.y > lay.height) : (mapped.x < 0 || mapped.x > lay.width)) {
+                    // Outside the slots; in the gap between two slots the open popout stays, so it doesn't flicker.
                     popouts.hasCurrent = false;
                 }
             } else {
                 popouts.hasCurrent = false;
                 item.expanded = true;
             }
+        } else {
+            // Other entries (workspaces, clock…) have no popout.
+            popouts.hasCurrent = false;
         }
     }
 

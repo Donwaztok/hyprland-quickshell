@@ -166,6 +166,16 @@ Scope {
         function open(): void {
             Visibilities.openControlCenter("");
         }
+
+        function openPane(pane: string): void {
+            Visibilities.openControlCenter(pane);
+        }
+
+        function close(): void {
+            for (const p of Visibilities.popoutsByMonitor.values())
+                if (p.isDetached)
+                    p.close();
+        }
     }
 
     IpcHandler {

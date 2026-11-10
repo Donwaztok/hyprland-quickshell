@@ -3,6 +3,7 @@ Searcher 1.0 Searcher.qml
 singleton Paths 1.0 Paths.qml
 singleton CUtils 1.0 CUtils.qml
 singleton Icons 1.0 Icons.qml
+singleton BarIcons 1.0 BarIcons.qml
 singleton Strings 1.0 Strings.qml
 singleton SysInfo 1.0 SysInfo.qml
 singleton NetworkConnection 1.0 NetworkConnection.qml

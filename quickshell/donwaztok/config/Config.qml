@@ -39,354 +39,6 @@ Singleton {
         saveTimer.restart();
     }
 
-    // Helper function to serialize the config object
-    function serializeConfig(): var {
-        return {
-            appearance: serializeAppearance(),
-            general: serializeGeneral(),
-            background: serializeBackground(),
-            bar: serializeBar(),
-            border: serializeBorder(),
-            dashboard: serializeDashboard(),
-            controlCenter: serializeControlCenter(),
-            launcher: serializeLauncher(),
-            notifs: serializeNotifs(),
-            session: serializeSession(),
-            winfo: serializeWinfo(),
-            lock: serializeLock(),
-            utilities: serializeUtilities(),
-            sidebar: serializeSidebar(),
-            services: serializeServices(),
-            paths: serializePaths()
-        };
-    }
-
-    function cloneRealList(lst) {
-        const o = [];
-        if (!lst)
-            return o;
-        for (let i = 0; i < lst.length; ++i)
-            o.push(lst[i]);
-        return o;
-    }
-
-    function serializeAppearance(): var {
-        return {
-            themeMode: appearance.themeMode || "dark",
-            rounding: {
-                scale: appearance.rounding.scale
-            },
-            spacing: {
-                scale: appearance.spacing.scale
-            },
-            padding: {
-                scale: appearance.padding.scale
-            },
-            font: {
-                family: {
-                    sans: appearance.font.family.sans,
-                    mono: appearance.font.family.mono,
-                    material: appearance.font.family.material,
-                    clock: appearance.font.family.clock
-                },
-                size: {
-                    scale: appearance.font.size.scale
-                }
-            },
-            anim: {
-                mediaGifSpeedAdjustment: appearance.anim.mediaGifSpeedAdjustment ?? 300,
-                durations: {
-                    scale: appearance.anim.durations.scale
-                },
-                curves: {
-                    emphasized: cloneRealList(appearance.anim.curves.emphasized),
-                    emphasizedAccel: cloneRealList(appearance.anim.curves.emphasizedAccel),
-                    emphasizedDecel: cloneRealList(appearance.anim.curves.emphasizedDecel),
-                    standard: cloneRealList(appearance.anim.curves.standard),
-                    standardAccel: cloneRealList(appearance.anim.curves.standardAccel),
-                    standardDecel: cloneRealList(appearance.anim.curves.standardDecel),
-                    expressiveFastSpatial: cloneRealList(appearance.anim.curves.expressiveFastSpatial),
-                    expressiveDefaultSpatial: cloneRealList(appearance.anim.curves.expressiveDefaultSpatial),
-                    expressiveEffects: cloneRealList(appearance.anim.curves.expressiveEffects)
-                }
-            }
-        };
-    }
-
-    function serializeGeneral(): var {
-        return {
-            excludedScreens: general.excludedScreens,
-            apps: {
-                terminal: general.apps.terminal,
-                audio: general.apps.audio,
-                playback: general.apps.playback,
-                viewer: general.apps.viewer,
-                mail: general.apps.mail,
-                explorer: general.apps.explorer,
-                editor: general.apps.editor
-            },
-            idle: {
-                lockBeforeSleep: general.idle.lockBeforeSleep,
-                inhibitWhenAudio: general.idle.inhibitWhenAudio,
-                timeouts: general.idle.timeouts
-            },
-            battery: {
-                warnLevels: general.battery.warnLevels,
-                criticalLevel: general.battery.criticalLevel
-            }
-        };
-    }
-
-    function serializeBackground(): var {
-        return {
-            enabled: background.enabled,
-            wallpaperEnabled: background.wallpaperEnabled,
-            desktopClock: {
-                enabled: background.desktopClock.enabled,
-                scale: background.desktopClock.scale,
-                position: background.desktopClock.position,
-                invertColors: background.desktopClock.invertColors,
-                background: {
-                    enabled: background.desktopClock.background.enabled,
-                    opacity: background.desktopClock.background.opacity,
-                    blur: background.desktopClock.background.blur
-                },
-                shadow: {
-                    enabled: background.desktopClock.shadow.enabled,
-                    opacity: background.desktopClock.shadow.opacity,
-                    blur: background.desktopClock.shadow.blur
-                }
-            }
-        };
-    }
-
-    function serializeBar(): var {
-        return {
-            position: bar.position,
-            persistent: bar.persistent,
-            showOnHover: bar.showOnHover,
-            borderless: bar.borderless,
-            dragThreshold: bar.dragThreshold,
-            popouts: {
-                tray: bar.popouts.tray,
-                statusIcons: bar.popouts.statusIcons
-            },
-            tray: {
-                background: bar.tray.background,
-                recolour: bar.tray.recolour,
-                compact: bar.tray.compact,
-                iconSubs: bar.tray.iconSubs,
-                hiddenIcons: bar.tray.hiddenIcons
-            },
-            status: {
-                showAudio: bar.status.showAudio,
-                showMicrophone: bar.status.showMicrophone,
-                showKbLayout: bar.status.showKbLayout,
-                showNetwork: bar.status.showNetwork,
-                showBluetooth: bar.status.showBluetooth,
-                showBattery: bar.status.showBattery,
-                showLockStatus: bar.status.showLockStatus
-            },
-            clock: {
-                showIcon: bar.clock.showIcon
-            },
-            sizes: {
-                thickness: bar.sizes.thickness,
-                innerWidth: bar.sizes.innerWidth,
-                windowPreviewSize: bar.sizes.windowPreviewSize,
-                trayMenuWidth: bar.sizes.trayMenuWidth,
-                batteryWidth: bar.sizes.batteryWidth,
-                networkWidth: bar.sizes.networkWidth,
-                kbLayoutWidth: bar.sizes.kbLayoutWidth
-            },
-            workspaces: {
-                style: bar.workspaces.style,
-                shown: bar.workspaces.shown,
-                showAppIcons: bar.workspaces.showAppIcons,
-                alwaysShowNumbers: bar.workspaces.alwaysShowNumbers,
-                showNumberDelay: bar.workspaces.showNumberDelay,
-                numberMap: bar.workspaces.numberMap,
-                useNerdFont: bar.workspaces.useNerdFont,
-                classicSlotWidth: bar.workspaces.classicSlotWidth,
-                workspaceButtonWidth: bar.workspaces.workspaceButtonWidth,
-                activeSlotWidth: bar.workspaces.activeSlotWidth,
-                dashWidthFactor: bar.workspaces.dashWidthFactor,
-                dashMargin: bar.workspaces.dashMargin,
-                indicatorSize: bar.workspaces.indicatorSize,
-                dotSize: bar.workspaces.dotSize,
-                pillHeight: bar.workspaces.pillHeight,
-                superKey: {
-                    showNumbers: bar.workspaces.superKey.showNumbers,
-                    delayMs: bar.workspaces.superKey.delayMs
-                }
-            },
-            entries: bar.entries,
-            excludedScreens: bar.excludedScreens
-        };
-    }
-
-    function serializeBorder(): var {
-        return {
-            thickness: border.thickness,
-            rounding: border.rounding
-        };
-    }
-
-    function serializeDashboard(): var {
-        return {
-            enabled: dashboard.enabled,
-            showOnHover: dashboard.showOnHover,
-            position: dashboard.position,
-            mediaUpdateInterval: dashboard.mediaUpdateInterval,
-            resourceUpdateInterval: dashboard.resourceUpdateInterval,
-            dragThreshold: dashboard.dragThreshold,
-            showDashboard: dashboard.showDashboard,
-            showMedia: dashboard.showMedia,
-            showPerformance: dashboard.showPerformance,
-            showWeather: dashboard.showWeather,
-            performance: {
-                showBattery: dashboard.performance.showBattery,
-                showGpu: dashboard.performance.showGpu,
-                showCpu: dashboard.performance.showCpu,
-                showMemory: dashboard.performance.showMemory,
-                showStorage: dashboard.performance.showStorage,
-                showNetwork: dashboard.performance.showNetwork
-            }
-        };
-    }
-
-    function serializeControlCenter(): var {
-        return {};
-    }
-
-    function serializeLauncher(): var {
-        return {
-            enabled: launcher.enabled,
-            maxShown: launcher.maxShown,
-            maxWallpapers: launcher.maxWallpapers,
-            clipboardMaxShown: launcher.clipboardMaxShown,
-            clipboardMaxHeightRatio: launcher.clipboardMaxHeightRatio,
-            actionPrefix: launcher.actionPrefix,
-            clipboardPrefix: launcher.clipboardPrefix,
-            pendingOpenPrefix: launcher.pendingOpenPrefix,
-            enableDangerousActions: launcher.enableDangerousActions,
-            dragThreshold: launcher.dragThreshold,
-            vimKeybinds: launcher.vimKeybinds,
-            cardOpacity: launcher.cardOpacity,
-            verticalAnchor: launcher.verticalAnchor,
-            favouriteApps: launcher.favouriteApps,
-            hiddenApps: launcher.hiddenApps,
-            sizes: {
-                itemWidth: launcher.sizes.itemWidth,
-                itemHeight: launcher.sizes.itemHeight,
-                searchBarHeight: launcher.sizes.searchBarHeight,
-                cardRadius: launcher.sizes.cardRadius,
-                wallpaperWidth: launcher.sizes.wallpaperWidth,
-                wallpaperHeight: launcher.sizes.wallpaperHeight,
-                clipboardImagePreviewHeight: launcher.sizes.clipboardImagePreviewHeight
-            },
-            actions: launcher.actions
-        };
-    }
-
-    function serializeNotifs(): var {
-        return {
-            expire: notifs.expire,
-            defaultExpireTimeout: notifs.defaultExpireTimeout,
-            clearThreshold: notifs.clearThreshold,
-            expandThreshold: notifs.expandThreshold,
-            actionOnClick: notifs.actionOnClick,
-            groupPreviewNum: notifs.groupPreviewNum
-        };
-    }
-
-    function serializeSession(): var {
-        return {
-            enabled: session.enabled,
-            dragThreshold: session.dragThreshold,
-            vimKeybinds: session.vimKeybinds,
-            icons: {
-                logout: session.icons.logout,
-                shutdown: session.icons.shutdown,
-                hibernate: session.icons.hibernate,
-                reboot: session.icons.reboot
-            },
-            commands: {
-                logout: session.commands.logout,
-                shutdown: session.commands.shutdown,
-                hibernate: session.commands.hibernate,
-                reboot: session.commands.reboot
-            }
-        };
-    }
-
-    function serializeWinfo(): var {
-        return {};
-    }
-
-    function serializeLock(): var {
-        return {
-            recolourLogo: lock.recolourLogo,
-            enableFprint: lock.enableFprint,
-            maxFprintTries: lock.maxFprintTries,
-            hideNotifs: lock.hideNotifs
-        };
-    }
-
-    function serializeUtilities(): var {
-        return {
-            enabled: utilities.enabled,
-            maxToasts: utilities.maxToasts,
-            toasts: {
-                configLoaded: utilities.toasts.configLoaded,
-                chargingChanged: utilities.toasts.chargingChanged,
-                dndChanged: utilities.toasts.dndChanged,
-                audioOutputChanged: utilities.toasts.audioOutputChanged,
-                audioInputChanged: utilities.toasts.audioInputChanged,
-                capsLockChanged: utilities.toasts.capsLockChanged,
-                numLockChanged: utilities.toasts.numLockChanged,
-                kbLayoutChanged: utilities.toasts.kbLayoutChanged,
-                vpnChanged: utilities.toasts.vpnChanged,
-                nowPlaying: utilities.toasts.nowPlaying
-            },
-            vpn: {
-                enabled: utilities.vpn.enabled,
-                provider: utilities.vpn.provider
-            },
-            quickToggles: utilities.quickToggles
-        };
-    }
-
-    function serializeSidebar(): var {
-        return {
-            enabled: sidebar.enabled,
-            dragThreshold: sidebar.dragThreshold
-        };
-    }
-
-    function serializeServices(): var {
-        return {
-            weatherLocation: services.weatherLocation,
-            useFahrenheit: services.useFahrenheit,
-            useFahrenheitPerformance: services.useFahrenheitPerformance,
-            useTwelveHourClock: services.useTwelveHourClock,
-            gpuType: services.gpuType,
-            audioIncrement: services.audioIncrement,
-            brightnessIncrement: services.brightnessIncrement,
-            maxVolume: services.maxVolume,
-            wallpaperSetCommand: services.wallpaperSetCommand,
-            defaultPlayer: services.defaultPlayer,
-            playerAliases: services.playerAliases
-        };
-    }
-
-    function serializePaths(): var {
-        return {
-            wallpaperDir: paths.wallpaperDir,
-            mediaGif: paths.mediaGif
-        };
-    }
-
     Timer {
         id: saveTimer
 
@@ -400,12 +52,61 @@ Singleton {
         }
     }
 
+    // One-time move from bar.status.show* / status.drives / tray.hiddenIcons to bar.icons. Runs only while
+    // all three lists are empty; the shell icons always sit in one of them afterwards. Reads the raw file,
+    // since the old keys are no longer declared (and so no longer written back).
+    function migrateBarIcons(text: string): void {
+        const icons = bar.icons;
+        if (icons.status.length || icons.tray.length || icons.hidden.length)
+            return;
+        const old = JSON.parse(text)?.bar ?? {};
+        const st = old.status ?? {};
+        // Defaults of the old keys, for a file that never set them.
+        const s = {
+            showAudio: st.showAudio ?? false,
+            showMicrophone: st.showMicrophone ?? false,
+            showKbLayout: st.showKbLayout ?? false,
+            showNetwork: st.showNetwork ?? true,
+            showBluetooth: st.showBluetooth ?? true,
+            drives: st.drives ?? "tray",
+            showBattery: st.showBattery ?? true,
+            showLockStatus: st.showLockStatus ?? false
+        };
+        const out = {
+            status: [],
+            tray: [],
+            hidden: []
+        };
+        // Same order as the status area before the move.
+        const legacy = [["lockstatus", s.showLockStatus], ["audio", s.showAudio], ["microphone", s.showMicrophone], ["kblayout", s.showKbLayout], ["drives", null], ["network", s.showNetwork], ["bluetooth", s.showBluetooth], ["battery", s.showBattery]];
+        for (const [id, on] of legacy) {
+            const group = id === "drives" ? (s.drives in out ? s.drives : "tray") : (on ? "status" : "hidden");
+            out[group].push(id);
+        }
+        for (const app of old.tray?.hiddenIcons ?? [])
+            out.hidden.push(`app:${app}`);
+        icons.status = out.status;
+        icons.tray = out.tray;
+        icons.hidden = out.hidden;
+        barIconsBackup.running = true;
+    }
+
+    // Keeps the pre-migration file (it is not versioned), then saves the new shape.
+    Process {
+        id: barIconsBackup
+
+        command: ["cp", "-n", DonwaztokConfigStore.filePath, `${DonwaztokConfigStore.filePath}.bak-bar-icons`]
+        onExited: root.save()
+    }
+
     Connections {
         target: DonwaztokConfigStore.configFileView
 
         function onLoaded() {
             try {
-                JSON.parse(target.text());
+                const text = target.text();
+                JSON.parse(text);
+                root.migrateBarIcons(text);
                 const elapsed = DonwaztokConfigStore.configLoadElapsed.elapsedMs();
                 const ad = DonwaztokConfigStore.topLevel;
                 if (ad.utilities.toasts.configLoaded && !DonwaztokConfigStore.topLevelWriteCooldown && elapsed > 0) {
