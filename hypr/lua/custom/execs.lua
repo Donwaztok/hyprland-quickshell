@@ -7,8 +7,8 @@ hl.on("hyprland.start", function()
     -- Apps
     -- hl.exec_cmd("gtk-launch vesktop")
     hl.exec_cmd("gtk-launch zen")
-    hl.exec_cmd("gtk-launch com.rtosta.zapzap.nogpu")
-    -- hl.exec_cmd("QT_QPA_PLATFORM=wayland __GLX_VENDOR_LIBRARY_NAME=mesa zapzap --disable-gpu")
+    -- WhatsApp as a Zen web app; waits so Zen is up and the second launch reuses its process
+    hl.exec_cmd("sleep 3; gtk-launch zen.webapp-eb053312-1790-456f-be26-fae75391f1a0")
     hl.exec_cmd("gtk-launch org.mozilla.Thunderbird")
 
     -- Put windows back where the saved layout has them (no saved layout: does nothing)
