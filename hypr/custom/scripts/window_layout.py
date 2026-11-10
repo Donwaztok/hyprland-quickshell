@@ -108,14 +108,16 @@ def zen_session_windows():
 
 def zen_spaces(clients):
     """address -> Zen Space. The Space survives tab changes and restarts; the title does neither."""
-    zen = [c for c in clients if c["class"] == "zen"]
+    # Creation order, which is also the session's window order: it decides whenever titles can't.
+    zen = sorted((c for c in clients if c["class"] == "zen"), key=lambda c: int(c["stableId"], 16))
     if not zen:
         return {}
 
     def score(client, session_window):
         title = client["title"].removesuffix(ZEN_TITLE_SUFFIX)
         best_tab = max((ratio(title, t) for t in session_window["titles"]), default=0)
-        return best_tab + ratio(title, session_window["selected"])
+        total = best_tab + ratio(title, session_window["selected"])
+        return total if total >= 1 else 0  # "Zen Browser" while restoring: a low ratio is noise, not a match
 
     return {c["address"]: s["space"] for c, s in pair(zen, zen_session_windows(), score)}
 
@@ -195,31 +197,29 @@ def launch_missing(slots, clients):
 
 
 def wait_for_windows(slots, boot):
-    """Boot: apps are still starting, so wait for them and for their titles to stop changing."""
+    """Boot: apps are still starting, so wait until every saved window exists."""
     start = time.monotonic()
-    launch_at = start + (15 if boot else 0)  # gives the autostart apps time to appear first
+    launch_at = start + (5 if boot else 0)  # autostart apps are running by then, so launch_missing skips them
     launched = attempted = False
-    last, stable_since = None, start
     while True:
-        clients = windows()
         now = time.monotonic()
-        state = sorted((c["address"], c["title"]) for c in clients)
-        if state != last:
-            last, stable_since = state, now
-        if not attempted and now >= launch_at:
-            attempted = True
-            launched = launch_missing(slots, clients)
-        have = {}
-        for c in clients:
-            have[c["class"]] = have.get(c["class"], 0) + 1
-        for s in slots:
-            have[s["class"]] = have.get(s["class"], 0) - 1
-        complete = all(n >= 0 for n in have.values())
-        settled = now - stable_since >= 5 or not (boot or launched)
-        if complete and settled and attempted:
-            return
-        if attempted and not boot and not launched:
-            return
+        try:
+            clients = windows()
+        except (subprocess.CalledProcessError, ValueError):  # compositor not answering yet
+            clients = None
+        if clients is not None:
+            if not attempted and now >= launch_at:
+                attempted = True
+                launched = launch_missing(slots, clients)
+            have = {}
+            for c in clients:
+                have[c["class"]] = have.get(c["class"], 0) + 1
+            for s in slots:
+                have[s["class"]] = have.get(s["class"], 0) - 1
+            if all(n >= 0 for n in have.values()):
+                return
+            if attempted and not boot and not launched:
+                return
         if now - start >= (60 if boot else 30):
             return
         time.sleep(1)
@@ -332,8 +332,7 @@ def restore(boot):
         return
     wait_for_windows(slots, boot)
     placed = apply(slots)
-    if not boot:
-        notify(f"Layout restored: {placed}/{len(slots)} windows")
+    notify(f"Layout restored: {placed}/{len(slots)} windows")
 
 
 if __name__ == "__main__":
