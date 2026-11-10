@@ -127,8 +127,8 @@ across surfaces or needs a plan: `/opsx:propose` → `/opsx:apply` → `ui-revie
 - Logitech `hidpp_battery_N` paths in UPower are not stable across reconnects;
   key per-device state by normalized name, not by `nativePath`.
 - Reloading the shell resets in-memory state in singletons.
-- Hot reload does not pick up a new inline `component` in a file that is already loaded: the log says
-  "X is not a type". Restart the shell (`qs kill -c donwaztok`, then start it again as in
+- Hot reload does not pick up a new inline `component` in a file that is already loaded (the log says
+  "X is not a type"), nor edits to a `.pragma library` `.js` file (the old code keeps running). Restart the shell (`qs kill -c donwaztok`, then start it again as in
   `hypr/lua/hyprland/execs.lua`). `config.json` keys that were removed from the file also keep their old
   in-memory values until a restart.
 - QML singletons are created on first reference: an unreferenced service never runs, and
