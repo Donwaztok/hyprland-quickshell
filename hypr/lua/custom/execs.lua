@@ -1,9 +1,6 @@
 -- Custom autostart (runs once per Hyprland session)
 
 hl.on("hyprland.start", function()
-    -- Tray: Bluetooth (network lives in the shell)
-    hl.exec_cmd("blueman-applet")
-
     -- Apps
     -- hl.exec_cmd("gtk-launch vesktop")
     hl.exec_cmd("gtk-launch zen")

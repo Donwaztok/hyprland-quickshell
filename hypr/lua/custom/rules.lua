@@ -55,7 +55,6 @@ local floatOpacityClasses = {
     "^(qt6ct)$",
     "^(kvantummanager)$",
     "^(org.pulseaudio.pavucontrol)$",
-    "^(blueman-manager)$",
 }
 
 for i, spec in ipairs(opacityRules) do

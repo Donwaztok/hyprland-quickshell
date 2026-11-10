@@ -45,8 +45,7 @@ ttf-twemoji                       # Twitter/Unicode emoji font
 hyprland                          # Wayland compositor
 wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
 xorg-setxkbmap                    # setxkbmap — XWayland / intl sync (old dotfiles + current exec-once)
-libayatana-appindicator           # GTK StatusNotifier tray (blueman, Epic Games launcher)
-blueman                           # blueman-applet (bar tray; donwaztok status bluetooth off)
+libayatana-appindicator           # GTK StatusNotifier tray (Epic Games launcher)
 
 # --------------------------------------------------- // GNOME / system
 gnome-keyring                     # password and key storage
@@ -100,7 +99,6 @@ cursor-bin                        # Cursor IDE
 eog                               # Eye of GNOME (image viewer)
 kitty                             # GPU-accelerated terminal
 thunderbird                       # email client
-zapzap                            # WhatsApp client
 zen-browser-bin                   # privacy-focused browser (Firefox fork)
 
 # --------------------------------------------------- // Shell

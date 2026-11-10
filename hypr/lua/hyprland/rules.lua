@@ -62,7 +62,7 @@ hl.window_rule({
 hl.window_rule({
     name = "small-utilities",
     match = {
-        class = "^(blueberry\\.py|blueman-manager|guifetch|pavucontrol|org.pulseaudio.pavucontrol|nm-connection-editor)$",
+        class = "^(blueberry\\.py|guifetch|pavucontrol|org.pulseaudio.pavucontrol|nm-connection-editor)$",
     },
     float = true,
     center = true,
