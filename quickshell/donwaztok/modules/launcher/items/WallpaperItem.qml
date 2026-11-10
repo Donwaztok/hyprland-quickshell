@@ -67,6 +67,8 @@ Item {
             path: root.modelData.path
             smooth: !root.PathView.view.moving
             cache: true
+            // Decode at tile size: a full-resolution wallpaper per tile costs tens of MB.
+            sourceSize: Qt.size(width, height)
 
             anchors.fill: parent
         }
