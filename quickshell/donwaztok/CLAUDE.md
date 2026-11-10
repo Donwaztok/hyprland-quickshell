@@ -23,8 +23,14 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
   window) and `toggle`; `mediaViewer` `open <path>`/`close`. Polkit: `pkexec true` in the
   background, cancel with `pkill -x pkexec`.
   Clicks: `ydotool mousemove --absolute` takes half the global coordinates here; check with
-  `hyprctl cursorpos` before `ydotool click 0xC0`. Never type into a window with `wtype` unless
-  focus is certain.
+  `hyprctl cursorpos` before `ydotool click 0xC0`. An absolute move passes through (0,0), the top of
+  the bar, which collapses the tray and closes drawers on the way: to hover inside them, use relative
+  1 px steps (`ydotool mousemove -x 0 -y 1`) checked against `hyprctl cursorpos`.
+  Keys: focus follows the mouse, so a key can land in the terminal running the agent (an Escape there
+  interrupts it). Run `scripts/dev/focus.sh "<title prefix>"` and send keys only if it succeeds.
+- `scripts/dev/qslog.sh mark` before an edit and `qslog.sh new` after the reload show only the new log
+  lines. Drawers open with `qs ipc -c donwaztok call drawers open <launcher|utilities|…>`.
+- `pkill -f <pattern>` also matches the shell running it; write the pattern as `[u]diskie` so it doesn't.
 - The shell is the only polkit agent; do not start another one (`hypr/lua/hyprland/execs.lua`),
   or the shell's agent fails to register ("An authentication agent already exists").
 - The Rust file-manager helper is the only compiled piece:
