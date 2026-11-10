@@ -13,7 +13,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 
-// Bluetooth pairing agent (replaces blueman-applet's): scripts/bluetooth/agent.py relays
+// Bluetooth pairing agent (replaces blueman-applet's): bin/donwaztok-bt-agent relays
 // BlueZ's requests here and this dialog answers them. Same look as the polkit dialog.
 Scope {
     id: root
@@ -36,7 +36,7 @@ Scope {
 
         running: !!Bluetooth.defaultAdapter
         stdinEnabled: true
-        command: ["python3", Quickshell.shellPath("scripts/bluetooth/agent.py")]
+        command: [Quickshell.shellPath("bin/donwaztok-bt-agent")]
         stderr: SplitParser {
             onRead: line => console.warn("[bluetooth agent]", line)
         }

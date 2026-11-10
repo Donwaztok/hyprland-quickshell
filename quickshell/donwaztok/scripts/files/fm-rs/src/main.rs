@@ -1,5 +1,7 @@
 //! Donwaztok file manager CLI — Rust port of fm.py.
 
+mod audio;
+mod batteries;
 mod compress;
 mod entry;
 mod extract;
@@ -112,6 +114,12 @@ enum Commands {
     Watch {
         path: String,
     },
+    /// USB devices whose battery UPower does not know (services/DeviceBatteries.qml)
+    #[command(name = "device-batteries")]
+    DeviceBatteries,
+    /// Sound cards, their profiles and monitor sources (services/shell/Audio.qml)
+    #[command(name = "audio-cards")]
+    AudioCards,
 }
 
 fn main() {
@@ -218,5 +226,7 @@ fn run(cli: Cli) {
             ops::do_info(&paths)
         }
         Commands::Watch { path } => watch::watch_dir(&path),
+        Commands::DeviceBatteries => batteries::list(),
+        Commands::AudioCards => audio::list(),
     }
 }

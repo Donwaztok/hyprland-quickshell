@@ -6,7 +6,7 @@ After=graphical-session.target
 [Service]
 Type=dbus
 BusName=org.freedesktop.impl.portal.desktop.donwaztok
-ExecStart=%h/.config/quickshell/donwaztok/scripts/portal/xdg-desktop-portal-donwaztok.py
+ExecStart=%h/.config/quickshell/donwaztok/bin/donwaztok-portal
 Restart=on-failure
 
 [Install]

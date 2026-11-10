@@ -15,8 +15,6 @@ pragma ComponentBehavior: Bound
 Singleton {
     id: root
 
-    property string thumbgenScriptPath: `${FileUtils.trimFileProtocol(Directories.scriptPath)}/thumbnails/thumbgen-venv.sh`
-    property string generateThumbnailsMagickScriptPath: `${FileUtils.trimFileProtocol(Directories.scriptPath)}/thumbnails/generate-thumbnails-magick.sh`
     property alias directory: folderModel.folder
     readonly property string effectiveDirectory: FileUtils.trimFileProtocol(folderModel.folder.toString())
     property url defaultFolder: Qt.resolvedUrl(`${Directories.pictures}/Wallpapers`)
@@ -26,12 +24,8 @@ Singleton {
         "jpg", "jpeg", "png", "webp", "avif", "bmp", "svg"
     ]
     property list<string> wallpapers: [] // List of absolute file paths (without file://)
-    readonly property bool thumbnailGenerationRunning: thumbgenProc.running
-    property real thumbnailGenerationProgress: 0
 
     signal changed()
-    signal thumbnailGenerated(directory: string)
-    signal thumbnailGeneratedFile(filePath: string)
 
     function load () {} // For forcing initialization
 
@@ -141,44 +135,6 @@ Singleton {
                 const path = folderModel.get(i, "filePath") || FileUtils.trimFileProtocol(folderModel.get(i, "fileURL"))
                 if (path && path.length) root.wallpapers.push(path)
             }
-        }
-    }
-
-    // Thumbnail generation
-    function generateThumbnail(size: string) {
-        if (!["normal", "large", "x-large", "xx-large"].includes(size)) throw new Error("Invalid thumbnail size");
-        thumbgenProc.directory = root.directory
-        thumbgenProc.running = false
-        thumbgenProc.command = [
-            "bash", "-c",
-            `${thumbgenScriptPath} --size ${size} --machine_progress -d ${FileUtils.trimFileProtocol(root.directory)} || ${generateThumbnailsMagickScriptPath} --size ${size} -d ${FileUtils.trimFileProtocol(root.directory)}`,
-        ]
-        // console.log("[Wallpapers] Updating thumbnails with command ", thumbgenProc.command.join(" "))
-        root.thumbnailGenerationProgress = 0
-        thumbgenProc.running = true
-    }
-    Process {
-        id: thumbgenProc
-        property string directory
-        stdout: SplitParser {
-            onRead: data => {
-                // print("thumb gen proc:", data)
-                let match = data.match(/PROGRESS (\d+)\/(\d+)/)
-                if (match) {
-                    const completed = parseInt(match[1])
-                    const total = parseInt(match[2])
-                    root.thumbnailGenerationProgress = completed / total
-                }
-                match = data.match(/FILE (.+)/)
-                if (match) {
-                    const filePath = match[1]
-                    root.thumbnailGeneratedFile(filePath)
-                }
-            }
-        }
-        onExited: (exitCode, exitStatus) => {
-            // print("[Wallpapers] Thumbnail generation completed with exit code", exitCode)
-            root.thumbnailGenerated(thumbgenProc.directory)
         }
     }
 

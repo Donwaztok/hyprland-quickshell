@@ -47,8 +47,6 @@ wl-clipboard                      # Wayland clipboard (wl-copy/wl-paste)
 xorg-setxkbmap                    # setxkbmap — XWayland / intl sync (old dotfiles + current exec-once)
 libayatana-appindicator           # GTK StatusNotifier tray (blueman, Epic Games launcher)
 blueman                           # blueman-applet (bar tray; donwaztok status bluetooth off)
-python-dbus                       # Bluetooth pairing agent (quickshell/donwaztok/scripts/bluetooth/agent.py)
-python-gobject                    # GLib main loop for the Bluetooth pairing agent
 
 # --------------------------------------------------- // GNOME / system
 gnome-keyring                     # password and key storage

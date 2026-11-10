@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build Donwaztok fm helper (Rust) → quickshell/donwaztok/bin/fm
+# Build the Donwaztok Rust helpers → quickshell/donwaztok/bin/
+# (fm, plus the donwaztok-portal and donwaztok-bt-agent daemons from daemons/)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 SRC="$(cd "$(dirname "$0")" && pwd)"
@@ -14,17 +15,21 @@ fi
 echo "[fm] Building release…"
 (
   cd "$SRC"
-  cargo build --release
+  cargo build --release --workspace
 )
 # Prefer crate-local target; fall back to CARGO_TARGET_DIR
-SRC_BIN="$SRC/target/release/fm"
-if [ ! -x "$SRC_BIN" ] && [ -n "${CARGO_TARGET_DIR:-}" ]; then
-  SRC_BIN="$CARGO_TARGET_DIR/release/fm"
+OUT="$SRC/target/release"
+if [ ! -x "$OUT/fm" ] && [ -n "${CARGO_TARGET_DIR:-}" ]; then
+  OUT="$CARGO_TARGET_DIR/release"
 fi
-if [ ! -x "$SRC_BIN" ]; then
-  echo "[fm] Build succeeded but binary not found at $SRC_BIN" >&2
-  exit 1
-fi
-cp -f "$SRC_BIN" "$BIN_DIR/fm"
-chmod +x "$BIN_DIR/fm"
-echo "[fm] Installed → $BIN_DIR/fm"
+for bin in fm donwaztok-portal donwaztok-bt-agent; do
+  if [ ! -x "$OUT/$bin" ]; then
+    echo "[fm] Build succeeded but binary not found at $OUT/$bin" >&2
+    exit 1
+  fi
+  # Replace by rename: the running portal/agent keep their old inode instead of crashing.
+  cp -f "$OUT/$bin" "$BIN_DIR/.$bin.new"
+  chmod +x "$BIN_DIR/.$bin.new"
+  mv -f "$BIN_DIR/.$bin.new" "$BIN_DIR/$bin"
+  echo "[fm] Installed → $BIN_DIR/$bin"
+done

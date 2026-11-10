@@ -972,7 +972,7 @@ Singleton {
     Process {
         id: cardsProc
 
-        command: ["python3", Quickshell.shellPath("scripts/audio/list-cards.py")]
+        command: [Quickshell.shellPath("bin/fm"), "audio-cards"]
         environment: ({
                 LANG: "C.UTF-8",
                 LC_ALL: "C.UTF-8"

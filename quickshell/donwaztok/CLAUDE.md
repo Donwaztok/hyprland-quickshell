@@ -33,10 +33,12 @@ Talk to the user in Portuguese (pt-BR). Code, comments, OpenSpec and docs are in
 - `pkill -f <pattern>` also matches the shell running it; write the pattern as `[u]diskie` so it doesn't.
 - The shell is the only polkit agent; do not start another one (`hypr/lua/hyprland/execs.lua`),
   or the shell's agent fails to register ("An authentication agent already exists").
-- The Rust file-manager helper is the only compiled piece:
-  `scripts/files/fm-rs/build.sh` builds it into `bin/fm` (used by
-  `services/shell/FileManagerService.qml`). `bin/` is not versioned: `~/.config/install.sh` builds it.
-  Rebuild by hand after changing `fm-rs/src`.
+- The Rust helpers are the only compiled pieces, one Cargo workspace in `scripts/files/fm-rs`:
+  `bin/fm` (file manager ops, `device-batteries`, `audio-cards`) and, from `fm-rs/daemons`, the
+  long-running `bin/donwaztok-portal` (FileChooser portal, systemd user unit) and
+  `bin/donwaztok-bt-agent` (BlueZ agent, started by `BluetoothAgent.qml`). `fm-rs/build.sh` builds all
+  three; `bin/` is not versioned: `~/.config/install.sh` builds it. Rebuild by hand after changing the
+  Rust sources (`cargo test --workspace` first), then `systemctl --user restart xdg-desktop-portal-donwaztok`.
 - Idle cost check: per-thread CPU of the `qs` process over 20 s (`/proc/<pid>/task/*/stat`)
   and its children (`ps --ppid <pid>`); `strace`/`perf` are not available.
 

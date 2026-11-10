@@ -27,8 +27,5 @@ hl.env("XDG_MENU_PREFIX", "gnome-")
 -- Route GTK file dialogs through xdg-desktop-portal (Donwaztok FileChooser)
 hl.env("GTK_USE_PORTAL", "1")
 
--- Virtual environment
-hl.env("DONWAZTOK_VIRTUAL_ENV", os.getenv("HOME") .. "/.local/state/quickshell/.venv")
-
 -- Terminal
 hl.env("TERMINAL", "kitty -1")

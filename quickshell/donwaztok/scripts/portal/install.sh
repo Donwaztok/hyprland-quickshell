@@ -11,7 +11,10 @@ XDG_PORTAL_CFG="${HOME_DIR}/.config/xdg-desktop-portal"
 
 mkdir -p "$PORTAL_DIR" "$DBUS_DIR" "$SYSTEMD_DIR" "$XDG_PORTAL_CFG"
 
-chmod +x "$ROOT/xdg-desktop-portal-donwaztok.py"
+# The daemon is built with the fm helper (scripts/files/fm-rs/build.sh, run first by ~/.config/install.sh).
+if [ ! -x "$ROOT/../../bin/donwaztok-portal" ]; then
+  bash "$ROOT/../files/fm-rs/build.sh"
+fi
 cp -f "$ROOT/donwaztok.portal" "$PORTAL_DIR/donwaztok.portal"
 cp -f "$ROOT/xdg-desktop-portal-donwaztok.service" "$SYSTEMD_DIR/xdg-desktop-portal-donwaztok.service"
 

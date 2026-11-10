@@ -4,7 +4,8 @@ context: |
   Project: Donwaztok — a Hyprland desktop shell written in QML on Quickshell. It lives in the
   ~/.config dotfiles repo at quickshell/donwaztok (the shell root, `shell.qml`). Single user, single
   machine (two monitors: DP-1 1920x1080 and HDMI-A-1 2560x1080). No build step for QML: Quickshell
-  hot-reloads on save. The only compiled piece is the Rust file-manager helper (scripts/files/fm-rs → bin/fm).
+  hot-reloads on save. The only compiled pieces are the Rust helpers in the scripts/files/fm-rs workspace → bin/ (fm,
+  donwaztok-portal, donwaztok-bt-agent).
 
   Code layout and conventions: see CLAUDE.md. UI and performance rules: docs/UI-PATTERNS.md.
 

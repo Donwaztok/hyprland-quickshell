@@ -250,7 +250,7 @@ Singleton {
 
     Process {
         id: probe
-        command: ["python3", Quickshell.shellPath("scripts/device-batteries.py")]
+        command: [Quickshell.shellPath("bin/fm"), "device-batteries"]
         stdout: StdioCollector {
             waitForEnd: true
             onStreamFinished: {

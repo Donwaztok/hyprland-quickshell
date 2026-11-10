@@ -44,13 +44,10 @@ PanelWindow {
     property color overlayColor: ColorUtils.transparentize(Colours.tPalette.m3scrim, 0.45)
     property color brightText: !Colours.light ? Colours.tPalette.m3onSurface : Colours.tPalette.m3surface
     property color brightSecondary: !Colours.light ? Colours.tPalette.m3secondary : Colours.tPalette.m3onSecondary
-    property color brightTertiary: !Colours.light ? Colours.tPalette.m3tertiary : Qt.lighter(Colours.tPalette.m3primary)
     property color selectionBorderColor: ColorUtils.mix(brightText, brightSecondary, 0.5)
     property color selectionFillColor: ColorUtils.transparentize(Colours.tPalette.m3primary, 0.18)
     property color windowBorderColor: brightSecondary
     property color windowFillColor: ColorUtils.transparentize(windowBorderColor, 0.85)
-    property color imageBorderColor: brightTertiary
-    property color imageFillColor: ColorUtils.transparentize(imageBorderColor, 0.85)
     property color onBorderColor: "#ff000000"
     readonly property var windows: [...HyprlandData.windowList].sort((a, b) => {
         // Bottom → top for painting + hit-test-from-end:
@@ -62,7 +59,6 @@ PanelWindow {
         return bf - af;
     })
     readonly property var layers: HyprlandData.layers
-    readonly property real falsePositivePreventionRatio: 0.5
 
     readonly property HyprlandMonitor hyprlandMonitor: Hyprland.monitorFor(screen)
     readonly property real monitorScale: hyprlandMonitor.scale
@@ -81,7 +77,6 @@ PanelWindow {
     property bool dragging: false
     property list<point> points: []
     property var mouseButton: null
-    property var imageRegions: []
     readonly property list<var> mappedWindowRegions: root.windows
         .filter(w => w.workspace.id === root.activeWorkspaceId)
         .map(window => {
@@ -138,9 +133,7 @@ PanelWindow {
     property bool isCircleSelection: (root.selectionMode === RegionSelection.SelectionMode.Circle)
     property bool enableWindowRegions: Config.options.regionSelector.targetRegions.windows && !isCircleSelection
     property bool enableLayerRegions: Config.options.regionSelector.targetRegions.layers && !isCircleSelection
-    property bool enableContentRegions: Config.options.regionSelector.targetRegions.content
     property real targetRegionOpacity: Config.options.regionSelector.targetRegions.opacity
-    property bool contentRegionOpacity: Config.options.regionSelector.targetRegions.contentRegionOpacity
 
     // Hold Ctrl to pick a whole window. Synced via Keys + mouse modifiers into GlobalStates
     // so both monitors stay in sync (Hyprland must not bind Ctrl in the snip submap).
@@ -202,14 +195,12 @@ PanelWindow {
     }
 
     function updateTargetedRegion(x, y) {
-        // Ctrl = window pick: only windows, never content/layer regions.
+        // Ctrl = window pick: only windows, never layer regions.
         if (root.windowPickMode) {
             root.applyTargetedRegion(root.hitTestRegion(root.mappedWindowRegions, x, y));
             return;
         }
 
-        if (root.applyTargetedRegion(root.hitTestRegion(root.imageRegions, x, y)))
-            return;
         if (root.enableLayerRegions && root.applyTargetedRegion(root.hitTestRegion(root.layerRegions, x, y)))
             return;
         if (root.enableWindowRegions && root.applyTargetedRegion(root.hitTestRegion(root.windowRegions, x, y)))
@@ -230,7 +221,6 @@ PanelWindow {
         screenshotDir: root.screenshotDir
         screenshotPath: root.screenshotPath
         onExited: (exitCode, exitStatus) => {
-            if (root.enableContentRegions) imageDetectionProcess.running = true;
             root.preparationDone = true;
         }
     }
@@ -242,30 +232,6 @@ PanelWindow {
     onVisibleChanged: {
         if (visible)
             captureHost.forceActiveFocus();
-    }
-
-    Process {
-        id: imageDetectionProcess
-        command: ["bash", "-c", `${Directories.scriptPath}/images/find-regions-venv.sh `
-            + `--hyprctl `
-            + `--image '${StringUtils.shellSingleQuoteEscape(root.screenshotPath)}' `
-            + `--max-width ${Math.round(root.screen.width * root.falsePositivePreventionRatio)} `
-            + `--max-height ${Math.round(root.screen.height * root.falsePositivePreventionRatio)} `]
-        stdout: StdioCollector {
-            id: imageDimensionCollector
-            onStreamFinished: {
-                const raw = (imageDimensionCollector.text ?? "").trim();
-                let parsed = [];
-                if (raw.length > 0) {
-                    try {
-                        parsed = JSON.parse(raw);
-                    } catch (e) {
-                        console.warn("[RegionSelection] find-regions stdout is not valid JSON:", raw.slice(0, 200));
-                    }
-                }
-                imageRegions = RegionFunctions.filterImageRegions(parsed, root.windowRegions);
-            }
-        }
     }
 
     function getScreenshotAction() {
@@ -547,28 +513,6 @@ PanelWindow {
                     fillColor: targeted ? root.windowFillColor : "transparent"
                     text: `${modelData.namespace}`
                     radius: Appearance.rounding.windowRounding
-                }
-            }
-
-            // Content regions
-            Repeater {
-                model: ScriptModel {
-                    values: (!root.windowPickMode && root.enableContentRegions) ? root.imageRegions : []
-                }
-                delegate: TargetRegion {
-                    z: 4
-                    required property var modelData
-                    clientDimensions: modelData
-                    targeted: !root.draggedAway &&
-                        (root.targetedRegionX === modelData.at[0]
-                        && root.targetedRegionY === modelData.at[1]
-                        && root.targetedRegionWidth === modelData.size[0]
-                        && root.targetedRegionHeight === modelData.size[1])
-
-                    opacity: root.draggedAway ? 0 : root.contentRegionOpacity
-                    borderColor: root.imageBorderColor
-                    fillColor: targeted ? root.imageFillColor : "transparent"
-                    text: qsTr("Content region")
                 }
             }
 
