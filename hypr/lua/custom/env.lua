@@ -14,3 +14,8 @@
 
 -- Editor
 -- hl.env("EDITOR", "vim")
+
+-- Browser video decoding on the GPU (NVDEC) through libva-nvidia-driver; pairs with Zen's user.js
+hl.env("LIBVA_DRIVER_NAME", "nvidia")
+hl.env("NVD_BACKEND", "direct")
+hl.env("MOZ_DISABLE_RDD_SANDBOX", "1")
