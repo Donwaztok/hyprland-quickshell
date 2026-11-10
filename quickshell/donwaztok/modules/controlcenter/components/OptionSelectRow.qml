@@ -70,9 +70,16 @@ RowLayout {
             anchors.fill: parent
             implicitHeight: 40
             radius: Appearance.rounding.normal
+            activeFocusOnTab: root.interactive
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                    menuPopup.open();
+                    event.accepted = true;
+                }
+            }
             color: !root.interactive ? Colours.tPalette.m3surfaceContainerLow : triggerMa.containsMouse ? Colours.tPalette.m3surfaceContainer : Colours.tPalette.m3surfaceContainerHighest
             border.width: 1
-            border.color: Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.55 : 0.42)
+            border.color: activeFocus ? Colours.palette.m3primary : Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.55 : 0.42)
 
             RowLayout {
                 anchors.fill: parent

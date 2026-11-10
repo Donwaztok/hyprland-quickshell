@@ -19,15 +19,14 @@ DeviceDetails {
     id: root
 
     required property Session session
-    // session.vpn.active is a stale list snapshot: resolve it by name in the live list after every write
+    // session.vpn.active is a stale list snapshot: resolve it by index (names repeat) in the live list
     readonly property var vpnProvider: {
-        const name = root.session.vpn.active?.name;
-        const list = Config.utilities.vpn.provider;
-        const index = list.findIndex(p => (typeof p === "object" ? (p.name || "custom") : String(p)) === name);
-        if (index < 0)
+        const index = root.session.vpn.active?.index ?? -1;
+        const p = Config.utilities.vpn.provider[index];
+        if (p === undefined)
             return null;
-        const p = list[index];
         const isObject = typeof p === "object";
+        const name = isObject ? (p.name || "custom") : String(p);
         return {
             index: index,
             name: name,
@@ -386,6 +385,8 @@ DeviceDetails {
 
                 SectionContainer {
                     ToggleRow {
+                        id: enableToggle
+
                         label: qsTr("Enable this provider")
                         checked: root.providerEnabled
                         toggle.onToggled: {
@@ -413,6 +414,7 @@ DeviceDetails {
 
                             Config.utilities.vpn.provider = providers;
                             Config.save();
+                            enableToggle.checked = Qt.binding(() => root.providerEnabled);
                         }
                     }
 

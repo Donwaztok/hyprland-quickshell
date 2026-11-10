@@ -28,12 +28,20 @@ QQC2.Popup {
 
     signal valueChosen(string value)
 
+    // Room on the chosen side, set before opening; the list shrinks to fit it.
+    property bool openAbove: false
+    property real room: maxListHeight
+    readonly property bool searchShown: showSearch && rows.length >= searchThreshold
+    readonly property real chromeHeight: topPadding + bottomPadding
+        + (searchShown ? searchField.implicitHeight + Appearance.spacing.smaller : 0)
+
     parent: anchor
     modal: true
+    focus: true
     closePolicy: QQC2.Popup.CloseOnEscape | QQC2.Popup.CloseOnPressOutside
 
     x: 0
-    y: anchor.height + 4
+    y: openAbove ? -height - 4 : anchor.height + 4
     width: Math.max(anchor.width, minimumPopupWidth)
     padding: Appearance.padding.smaller
 
@@ -60,6 +68,27 @@ QQC2.Popup {
         return out;
     }
 
+    onAboutToShow: {
+        const top = anchor.mapToItem(null, 0, 0).y;
+        const below = anchor.Window.height - top - anchor.height - 8;
+        const above = top - 8;
+        openAbove = below < maxListHeight + chromeHeight && above > below;
+        room = openAbove ? above : below;
+    }
+
+    function navKey(event) {
+        if (event.key === Qt.Key_Down || event.key === Qt.Key_Up) {
+            const step = event.key === Qt.Key_Down ? 1 : -1;
+            listView.currentIndex = Math.max(0, Math.min(listView.count - 1, listView.currentIndex + step));
+            listView.positionViewAtIndex(listView.currentIndex, ListView.Contain);
+            event.accepted = true;
+        } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && listView.currentItem) {
+            popup.valueChosen(listView.currentItem.modelData.value);
+            popup.close();
+            event.accepted = true;
+        }
+    }
+
     onOpened: {
         searchField.text = "";
         listView.model = filteredRows();
@@ -76,13 +105,19 @@ QQC2.Popup {
         id: col
         spacing: Appearance.spacing.smaller
         width: popup.availableWidth
+        focus: true
+
+        Keys.onPressed: event => popup.navKey(event)
 
         StyledTextField {
             id: searchField
 
-            visible: popup.showSearch && popup.rows.length >= popup.searchThreshold
+            visible: popup.searchShown
             Layout.fillWidth: true
             placeholderText: qsTr("Search…")
+
+            // Typing stays in the field; Up/Down/Enter drive the list.
+            Keys.onPressed: event => popup.navKey(event)
 
             onTextChanged: {
                 listView.model = popup.filteredRows();
@@ -94,7 +129,7 @@ QQC2.Popup {
             id: listClip
 
             Layout.fillWidth: true
-            Layout.preferredHeight: popup.maxListHeight
+            Layout.preferredHeight: Math.max(80, Math.min(popup.maxListHeight, popup.room - popup.chromeHeight))
 
             ListView {
                 id: listView
@@ -105,14 +140,16 @@ QQC2.Popup {
                 spacing: 0
 
                 model: []
+                onModelChanged: currentIndex = 0
 
                 delegate: StyledRect {
                     required property var modelData
+                    required property int index
 
                     width: ListView.view.width
                     implicitHeight: row.implicitHeight + Appearance.padding.normal * 2
                     radius: Appearance.rounding.small
-                    color: ma.containsMouse ? Qt.alpha(Colours.palette.m3onSurface, 0.06) : "transparent"
+                    color: ListView.isCurrentItem ? Qt.alpha(Colours.palette.m3onSurface, 0.06) : "transparent"
 
                     RowLayout {
                         id: row
@@ -146,6 +183,8 @@ QQC2.Popup {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
+                        // Not containsMouse: keyboard scrolling under a resting pointer must not move the row
+                        onPositionChanged: listView.currentIndex = index
                         onClicked: {
                             popup.valueChosen(modelData.value);
                             popup.close();

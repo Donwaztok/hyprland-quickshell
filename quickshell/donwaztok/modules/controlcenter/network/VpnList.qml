@@ -117,10 +117,10 @@ ColumnLayout {
 
                 width: ListView.view ? ListView.view.width : undefined
 
-                color: root.session.vpn.active?.name === modelData.name ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer
+                color: root.session.vpn.active?.index === modelData.index ? Colours.tPalette.m3surfaceContainerHigh : Colours.tPalette.m3surfaceContainer
                 radius: Appearance.rounding.normal
                 border.width: 1
-                border.color: Qt.alpha(Colours.palette.m3outlineVariant, root.session.vpn.active?.name === modelData.name ? 0.55 : 0.34)
+                border.color: Qt.alpha(Colours.palette.m3outlineVariant, root.session.vpn.active?.index === modelData.index ? 0.55 : 0.34)
 
                 StateLayer {
                     function onClicked(): void {
@@ -258,8 +258,13 @@ ColumnLayout {
                         StateLayer {
                             function onClicked(): void {
                                 // Before the write: it rebuilds the model and this delegate's modelData
-                                if (root.session.vpn.active?.name === modelData.name)
+                                const active = root.session.vpn.active;
+                                if (active?.index === modelData.index)
                                     root.session.vpn.active = null;
+                                else if (active && active.index > modelData.index)
+                                    root.session.vpn.active = Object.assign({}, active, {
+                                        index: active.index - 1
+                                    });
                                 const providers = [];
                                 for (let i = 0; i < Config.utilities.vpn.provider.length; i++) {
                                     if (i !== modelData.index) {
