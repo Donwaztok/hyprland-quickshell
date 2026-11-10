@@ -40,11 +40,9 @@ ColumnLayout {
             return parseValueFunction(text);
         }
         // Default parse function
-        if (validator && validator.bottom !== undefined) {
-            // Check if it's an integer validator
-            if (validator.top !== undefined && validator.top === Math.floor(validator.top)) {
-                return parseInt(text);
-            }
+        // Same IntValidator check as formatValue: a DoubleValidator has 'decimals'
+        if (validator && validator.bottom !== undefined && validator.decimals === undefined) {
+            return parseInt(text);
         }
         return parseFloat(text);
     }

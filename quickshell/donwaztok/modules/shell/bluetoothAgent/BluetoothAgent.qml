@@ -50,10 +50,12 @@ Scope {
                 }
                 if (msg.type === "ready")
                     return;
-                if (msg.type === "cancel" || msg.type === "done")
+                if (msg.type === "cancel" || msg.type === "done") {
                     root.request = null;
-                else
+                } else {
+                    root.answer(false, ""); // reject the request this replaces, or BlueZ waits for its timeout
                     root.request = msg;
+                }
             }
         }
     }
@@ -199,6 +201,14 @@ Scope {
 
                             onAccepted: root.answer(true, text)
                             Keys.onEscapePressed: root.answer(false, "")
+
+                            Connections {
+                                target: root
+
+                                function onRequestChanged(): void {
+                                    inputField.text = "";
+                                }
+                            }
                         }
 
                         RowLayout {

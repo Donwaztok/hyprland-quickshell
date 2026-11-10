@@ -1083,6 +1083,12 @@ Singleton {
         objects: [...root.sinks, ...root.sources, ...root.streams]
     }
 
+    // A source only joins `sources` once its `audio` exists, which needs it bound first: track the defaults
+    // directly, or mic mute/volume writes on the default source are ignored.
+    PwObjectTracker {
+        objects: [root.sink, root.source]
+    }
+
     Connections { // Protection against sudden volume changes
         target: root.sink?.audio ?? null
         property bool lastReady: false

@@ -193,6 +193,16 @@ Item {
                                 event.accepted = true;
                             return;
                         }
+                        if (event.key === Qt.Key_Backtab || (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier))) {
+                            list.currentList?.decrementCurrentIndex();
+                            event.accepted = true;
+                            return;
+                        }
+                        if (event.key === Qt.Key_Tab) {
+                            list.currentList?.incrementCurrentIndex();
+                            event.accepted = true;
+                            return;
+                        }
                         if (!Config.launcher.vimKeybinds)
                             return;
 
@@ -204,12 +214,6 @@ Item {
                                 list.currentList?.decrementCurrentIndex();
                                 event.accepted = true;
                             }
-                        } else if (event.key === Qt.Key_Tab) {
-                            list.currentList?.incrementCurrentIndex();
-                            event.accepted = true;
-                        } else if (event.key === Qt.Key_Backtab || (event.key === Qt.Key_Tab && (event.modifiers & Qt.ShiftModifier))) {
-                            list.currentList?.decrementCurrentIndex();
-                            event.accepted = true;
                         }
                     }
 

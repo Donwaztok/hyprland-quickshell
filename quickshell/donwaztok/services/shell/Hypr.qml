@@ -36,6 +36,9 @@ Singleton {
     readonly property alias devices: extras.devices
 
     property bool hadKeyboard
+    // HyprDevices sets the keyboard's lastIpcObject after its lock states, so this is false while the
+    // first `hyprctl devices` result flips them from their defaults (no toast for that).
+    readonly property bool locksKnown: Object.keys(keyboard?.lastIpcObject ?? {}).length > 0
     property string lastSpecialWorkspace: ""
 
     signal configReloaded
@@ -98,7 +101,7 @@ Singleton {
     Component.onCompleted: reloadDynamicConfs()
 
     onCapsLockChanged: {
-        if (!Config.utilities.toasts.capsLockChanged)
+        if (!locksKnown || !Config.utilities.toasts.capsLockChanged)
             return;
 
         if (capsLock)
@@ -108,7 +111,7 @@ Singleton {
     }
 
     onNumLockChanged: {
-        if (!Config.utilities.toasts.numLockChanged)
+        if (!locksKnown || !Config.utilities.toasts.numLockChanged)
             return;
 
         if (numLock)

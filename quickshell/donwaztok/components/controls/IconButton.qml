@@ -24,7 +24,8 @@ StyledRect {
     property alias label: label
     property alias radiusAnim: radiusAnim
 
-    property bool internalChecked
+    // Follows checked, so a toggle whose action fails or is async never shows a state it is not in
+    property bool internalChecked: checked
     property color activeColour: type === IconButton.Filled ? Colours.palette.m3primary : Colours.palette.m3secondary
     property color inactiveColour: {
         if (!toggle && type === IconButton.Filled)
@@ -42,8 +43,6 @@ StyledRect {
 
     signal clicked
 
-    onCheckedChanged: internalChecked = checked
-
     radius: internalChecked ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
     color: type === IconButton.Text ? "transparent" : disabled ? disabledColour : internalChecked ? activeColour : inactiveColour
 
@@ -57,8 +56,6 @@ StyledRect {
         disabled: root.disabled
 
         function onClicked(): void {
-            if (root.toggle)
-                root.internalChecked = !root.internalChecked;
             root.clicked();
         }
     }

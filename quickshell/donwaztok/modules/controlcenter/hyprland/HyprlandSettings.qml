@@ -51,13 +51,12 @@ Item {
     property real scrollFactor: 1
     property int floatSwitchOverrideFocus: 0
 
-    property bool workspaceSwipe: true
     property real masterMfact: 0.55
     property string masterOrientation: "left"
 
     property string fetchHint: ""
 
-    readonly property int _optCount: 31
+    readonly property int _optCount: 30
 
     function refreshFromHyprland() {
         hyprFetchProc.running = true;
@@ -113,12 +112,12 @@ Item {
 
     function applyDropShadow(v) {
         root.dropShadow = v;
-        applyBool("decoration:drop_shadow", v);
+        applyBool("decoration:shadow:enabled", v);
     }
 
     function applyShadowRange(v) {
         root.shadowRange = Math.round(v);
-        applyKeyword("decoration:shadow_range", String(root.shadowRange));
+        applyKeyword("decoration:shadow:range", String(root.shadowRange));
     }
 
     function applyOpacity(option, v) {
@@ -204,11 +203,6 @@ Item {
         applyKeyword("input:float_switch_override_focus", String(root.floatSwitchOverrideFocus));
     }
 
-    function applyWorkspaceSwipe(v) {
-        root.workspaceSwipe = v;
-        applyBool("gestures:workspace_swipe", v);
-    }
-
     function applyMasterMfact(v) {
         root.masterMfact = v;
         applyKeyword("master:mfact", v.toFixed(4));
@@ -227,6 +221,11 @@ Item {
             const j = JSON.parse(t);
             if (j.int !== undefined)
                 return j.int;
+            if (j.bool !== undefined)
+                return j.bool;
+            // gaps come back as "css" ("3 3 3 3"); the panes edit one value for all sides
+            if (j.css !== undefined)
+                return parseInt(j.css, 10);
             if (j.float !== undefined)
                 return j.float;
             if (j.str !== undefined)
@@ -259,7 +258,8 @@ Item {
             root.fetchHint = qsTr("Could not read Hyprland options (is hyprctl available?)");
             return;
         }
-        if (parts.length < root._optCount)
+        // hyprctl prints "no such option" (not JSON) for keys this Hyprland lacks
+        if (parts.some(p => parseOptionJson(p) === null))
             root.fetchHint = qsTr("Some options could not be read; your Hyprland version may not expose every key.");
         else
             root.fetchHint = "";
@@ -359,13 +359,10 @@ Item {
         const fso = a(27);
         if (fso !== null && fso !== undefined)
             root.floatSwitchOverrideFocus = fso;
-        const b28 = parseOptionBool(parts[28]);
-        if (b28 !== null)
-            root.workspaceSwipe = b28;
-        const mf = a(29);
+        const mf = a(28);
         if (typeof mf === "number")
             root.masterMfact = mf;
-        const mo = a(30);
+        const mo = a(29);
         if (typeof mo === "string" && mo.length)
             root.masterOrientation = mo;
     }
@@ -385,8 +382,8 @@ Item {
                 + "hyprctl -j getoption decoration:blur:enabled 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption decoration:blur:size 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption decoration:blur:passes 2>/dev/null; echo __SPLIT__; "
-                + "hyprctl -j getoption decoration:drop_shadow 2>/dev/null; echo __SPLIT__; "
-                + "hyprctl -j getoption decoration:shadow_range 2>/dev/null; echo __SPLIT__; "
+                + "hyprctl -j getoption decoration:shadow:enabled 2>/dev/null; echo __SPLIT__; "
+                + "hyprctl -j getoption decoration:shadow:range 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption decoration:active_opacity 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption decoration:inactive_opacity 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption decoration:dim_special 2>/dev/null; echo __SPLIT__; "
@@ -405,7 +402,6 @@ Item {
                 + "hyprctl -j getoption input:natural_scroll 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption input:scroll_factor 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption input:float_switch_override_focus 2>/dev/null; echo __SPLIT__; "
-                + "hyprctl -j getoption gestures:workspace_swipe 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption master:mfact 2>/dev/null; echo __SPLIT__; "
                 + "hyprctl -j getoption master:orientation 2>/dev/null"
         ]

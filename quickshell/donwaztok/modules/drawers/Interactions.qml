@@ -43,6 +43,13 @@ CustomMouseArea {
         return x >= panelX - Config.border.rounding && x <= panelX + panel.width + Config.border.rounding;
     }
 
+    // Popouts that must survive the pointer leaving: tray submenus and the Wi-Fi password field.
+    function popoutHoldsInput(): bool {
+        if (popouts.currentName === "wirelesspassword")
+            return true;
+        return popouts.currentName.startsWith("traymenu") && (popouts.current?.depth ?? 0) > 1;
+    }
+
     function inLeftPanel(panel: Item, x: real, y: real): bool {
         return x < contentLeft() + panel.x + panel.width && withinPanelHeight(panel, x, y);
     }
@@ -91,7 +98,7 @@ CustomMouseArea {
             if (!utilitiesShortcutActive)
                 visibilities.utilities = false;
 
-            if (!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) {
+            if (!root.popoutHoldsInput()) {
                 popouts.hasCurrent = false;
                 bar.closeTray();
             }
@@ -200,8 +207,9 @@ CustomMouseArea {
         }
 
         if (inBarArea(x, y)) {
-            bar.checkPopout(barCoord(x, y));
-        } else if ((!popouts.currentName.startsWith("traymenu") || (popouts.current?.depth ?? 0) <= 1) && !inLeftPanel(panels.popouts, x, y)) {
+            if (popouts.currentName !== "wirelesspassword")
+                bar.checkPopout(barCoord(x, y));
+        } else if (!root.popoutHoldsInput() && !inLeftPanel(panels.popouts, x, y)) {
             popouts.hasCurrent = false;
             bar.closeTray();
         }

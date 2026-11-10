@@ -94,7 +94,7 @@ Item {
         scale: root.jobVisible ? 1 : 0.86
         transformOrigin: Item.BottomLeft
 
-        property bool expanded: progressHover.hovered && root.progressJobs.length > 1
+        property bool expanded: progressHover.containsMouse && root.progressJobs.length > 1
         readonly property var visibleJobs: {
             const all = root.progressJobs;
             if (progressHost.expanded || all.length <= 1)
@@ -598,10 +598,7 @@ Item {
             opacity: parent.opacity
         }
 
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-        }
+        // No MouseArea here: the pill has no actions, and one swallowed clicks on the list rows beneath it.
 
         Timer {
             interval: Number(info.toast && info.toast.timeout) || 0

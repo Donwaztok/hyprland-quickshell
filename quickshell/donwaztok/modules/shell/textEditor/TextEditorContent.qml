@@ -12,6 +12,7 @@ import QtQuick
 import QtQuick.Layouts
 import "Syntax.js" as Syntax
 import "Markdown.js" as Markdown
+import "JsonFormat.js" as JsonFormat
 
 Item {
     id: root
@@ -26,6 +27,7 @@ Item {
     property bool pendingClose: false
     property bool confirmOpen: false
     property bool saveAsOpen: false
+    property string overwritePath: "" // set while the confirm dialog asks to replace this file
     property bool findOpen: false
     property int findMatchIndex: -1
     property int findMatchCount: 0
@@ -33,6 +35,13 @@ Item {
     property var pendingSaveText: null
     property string highlightedHtml: ""
     property string indentStr: "    "
+    property bool crlf: false // file on disk uses CRLF; TextEdit only holds LF
+    property string encoding: "" // iconv name of a non-UTF-8 file, "" for UTF-8
+    property bool decoding: false
+    // Text right after each block indent (undo) or its undo (redo); any other edit clears both
+    property var indentUndo: []
+    property var indentRedo: []
+    property bool compoundEdit: false
 
     readonly property string language: TextEditorService.languageFor(root.filePath)
     readonly property bool syntaxOn: root.language.length > 0
@@ -134,17 +143,14 @@ Item {
         return root.language === "json" || root.language === "yaml" || root.language === "md" || root.language === "mdx" ? "  " : "    ";
     }
 
-    function maybeFormat(text: string): string {
-        if (root.language !== "json")
-            return text;
-        const src = String(text || "");
-        if (src.indexOf("\n") >= 0)
-            return src;
-        try {
-            return JSON.stringify(JSON.parse(src), null, root.indentStr === "\t" ? "\t" : 2) + "\n";
-        } catch (e) {
-            return src;
+    // Text as it goes to disk: minified JSON re-indented (also in the buffer), line endings restored
+    function diskText(): string {
+        if (root.language === "json") {
+            const formatted = JsonFormat.reindentMinified(editor.text, root.indentStr);
+            if (formatted !== editor.text)
+                editor.text = formatted;
         }
+        return root.crlf ? editor.text.replace(/\n/g, "\r\n") : editor.text;
     }
 
     function lineStartAt(text: string, pos: int): int {
@@ -309,9 +315,32 @@ Item {
             }
         }
         const next = lines.join("\n");
+        root.compoundEdit = true;
         editor.remove(from, to);
         editor.insert(from, next);
+        root.compoundEdit = false;
+        root.indentUndo = root.indentUndo.concat([editor.text]);
+        root.indentRedo = [];
         editor.select(from, from + next.length);
+    }
+
+    // TextEdit has no edit blocks, so a block indent is two undo steps; replay both as one
+    function replayIndent(undo: bool): bool {
+        const stack = undo ? root.indentUndo : root.indentRedo;
+        if (!stack.length || stack[stack.length - 1] !== editor.text)
+            return false;
+        root.compoundEdit = true;
+        for (let i = 0; i < 2; ++i) {
+            if (undo)
+                editor.undo();
+            else
+                editor.redo();
+        }
+        root.compoundEdit = false;
+        const other = (undo ? root.indentRedo : root.indentUndo).concat([editor.text]);
+        root.indentUndo = undo ? stack.slice(0, -1) : other;
+        root.indentRedo = undo ? other : stack.slice(0, -1);
+        return true;
     }
 
     function handleEnter(): void {
@@ -359,8 +388,12 @@ Item {
         const p = TextEditorService.normalizePath(path);
         root.filePath = p;
         root.pendingSaveText = null;
+        root.crlf = false;
+        root.encoding = "";
+        root.decoding = false;
         if (!p.length) {
             fileView.path = "";
+            root.loading = true;
             root.applyLoaded("");
             return;
         }
@@ -388,11 +421,37 @@ Item {
             Qt.callLater(() => saveAsField.forceActiveFocus());
             return false;
         }
-        root.pendingSaveText = editor.text;
-        if (fileView.path !== root.filePath)
-            fileView.path = root.filePath;
-        fileView.setText(editor.text);
+        root.writeTo(root.filePath);
         return true;
+    }
+
+    function writeTo(path: string): void {
+        const out = root.diskText();
+        root.pendingSaveText = editor.text;
+        if (root.encoding.length) {
+            encodeProc.input = out;
+            encodeProc.command = ["sh", "-c", 't=$(mktemp) || exit 1; iconv -f utf-8 -t "$1" > "$t" && cat -- "$t" > "$2"; s=$?; rm -f -- "$t"; exit $s', "sh", root.encoding, path];
+            encodeProc.stdinEnabled = true;
+            encodeProc.running = true;
+            return;
+        }
+        if (fileView.path !== path)
+            fileView.path = path;
+        fileView.setText(out);
+    }
+
+    function savedOk(): void {
+        root.pendingSaveText = null;
+        root.loadedText = editor.text;
+        root.dirty = false;
+        if (root.pendingClose)
+            root.requestForceClose();
+    }
+
+    function saveFailed(reason: string): void {
+        root.pendingSaveText = null;
+        root.pendingClose = false;
+        Toaster.toast(qsTr("Could not save file"), reason, "error", Toast.Error);
     }
 
     function saveTo(path: string): void {
@@ -400,28 +459,76 @@ Item {
         if (!p.length)
             return;
         root.filePath = p;
-        root.pendingSaveText = editor.text;
-        fileView.path = p;
-        fileView.setText(editor.text);
+        root.writeTo(p);
     }
 
     function confirmSaveAs(): void {
         const raw = String(saveAsField.text || "").trim();
         if (!raw.length)
             return;
-        const p = raw.startsWith("/") || raw.startsWith("~") ? TextEditorService.normalizePath(raw) : `${Paths.home}/${raw}`;
+        const dir = root.filePath.length ? root.filePath.slice(0, root.filePath.lastIndexOf("/")) : Paths.home;
+        const p = TextEditorService.normalizePath(raw.startsWith("/") || raw.startsWith("~") ? raw : `${dir}/${raw}`);
         root.saveAsOpen = false;
-        root.saveTo(p);
+        if (p === root.filePath) {
+            root.saveTo(p);
+            return;
+        }
+        existsProc.target = p;
+        existsProc.command = ["test", "-e", p];
+        existsProc.running = true;
     }
 
+    function acceptConfirm(): void {
+        const target = root.overwritePath;
+        root.confirmOpen = false;
+        if (target.length)
+            root.saveTo(target);
+        else if (!root.save())
+            root.pendingClose = true;
+    }
+
+    function syncFocus(): void {
+        if (root.confirmOpen)
+            confirmDialog.forceActiveFocus();
+        else if (root.saveAsOpen)
+            saveAsField.forceActiveFocus();
+        else
+            editor.forceActiveFocus();
+    }
+
+    onConfirmOpenChanged: {
+        if (!root.confirmOpen)
+            root.overwritePath = "";
+        Qt.callLater(root.syncFocus);
+    }
+    onSaveAsOpenChanged: Qt.callLater(root.syncFocus)
+
     function applyLoaded(text: string): void {
+        // FileView and the cat fallback can both answer one open; only the first may set the text
+        if (!root.loading || root.decoding)
+            return;
         loadFallback.stop();
+        // U+FFFD means the bytes were not valid UTF-8: reread through iconv in the file's own encoding
+        if (text.indexOf("\uFFFD") >= 0 && root.filePath.length) {
+            root.decoding = true;
+            decodeProc.path = root.filePath;
+            decodeProc.fallback = text;
+            decodeProc.command = ["sh", "-c", 'if iconv -f utf-8 -t utf-8 < "$1" > /dev/null 2>&1; then echo utf-8; exec cat -- "$1"; fi; e=$(file -b --mime-encoding -- "$1"); iconv -f "$e" -t utf-8 < "$1" > /dev/null 2>&1 || e=iso-8859-1; echo "$e"; exec iconv -f "$e" -t utf-8 < "$1"', "sh", root.filePath];
+            decodeProc.running = true;
+            return;
+        }
+        root.showLoaded(text);
+    }
+
+    function showLoaded(raw: string): void {
+        // shortcut: mixed or CR-only line endings are saved as LF; track them per line if that matters
+        root.crlf = raw.indexOf("\r\n") >= 0 && !/(^|[^\r])\n/.test(raw);
+        const text = root.crlf ? raw.replace(/\r\n/g, "\n") : raw;
         root.indentStr = root.detectIndent(text);
-        const formatted = root.maybeFormat(text);
         root.loading = true;
-        editor.text = formatted;
-        root.loadedText = formatted;
-        root.dirty = formatted !== text;
+        editor.text = text;
+        root.loadedText = text;
+        root.dirty = false;
         root.loading = false;
         root.refreshHighlight();
         Qt.callLater(() => {
@@ -465,6 +572,58 @@ Item {
         }
     }
 
+    Process {
+        id: decodeProc
+        property string path: ""
+        property string fallback: ""
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const out = text;
+                const nl = out.indexOf("\n");
+                const enc = out.slice(0, Math.max(0, nl));
+                if (!root.decoding || decodeProc.path !== root.filePath)
+                    return;
+                root.decoding = false;
+                if (!root.loading)
+                    return;
+                if (nl < 0) {
+                    root.showLoaded(decodeProc.fallback); // file vanished or sh failed: show what FileView read
+                    return;
+                }
+                root.encoding = enc === "utf-8" ? "" : enc;
+                root.showLoaded(out.slice(nl + 1));
+            }
+        }
+    }
+
+    Process {
+        id: encodeProc
+        property string input: ""
+        onStarted: {
+            encodeProc.write(encodeProc.input);
+            encodeProc.stdinEnabled = false;
+        }
+        onExited: code => {
+            if (code === 0)
+                root.savedOk();
+            else
+                root.saveFailed(qsTr("The text cannot be written as %1; the file was left as it was.").arg(root.encoding));
+        }
+    }
+
+    Process {
+        id: existsProc
+        property string target: ""
+        onExited: code => {
+            if (code !== 0) {
+                root.saveTo(existsProc.target);
+                return;
+            }
+            root.overwritePath = existsProc.target;
+            root.confirmOpen = true;
+        }
+    }
+
     FileView {
         id: fileView
         preload: true
@@ -488,18 +647,8 @@ Item {
             readProc.command = ["cat", "--", root.filePath];
             readProc.running = true;
         }
-        onSaved: {
-            root.pendingSaveText = null;
-            root.loadedText = editor.text;
-            root.dirty = false;
-            if (root.pendingClose)
-                root.requestForceClose();
-        }
-        onSaveFailed: err => {
-            root.pendingSaveText = null;
-            root.pendingClose = false;
-            Toaster.toast(qsTr("Could not save file"), FileViewError.toString(err), "error", Toast.Error);
-        }
+        onSaved: root.savedOk()
+        onSaveFailed: err => root.saveFailed(FileViewError.toString(err))
     }
 
     Shortcut {
@@ -517,7 +666,8 @@ Item {
         }
     }
     Shortcut {
-        sequences: [StandardKey.Close, StandardKey.Quit, "Ctrl+W"]
+        // Not StandardKey.Close: it already holds Ctrl+W here, and a duplicate makes the shortcut ambiguous (never fires).
+        sequences: ["Ctrl+W", StandardKey.Quit]
         context: Qt.WindowShortcut
         onActivated: root.requestClose()
     }
@@ -549,7 +699,7 @@ Item {
     }
 
     Shortcut {
-        sequences: [StandardKey.Find, "Ctrl+F"]
+        sequences: ["Ctrl+F"]
         context: Qt.WindowShortcut
         onActivated: root.openFind()
     }
@@ -826,6 +976,10 @@ Item {
                         visible: editor.activeFocus
                     }
                     onTextChanged: {
+                        if (!root.compoundEdit && (root.indentUndo.length || root.indentRedo.length)) {
+                            root.indentUndo = [];
+                            root.indentRedo = [];
+                        }
                         if (root.loading)
                             return;
                         root.dirty = editor.text !== root.loadedText;
@@ -848,6 +1002,10 @@ Item {
                     Keys.onPressed: event => {
                         if (event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier) && !(event.modifiers & Qt.ShiftModifier) && !(event.modifiers & Qt.AltModifier)) {
                             root.openFind();
+                            event.accepted = true;
+                            return;
+                        }
+                        if ((event.matches(StandardKey.Undo) && root.replayIndent(true)) || (event.matches(StandardKey.Redo) && root.replayIndent(false))) {
                             event.accepted = true;
                             return;
                         }
@@ -915,6 +1073,7 @@ Item {
         }
 
         StyledRect {
+            id: confirmDialog
             visible: root.confirmOpen
             anchors.centerIn: parent
             implicitWidth: Math.min(420, parent.width - 48)
@@ -922,6 +1081,13 @@ Item {
             radius: Theme.Appearance.rounding.large
             color: Colours.palette.m3surfaceContainerHigh
             z: 1
+            Keys.onReturnPressed: root.acceptConfirm()
+            Keys.onEnterPressed: root.acceptConfirm()
+
+            // Keeps clicks on the dialog body from reaching the scrim, which cancels
+            MouseArea {
+                anchors.fill: parent
+            }
 
             ColumnLayout {
                 id: confirmCol
@@ -932,7 +1098,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("Save changes?")
+                    text: root.overwritePath.length ? qsTr("Replace file?") : qsTr("Save changes?")
                     horizontalAlignment: Text.AlignHCenter
                     font.pointSize: Theme.Appearance.font.size.larger
                     font.weight: Font.DemiBold
@@ -941,7 +1107,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("%1 has unsaved changes.").arg(root.fileLabel)
+                    text: root.overwritePath.length ? qsTr("%1 already exists.").arg(root.overwritePath) : qsTr("%1 has unsaved changes.").arg(root.fileLabel)
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     color: Colours.palette.m3onSurfaceVariant
@@ -958,6 +1124,7 @@ Item {
                     }
 
                     StyledRect {
+                        visible: !root.overwritePath.length
                         implicitWidth: discardLabel.implicitWidth + Theme.Appearance.padding.large * 2
                         implicitHeight: 36
                         radius: Theme.Appearance.rounding.full
@@ -1011,16 +1178,14 @@ Item {
                         StateLayer {
                             color: Colours.palette.m3onPrimary
                             function onClicked(): void {
-                                root.confirmOpen = false;
-                                if (!root.save())
-                                    root.pendingClose = true;
+                                root.acceptConfirm();
                             }
                         }
 
                         StyledText {
                             id: saveLabel
                             anchors.centerIn: parent
-                            text: qsTr("Save")
+                            text: root.overwritePath.length ? qsTr("Replace") : qsTr("Save")
                             color: Colours.palette.m3onPrimary
                             font.weight: Font.Medium
                         }
@@ -1037,6 +1202,10 @@ Item {
             radius: Theme.Appearance.rounding.large
             color: Colours.palette.m3surfaceContainerHigh
             z: 1
+
+            MouseArea {
+                anchors.fill: parent
+            }
 
             ColumnLayout {
                 id: saveAsCol

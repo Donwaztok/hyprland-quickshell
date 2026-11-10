@@ -53,7 +53,11 @@ Singleton {
         const t = String(text ?? "").trim();
         if (!t || root.isCalcMode(t))
             return false;
-        if (t.startsWith(Config.launcher.actionPrefix))
+        if (t.startsWith(Config.launcher.actionPrefix) || t.startsWith(Config.launcher.clipboardPrefix))
+            return false;
+        // Runs on every app search: "7-zip" must stay a search, so only known function names count as words
+        const words = t.toLowerCase().match(/[a-z]+/g) ?? [];
+        if (words.some(w => w !== "pi" && w !== "e" && !root.functions.some(f => f.name === w)))
             return false;
         return root.canEvaluate(t);
     }

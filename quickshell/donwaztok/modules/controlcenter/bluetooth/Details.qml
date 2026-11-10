@@ -86,12 +86,19 @@ StyledFlickable {
                                 spacing: Appearance.spacing.larger
 
                                 Toggle {
+                                    id: connectedToggle
+
                                     label: qsTr("Connected")
                                     checked: root.device?.connected ?? false
-                                    toggle.onToggled: root.device.connected = checked
+                                    toggle.onToggled: {
+                                        root.device.connected = checked;
+                                        connectedToggle.checked = Qt.binding(() => root.device?.connected ?? false);
+                                    }
                                 }
 
                                 Toggle {
+                                    id: pairedToggle
+
                                     label: qsTr("Paired")
                                     checked: root.device?.paired ?? false
                                     toggle.onToggled: {
@@ -99,6 +106,7 @@ StyledFlickable {
                                             root.device.forget();
                                         else
                                             root.device.pair();
+                                        pairedToggle.checked = Qt.binding(() => root.device?.paired ?? false);
                                     }
                                 }
 

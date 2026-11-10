@@ -131,7 +131,8 @@ Item {
 
     Connections {
         target: session
-        function onCurrentPathChanged(): void {
+        // Not onCurrentPathChanged: the listing arrives later, so the count would be the old folder's.
+        function onFilteredEntriesChanged(): void {
             root.pushStatusToast();
         }
         function onSelectedPathsChanged(): void {
@@ -454,8 +455,13 @@ Item {
     }
 
     function finishDragPreviewGrab(sourceItem: var, seq: int): void {
-        if (!sourceItem || root.pendingDragItem !== sourceItem || seq !== root.dragPreviewSeq)
+        if (seq !== root.dragPreviewSeq)
             return;
+        // The dragged delegate is gone (folder refreshed): drop the drag instead of leaving fileDragActive set.
+        if (!sourceItem || root.pendingDragItem !== sourceItem) {
+            root.endFileDrag(null);
+            return;
+        }
 
         // Wait for thumb decode on the first frame(s); fall back to icon quickly
         if (dragGrabSource.previewIsImage && dragGrabThumb.status === Image.Loading && dragGrabWait.attempts < 8) {
@@ -472,8 +478,12 @@ Item {
         dragGrabSource.height = h;
 
         dragGrabSource.grabToImage(result => {
-            if (root.pendingDragItem !== sourceItem || seq !== root.dragPreviewSeq)
+            if (seq !== root.dragPreviewSeq)
                 return;
+            if (!sourceItem || root.pendingDragItem !== sourceItem) {
+                root.endFileDrag(null);
+                return;
+            }
             let url = "";
             if (result) {
                 // Unique path every drag — same file:// is cached by Qt Drag and looks "stuck"
@@ -909,7 +919,8 @@ Item {
         onActivated: root.shortcutCut()
     }
     Shortcut {
-        sequences: [StandardKey.Undo, "Ctrl+Z", "Ctrl+z"]
+        // One entry per key: StandardKey.Undo already holds Ctrl+Z, and duplicates make the shortcut ambiguous.
+        sequences: ["Ctrl+Z"]
         context: Qt.WindowShortcut
         enabled: !root.inputBlocked && !root.dialogOpen && session.canUndo()
         onActivated: root.shortcutUndo()
@@ -949,7 +960,7 @@ Item {
         }
     }
     Shortcut {
-        sequences: [StandardKey.Find, "Ctrl+F"]
+        sequences: ["Ctrl+F"]
         context: Qt.WindowShortcut
         enabled: !root.dialogOpen && !session.renameTarget.length
         onActivated: root.openSearch()
@@ -2397,7 +2408,8 @@ Item {
         modal: false
         dim: false
         focus: true
-        closePolicy: QC.Popup.CloseOnEscape
+        // Opened from the context menu no hover-out ever starts the close timer, so a click outside must close it.
+        closePolicy: QC.Popup.CloseOnEscape | QC.Popup.CloseOnPressOutside
 
         background: StyledRect {
             radius: Theme.Appearance.rounding.normal
@@ -3384,6 +3396,11 @@ Item {
                             if (!row.Drag.active && root.pendingDragItem === row)
                                 root.endFileDrag(row);
                         }
+                        // A folder refresh can recreate delegates mid-drag; Drag.onActiveChanged then never fires.
+                        Component.onDestruction: {
+                            if (root.pendingDragItem === row)
+                                root.endFileDrag(null);
+                        }
 
                         DropArea {
                             anchors.fill: parent
@@ -3542,6 +3559,11 @@ Item {
                             if (!tile.Drag.active && root.pendingDragItem === tile)
                                 root.endFileDrag(tile);
                         }
+                        // A folder refresh can recreate delegates mid-drag; Drag.onActiveChanged then never fires.
+                        Component.onDestruction: {
+                            if (root.pendingDragItem === tile)
+                                root.endFileDrag(null);
+                        }
 
                         DropArea {
                             anchors.fill: parent
@@ -3659,7 +3681,7 @@ Item {
                     acceptedButtons: Qt.LeftButton
                     hoverEnabled: false
                     preventStealing: root.marqueeActive || root.marqueePending || root.fileDragActive
-                    enabled: !root.dialogOpen && !session.pathEditing
+                    enabled: !root.dialogOpen
                     property real pressX: 0
                     property real pressY: 0
                     property int pressMods: 0
@@ -3675,6 +3697,9 @@ Item {
                     }
 
                     onPressed: mouse => {
+                        // Clicking the list leaves the address bar, as in other file managers.
+                        if (session.pathEditing)
+                            session.cancelPathEdit();
                         const hit = root.hitFileAt(mouse.x, mouse.y);
                         pressX = mouse.x;
                         pressY = mouse.y;
@@ -3732,6 +3757,12 @@ Item {
                         root.updateMarquee(mouse.x, mouse.y);
                     }
                     onReleased: mouse => {
+                        // Released before the preview grab started the drag: cancel it, or it would start with no
+                        // button held and fileDragActive would block every later click.
+                        if (root.fileDragActive && !root.pendingDragItem?.Drag.active) {
+                            root.dragPreviewSeq += 1;
+                            root.endFileDrag(root.pendingDragItem);
+                        }
                         // Starting Drag.active steals the grab and can fire released — don't cancel DnD
                         if (root.fileDragActive) {
                             pressHit = "";
@@ -3761,6 +3792,10 @@ Item {
                             root.endMarquee();
                     }
                     onDoubleClicked: mouse => {
+                        // The second release still follows; without this it re-selects the opened folder by path
+                        // after navigate() cleared the selection, leaving an invisible selection in the new folder.
+                        pressHit = "";
+                        pressItem = null;
                         const hit = root.hitFileAt(mouse.x, mouse.y);
                         if (!hit.length)
                             return;

@@ -251,142 +251,16 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: Appearance.spacing.small
 
-            Item {
-                id: renameAdapter
-
+            StyledText {
                 Layout.fillWidth: true
-                Layout.rightMargin: Appearance.spacing.small
-
-                implicitHeight: renameLabel.implicitHeight + adapterNameEdit.implicitHeight
-
-                states: State {
-                    name: "editingAdapterName"
-                    when: root.session.bt.editingAdapterName
-
-                    AnchorChanges {
-                        target: adapterNameEdit
-                        anchors.top: renameAdapter.top
-                    }
-                    PropertyChanges {
-                        renameAdapter.implicitHeight: adapterNameEdit.implicitHeight
-                        renameLabel.opacity: 0
-                        adapterNameEdit.padding: Appearance.padding.normal
-                    }
-                }
-
-                transitions: Transition {
-                    AnchorAnimation {
-                        duration: Appearance.anim.durations.normal
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Appearance.anim.curves.standard
-                    }
-                    Anim {
-                        properties: "implicitHeight,opacity,padding"
-                    }
-                }
-
-                StyledText {
-                    id: renameLabel
-
-                    anchors.left: parent.left
-
-                    text: qsTr("Rename adapter (currently does not work)")
-                    color: Colours.light ? Colours.palette.m3onSurfaceVariant : Qt.lighter(Colours.palette.m3onSurfaceVariant, 1.2)
-                    font.pointSize: Appearance.font.size.small
-                    font.weight: Font.Medium
-                }
-
-                StyledTextField {
-                    id: adapterNameEdit
-
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: renameLabel.bottom
-                    anchors.leftMargin: root.session.bt.editingAdapterName ? 0 : -Appearance.padding.normal
-
-                    text: root.session.bt.currentAdapter?.name ?? ""
-                    readOnly: !root.session.bt.editingAdapterName
-                    onAccepted: {
-                        root.session.bt.editingAdapterName = false;
-                    }
-
-                    Behavior on anchors.leftMargin {
-                        Anim {}
-                    }
-                }
+                text: qsTr("Adapter name")
+                font.weight: Font.Medium
             }
 
-            StyledRect {
-                implicitWidth: implicitHeight
-                implicitHeight: cancelEditIcon.implicitHeight + Appearance.padding.smaller * 2
-
-                radius: Appearance.rounding.small
-                color: Colours.palette.m3secondaryContainer
-                opacity: root.session.bt.editingAdapterName ? 1 : 0
-                scale: root.session.bt.editingAdapterName ? 1 : 0.5
-
-                StateLayer {
-                    color: Colours.palette.m3onSecondaryContainer
-                    disabled: !root.session.bt.editingAdapterName
-
-                    function onClicked(): void {
-                        root.session.bt.editingAdapterName = false;
-                        adapterNameEdit.text = Qt.binding(() => root.session.bt.currentAdapter?.name ?? "");
-                    }
-                }
-
-                MaterialIcon {
-                    id: cancelEditIcon
-
-                    anchors.centerIn: parent
-                    animate: true
-                    text: "cancel"
-                    color: Colours.palette.m3onSecondaryContainer
-                }
-
-                Behavior on opacity {
-                    Anim {}
-                }
-
-                Behavior on scale {
-                    Anim {
-                        duration: Appearance.anim.durations.expressiveFastSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
-                    }
-                }
-            }
-
-            StyledRect {
-                implicitWidth: implicitHeight
-                implicitHeight: editIcon.implicitHeight + Appearance.padding.smaller * 2
-
-                radius: root.session.bt.editingAdapterName ? Appearance.rounding.small : implicitHeight / 2 * Math.min(1, Appearance.rounding.scale)
-                color: Qt.alpha(Colours.palette.m3primary, root.session.bt.editingAdapterName ? 1 : 0)
-
-                StateLayer {
-                    color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
-
-                    function onClicked(): void {
-                        root.session.bt.editingAdapterName = !root.session.bt.editingAdapterName;
-                        if (root.session.bt.editingAdapterName)
-                            adapterNameEdit.forceActiveFocus();
-                        else
-                            adapterNameEdit.accepted();
-                    }
-                }
-
-                MaterialIcon {
-                    id: editIcon
-
-                    anchors.centerIn: parent
-                    animate: true
-                    text: root.session.bt.editingAdapterName ? "check_circle" : "edit"
-                    color: root.session.bt.editingAdapterName ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
-                }
-
-                Behavior on radius {
-                    Anim {}
-                }
+            // Quickshell's BluetoothAdapter.name is read-only, so the adapter cannot be renamed here
+            StyledText {
+                text: root.session.bt.currentAdapter?.name ?? ""
+                color: Colours.palette.m3onSurfaceVariant
             }
         }
     }

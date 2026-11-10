@@ -105,7 +105,8 @@ Item {
     }
 
     Shortcut {
-        sequences: [StandardKey.Close, "Ctrl+W"]
+        // One entry per key: StandardKey.Close already holds Ctrl+W, and duplicates make the shortcut ambiguous.
+        sequences: ["Ctrl+W"]
         onActivated: root.requestClose()
     }
     Shortcut {

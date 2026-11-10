@@ -111,6 +111,8 @@ DeviceDetails {
 
                 SectionContainer {
                     ToggleRow {
+                        id: connectedToggle
+
                         label: qsTr("Connected")
                         checked: root.network?.active ?? false
                         toggle.onToggled: {
@@ -119,6 +121,7 @@ DeviceDetails {
                             } else {
                                 Nmcli.disconnectFromNetwork();
                             }
+                            connectedToggle.checked = Qt.binding(() => root.network?.active ?? false);
                         }
                     }
 

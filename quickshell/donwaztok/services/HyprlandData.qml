@@ -16,10 +16,6 @@ Singleton {
     property var windowList: []
     property var addresses: []
     property var windowByAddress: ({})
-    property var workspaces: []
-    property var workspaceIds: []
-    property var workspaceById: ({})
-    property var activeWorkspace: null
     property var monitors: []
     property var layers: ({})
 
@@ -57,18 +53,26 @@ Singleton {
 
     // --- Hyprctl refresh ------------------------------------------------------
 
-    function updateWindowList() { getClients.running = true; }
-    function updateLayers() { getLayers.running = true; }
-    function updateMonitors() { getMonitors.running = true; }
-    function updateWorkspaces() {
-        getWorkspaces.running = true;
-        getActiveWorkspace.running = true;
+    // Setting running while a run is in flight is a no-op, so remember it and rerun in onExited.
+    function _run(proc) {
+        if (proc.running)
+            proc.pending = true;
+        else
+            proc.running = true;
+    }
+    function updateWindowList() { _run(getClients); }
+    function updateLayers() { _run(getLayers); }
+    function updateMonitors() { _run(getMonitors); }
+    function _rerunIfPending(proc) {
+        if (!proc.pending)
+            return;
+        proc.pending = false;
+        Qt.callLater(() => root._run(proc));
     }
     function updateAll() {
         updateWindowList();
         updateMonitors();
         updateLayers();
-        updateWorkspaces();
     }
 
     function refreshRecoveryUi() {
@@ -240,18 +244,39 @@ Singleton {
 
     Component.onCompleted: updateAll()
 
+    property bool _wantClients: false
+    property bool _wantMonitors: false
+    property bool _wantLayers: false
+
     Timer {
         id: eventRefreshDebounce
         interval: 50
         repeat: false
-        onTriggered: root.updateAll()
+        onTriggered: {
+            if (root._wantClients)
+                root.updateWindowList();
+            if (root._wantMonitors)
+                root.updateMonitors();
+            if (root._wantLayers)
+                root.updateLayers();
+            root._wantClients = root._wantMonitors = root._wantLayers = false;
+        }
     }
 
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (["openlayer", "closelayer", "screencast"].includes(event.name))
+            const n = event.name;
+            if (n === "screencast")
                 return;
+            if (n === "openlayer" || n === "closelayer") {
+                root._wantLayers = true;
+            } else {
+                root._wantClients = true;
+                // Consumers read only monitor geometry and layer rects; both change only with monitors.
+                if (n.startsWith("monitor") || n === "configreloaded")
+                    root._wantMonitors = root._wantLayers = true;
+            }
             eventRefreshDebounce.restart();
         }
     }
@@ -260,10 +285,18 @@ Singleton {
 
     Process {
         id: getClients
+        property bool pending: false
         command: ["hyprctl", "clients", "-j"]
+        onExited: root._rerunIfPending(getClients)
         stdout: StdioCollector {
             onStreamFinished: {
-                const wins = JSON.parse(this.text);
+                let wins;
+                try {
+                    wins = JSON.parse(this.text);
+                } catch (e) {
+                    console.warn("[HyprlandData] Failed to parse clients:", e);
+                    return;
+                }
                 const byAddress = {};
                 for (let i = 0; i < wins.length; ++i)
                     byAddress[wins[i].address] = wins[i];
@@ -278,10 +311,17 @@ Singleton {
 
     Process {
         id: getMonitors
+        property bool pending: false
         command: ["hyprctl", "monitors", "-j"]
+        onExited: root._rerunIfPending(getMonitors)
         stdout: StdioCollector {
             onStreamFinished: {
-                root.monitors = JSON.parse(this.text);
+                try {
+                    root.monitors = JSON.parse(this.text);
+                } catch (e) {
+                    console.warn("[HyprlandData] Failed to parse monitors:", e);
+                    return;
+                }
                 root.recomputeRecoveryCandidates();
                 root._recoveryRefreshDone(root._recoveryMonitorsBit);
             }
@@ -290,36 +330,16 @@ Singleton {
 
     Process {
         id: getLayers
+        property bool pending: false
         command: ["hyprctl", "layers", "-j"]
+        onExited: root._rerunIfPending(getLayers)
         stdout: StdioCollector {
             onStreamFinished: {
-                root.layers = JSON.parse(this.text);
-            }
-        }
-    }
-
-    Process {
-        id: getWorkspaces
-        command: ["hyprctl", "workspaces", "-j"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const raw = JSON.parse(this.text).filter(ws => ws.id >= 1 && ws.id <= 100);
-                const byId = {};
-                for (let i = 0; i < raw.length; ++i)
-                    byId[raw[i].id] = raw[i];
-                root.workspaces = raw;
-                root.workspaceById = byId;
-                root.workspaceIds = raw.map(ws => ws.id);
-            }
-        }
-    }
-
-    Process {
-        id: getActiveWorkspace
-        command: ["hyprctl", "activeworkspace", "-j"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.activeWorkspace = JSON.parse(this.text);
+                try {
+                    root.layers = JSON.parse(this.text);
+                } catch (e) {
+                    console.warn("[HyprlandData] Failed to parse layers:", e);
+                }
             }
         }
     }

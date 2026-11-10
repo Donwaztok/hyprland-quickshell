@@ -100,14 +100,14 @@ ColumnLayout {
             label: qsTr("Shadow range")
             value: ctl ? ctl.shadowRange : 0
             from: 0
-            to: 40
+            to: 100
             stepSize: 1
             decimals: 0
             suffix: " px"
             opacity: ctl && ctl.dropShadow ? 1 : 0.45
             validator: IntValidator {
                 bottom: 0
-                top: 40
+                top: 100
             }
 
             onValueModified: newValue => ctl.applyShadowRange(newValue)

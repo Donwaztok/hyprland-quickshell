@@ -152,18 +152,6 @@ ColumnLayout {
                 }
             }
         }
-
-        TextButton {
-            Layout.fillWidth: true
-            Layout.topMargin: Appearance.spacing.normal
-            text: qsTr("+ Add Provider")
-            inactiveColour: Colours.palette.m3primary
-            inactiveOnColour: Colours.palette.m3onPrimary
-
-            onClicked: {
-                addProviderDialog.open();
-            }
-        }
     }
 
     SectionHeader {

@@ -51,16 +51,19 @@ Singleton {
         return monitors.find(m => m.modelData.name === query);
     }
 
-    function increaseBrightness(): void {
+    function stepBrightness(delta: real): void {
         const monitor = getMonitor("active");
-        if (monitor?.available)
-            monitor.setBrightness(monitor.brightness + Config.services.brightnessIncrement);
+        if (!monitor?.available)
+            return;
+        monitor.setBrightness(monitor.brightness + delta);
+    }
+
+    function increaseBrightness(): void {
+        stepBrightness(Config.services.brightnessIncrement);
     }
 
     function decreaseBrightness(): void {
-        const monitor = getMonitor("active");
-        if (monitor?.available)
-            monitor.setBrightness(monitor.brightness - Config.services.brightnessIncrement);
+        stepBrightness(-Config.services.brightnessIncrement);
     }
 
     onHasBacklightChanged: {
@@ -147,7 +150,10 @@ Singleton {
         readonly property bool isAppleDisplay: root.appleDisplayPresent && modelData.model.startsWith("StudioDisplay")
         readonly property bool available: isAppleDisplay || isDdc || root.hasBacklight
         property real brightness
-        property real queuedBrightness: NaN
+        // Last DDC value asked for while a write was still running (-1: none).
+        property int pendingDdc: -1
+        // Own flag: Process.running only turns true once the process has actually started.
+        property bool ddcBusy: false
 
         readonly property Process initProc: Process {
             stdout: StdioCollector {
@@ -163,14 +169,27 @@ Singleton {
             }
         }
 
-        readonly property Timer timer: Timer {
-            interval: 500
-            onTriggered: {
-                if (!isNaN(monitor.queuedBrightness)) {
-                    monitor.setBrightness(monitor.queuedBrightness);
-                    monitor.queuedBrightness = NaN;
-                }
+        // One ddcutil write at a time: a write takes ~0.5 s and a second one on a busy bus fails silently.
+        readonly property Process writeProc: Process {
+            onExited: (code, status) => {
+                monitor.ddcBusy = false;
+                if (monitor.pendingDdc < 0)
+                    return;
+                const value = monitor.pendingDdc;
+                monitor.pendingDdc = -1;
+                Qt.callLater(() => monitor.writeDdc(value));
             }
+        }
+
+        function writeDdc(value: int): void {
+            if (ddcBusy) {
+                pendingDdc = value;
+                return;
+            }
+            ddcBusy = true;
+            // Qualified: a bare `ddcProc` would resolve to the root's `ddcutil detect` process by id.
+            monitor.writeProc.command = ["ddcutil", "-b", busNum, "setvcp", "10", String(value)];
+            monitor.writeProc.running = true;
         }
 
         function setBrightness(value: real): void {
@@ -182,23 +201,16 @@ Singleton {
             if (Math.round(brightness * 100) === rounded)
                 return;
 
-            if (isDdc && timer.running) {
-                queuedBrightness = value;
-                return;
-            }
-
+            // Shown at once; the hardware catches up (DDC writes are serialized in writeDdc).
             brightness = value;
             root.brightnessChanged();
 
             if (isAppleDisplay)
                 Quickshell.execDetached(["asdbctl", "set", rounded]);
             else if (isDdc)
-                Quickshell.execDetached(["ddcutil", "-b", busNum, "setvcp", "10", rounded]);
+                writeDdc(rounded);
             else if (root.hasBacklight)
                 Quickshell.execDetached(["brightnessctl", "s", `${rounded}%`]);
-
-            if (isDdc)
-                timer.restart();
         }
 
         function initBrightness(): void {

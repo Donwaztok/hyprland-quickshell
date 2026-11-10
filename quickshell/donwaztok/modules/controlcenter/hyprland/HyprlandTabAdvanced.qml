@@ -189,21 +189,8 @@ ColumnLayout {
 
     PreferencesGroup {
         Layout.fillWidth: true
-        title: qsTr("Gestures and branding")
-        description: qsTr("Touch gestures and splash screen.")
-
-        SwitchRow {
-            label: qsTr("Workspace swipe gesture")
-            checked: ctl ? ctl.workspaceSwipe : true
-            flatStyle: true
-            onToggled: v => ctl.applyWorkspaceSwipe(v)
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 1
-            color: Qt.alpha(Colours.palette.m3outlineVariant, Colours.light ? 0.45 : 0.32)
-        }
+        title: qsTr("Branding")
+        description: qsTr("Splash screen.")
 
         SwitchRow {
             label: qsTr("Disable Hyprland logo on boot")

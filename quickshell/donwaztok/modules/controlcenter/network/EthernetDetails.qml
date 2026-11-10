@@ -15,7 +15,11 @@ DeviceDetails {
     id: root
 
     required property Session session
-    readonly property var ethernetDevice: root.session.ethernet.active
+    // Nmcli rebuilds ethernetDevices as new objects on every refresh, so follow the live entry
+    readonly property var ethernetDevice: {
+        const iface = root.session.ethernet.active?.interface;
+        return Nmcli.ethernetDevices.find(d => d.interface === iface) ?? null;
+    }
 
     device: ethernetDevice
 
@@ -52,6 +56,8 @@ DeviceDetails {
 
                 SectionContainer {
                     ToggleRow {
+                        id: connectedToggle
+
                         label: qsTr("Connected")
                         checked: root.ethernetDevice?.connected ?? false
                         toggle.onToggled: {
@@ -62,6 +68,7 @@ DeviceDetails {
                                     Nmcli.disconnectEthernet(root.ethernetDevice.connection, () => {});
                                 }
                             }
+                            connectedToggle.checked = Qt.binding(() => root.ethernetDevice?.connected ?? false);
                         }
                     }
                 }

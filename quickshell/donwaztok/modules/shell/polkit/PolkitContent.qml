@@ -26,8 +26,10 @@ Item {
         target: PolkitService
 
         function onInteractionAvailableChanged(): void {
-            if (!PolkitService.interactionAvailable)
+            if (!PolkitService.interactionAvailable) {
+                root.forceActiveFocus(); // the disabled field drops focus; keep Escape working
                 return;
+            }
             inputField.text = "";
             inputField.forceActiveFocus();
         }

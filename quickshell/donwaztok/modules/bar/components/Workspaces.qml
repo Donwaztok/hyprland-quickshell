@@ -106,6 +106,11 @@ Item {
             updateOpenWorkspaces()
             syncActiveFromHyprland()
         }
+        // Moving a workspace to another monitor changes ws.monitor but not the workspace list.
+        function onRawEvent(event) {
+            if (event.name === "moveworkspacev2")
+                Qt.callLater(root.updateOpenWorkspaces)
+        }
     }
     onOpenWorkspaceIdsChanged: {
         updateActiveIndex()

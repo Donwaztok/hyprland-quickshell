@@ -4,6 +4,7 @@ import qs.components
 import qs.components.containers
 import qs.services.shell
 import qs.config
+import qs.utils
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
@@ -18,6 +19,8 @@ Loader {
             id: win
 
             required property ShellScreen modelData
+            // Only a bar on the left edge of this screen pushes the clock right.
+            readonly property bool leftBar: Config.bar.position === "left" && !Strings.testRegexList(Config.bar.excludedScreens, modelData.name)
 
             screen: modelData
             name: "background"
@@ -52,7 +55,7 @@ Loader {
                 active: Config.background.desktopClock.enabled
 
                 anchors.margins: Math.round(Appearance.padding.large * 2 * Config.barThicknessScale)
-                anchors.leftMargin: Math.round(Appearance.padding.large * 2 * Config.barThicknessScale) + Config.bar.sizes.thickness + Math.max(Math.round(Appearance.padding.smaller * Config.barThicknessScale), Config.border.thickness)
+                anchors.leftMargin: Math.round(Appearance.padding.large * 2 * Config.barThicknessScale) + (win.leftBar ? Config.bar.sizes.thickness : 0) + Math.max(Math.round(Appearance.padding.smaller * Config.barThicknessScale), Config.border.thickness)
 
                 state: Config.background.desktopClock.position
                 states: [

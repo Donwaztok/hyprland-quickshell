@@ -224,8 +224,10 @@ Singleton {
         readonly property Timer timer: Timer {
             running: true
             interval: notif.expireTimeout > 0 ? notif.expireTimeout : Config.notifs.defaultExpireTimeout
+            // expireTimeout is the raw D-Bus value in ms: -1 means server default, 0 means never expire
             onTriggered: {
-                if (Config.notifs.expire)
+                const persistent = notif.expireTimeout === 0 || notif.urgency === NotificationUrgency.Critical;
+                if (Config.notifs.expire && !persistent)
                     notif.popup = false;
             }
         }
@@ -307,7 +309,9 @@ Singleton {
             }
             // No live action (restored after a reload, or none sent): focus the app's window.
             const cls = hints?.["desktop-entry"] || appName;
-            if (cls) {
+            // Scripts (notify-send, cron) have no window; dispatching anyway only logs "window not found".
+            const hasWindow = cls && Hypr.toplevels.values.some(t => (t.lastIpcObject?.class ?? "").toLowerCase() === cls.toLowerCase());
+            if (hasWindow) {
                 // Lua long string so regex backslashes reach Hyprland untouched; escaping rules out "]]"
                 const escaped = cls.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
                 Hyprland.dispatch(`hl.dsp.focus({ window = [[class:(?i)^(${escaped})$]] })`);

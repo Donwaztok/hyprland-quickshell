@@ -387,7 +387,7 @@ ColumnLayout {
     SectionHeader {
         Layout.topMargin: Appearance.spacing.large
         title: qsTr("Applications")
-        description: qsTr("Favourites and hidden apps are managed in the Applications tab")
+        description: qsTr("Select an app in the list to mark it as a favourite or hide it")
     }
 
     SectionContainer {

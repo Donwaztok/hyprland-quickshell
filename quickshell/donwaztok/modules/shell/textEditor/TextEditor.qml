@@ -20,7 +20,8 @@ Scope {
                 const w = list[i];
                 if (w && w.filePath === start) {
                     w.visible = true;
-                    root.focusWindow(w);
+                    // After the window is mapped again; focusing right away finds no window.
+                    Qt.callLater(() => root.focusWindow(w));
                     return;
                 }
             }
@@ -139,8 +140,12 @@ Scope {
                     win.destroy();
                     return;
                 }
-                win.visible = true;
-                content.askClose();
+                // Re-showing inside this handler does not take; without the deferral the window stayed
+                // hidden with its unsaved changes and the question never appeared.
+                Qt.callLater(() => {
+                    win.visible = true;
+                    content.askClose();
+                });
             }
 
             Component.onCompleted: root.track(win)

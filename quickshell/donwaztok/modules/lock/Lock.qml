@@ -21,6 +21,8 @@ Scope {
         id: lock
 
         signal unlock
+        // surface is a Component, so its instance is reached only through this signal
+        signal refocusRequested
 
         // While locked, global shortcuts can be flaky; keep Caps/Num/layout in sync.
         Timer {
@@ -34,6 +36,14 @@ Scope {
             id: lockSurface
             lock: lock
             pam: pam
+
+            Connections {
+                target: lock
+
+                function onRefocusRequested(): void {
+                    lockSurface.refocusLockInput();
+                }
+            }
         }
     }
 
@@ -43,7 +53,8 @@ Scope {
         lock: lock
     }
 
-    // Hyprland: global donwaztok:lock | donwaztok:unlock | donwaztok:lockFocus (hypridle, keybinds, LauncherConfig).
+    // Hyprland: global donwaztok:lock | donwaztok:lockFocus (hypridle, keybinds, LauncherConfig).
+    // No unlock shortcut or IPC: unlocking always goes through PAM (Pam.qml).
     GlobalShortcut {
         appid: "donwaztok"
         name: "lock"
@@ -53,18 +64,11 @@ Scope {
 
     GlobalShortcut {
         appid: "donwaztok"
-        name: "unlock"
-        description: "Unlock the current session"
-        onPressed: lock.unlock()
-    }
-
-    GlobalShortcut {
-        appid: "donwaztok"
         name: "lockFocus"
         description: "Re-focus the lock screen password field (e.g. after resume)"
         onPressed: {
             if (lock.locked)
-                lockSurface.refocusLockInput();
+                lock.refocusRequested();
         }
     }
 
@@ -79,17 +83,13 @@ Scope {
             root.activateLock();
         }
 
-        function unlock(): void {
-            lock.unlock();
-        }
-
         function isLocked(): bool {
             return lock.locked;
         }
 
         function focus(): void {
             if (lock.locked)
-                lockSurface.refocusLockInput();
+                lock.refocusRequested();
         }
     }
 }

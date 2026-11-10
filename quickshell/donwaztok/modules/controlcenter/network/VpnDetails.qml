@@ -19,13 +19,24 @@ DeviceDetails {
     id: root
 
     required property Session session
-    readonly property var vpnProvider: root.session.vpn.active
-    readonly property bool providerEnabled: {
-        if (!vpnProvider || vpnProvider.index === undefined)
-            return false;
-        const provider = Config.utilities.vpn.provider[vpnProvider.index];
-        return provider && typeof provider === "object" && provider.enabled === true;
+    // session.vpn.active is a stale list snapshot: resolve it by name in the live list after every write
+    readonly property var vpnProvider: {
+        const name = root.session.vpn.active?.name;
+        const list = Config.utilities.vpn.provider;
+        const index = list.findIndex(p => (typeof p === "object" ? (p.name || "custom") : String(p)) === name);
+        if (index < 0)
+            return null;
+        const p = list[index];
+        const isObject = typeof p === "object";
+        return {
+            index: index,
+            name: name,
+            displayName: isObject ? (p.displayName || name) : name,
+            interface: isObject ? (p.interface || "") : "",
+            enabled: isObject && p.enabled === true
+        };
     }
+    readonly property bool providerEnabled: vpnProvider?.enabled ?? false
 
     readonly property bool isFastestVpn: root.vpnProvider?.name === "fastestvpn"
     property string fvpnDefault: "brazil-udp"
@@ -439,6 +450,8 @@ DeviceDetails {
                             inactiveOnColour: Colours.palette.m3onSecondaryContainer
 
                             onClicked: {
+                                if (!root.vpnProvider)
+                                    return;
                                 editVpnDialog.editIndex = root.vpnProvider.index;
                                 editVpnDialog.providerName = root.vpnProvider.name;
                                 editVpnDialog.displayName = root.vpnProvider.displayName;
@@ -454,6 +467,8 @@ DeviceDetails {
                             inactiveOnColour: Colours.palette.m3onErrorContainer
 
                             onClicked: {
+                                if (!root.vpnProvider)
+                                    return;
                                 const providers = [];
                                 for (let i = 0; i < Config.utilities.vpn.provider.length; i++) {
                                     if (i !== root.vpnProvider.index) {

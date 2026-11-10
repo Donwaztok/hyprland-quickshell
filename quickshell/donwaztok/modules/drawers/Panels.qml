@@ -122,7 +122,7 @@ Item {
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        anchors.topMargin: Math.round(root.screen.height * 0.38 - Config.launcher.sizes.searchBarHeight / 2)
+        anchors.topMargin: Math.round(root.screen.height * Config.launcher.verticalAnchor - Config.launcher.sizes.searchBarHeight / 2)
     }
 
     Utilities.Wrapper {
