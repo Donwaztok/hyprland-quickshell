@@ -75,8 +75,12 @@ Singleton {
         }
     }
 
+    // True while `ddcutil detect` holds the I2C buses; writes wait for it (a write on a busy bus fails silently).
+    property bool detecting: false
+
     onMonitorsChanged: {
         ddcMonitors = [];
+        detecting = true;
         ddcProc.running = true;
     }
 
@@ -108,6 +112,16 @@ Singleton {
         id: ddcProc
 
         command: ["ddcutil", "detect", "--brief"]
+        onExited: {
+            root.detecting = false;
+            for (const m of root.monitors) {
+                if (m.pendingDdc < 0 || m.ddcBusy)
+                    continue;
+                const value = m.pendingDdc;
+                m.pendingDdc = -1;
+                m.writeDdc(value);
+            }
+        }
         stdout: StdioCollector {
             onStreamFinished: root.ddcMonitors = text.trim().split("\n\n").filter(d => d.startsWith("Display ")).map(d => ({
                         busNum: d.match(/I2C bus:[ ]*\/dev\/i2c-([0-9]+)/)[1],
@@ -182,7 +196,7 @@ Singleton {
         }
 
         function writeDdc(value: int): void {
-            if (ddcBusy) {
+            if (ddcBusy || root.detecting) {
                 pendingDdc = value;
                 return;
             }

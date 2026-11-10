@@ -4,7 +4,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import Quickshell.Hyprland
 
 /**
@@ -14,7 +13,6 @@ Singleton {
     id: root
 
     property var windowList: []
-    property var addresses: []
     property var windowByAddress: ({})
     property var monitors: []
     property var layers: ({})
@@ -23,23 +21,6 @@ Singleton {
     property var recoveryCandidates: []
 
     // --- Public queries -------------------------------------------------------
-
-    function toplevelsForWorkspace(workspace) {
-        return ToplevelManager.toplevels.values.filter(toplevel => {
-            const address = `0x${toplevel.HyprlandToplevel?.address}`;
-            return root.windowByAddress[address]?.workspace?.id === workspace;
-        });
-    }
-
-    function hyprlandClientsForWorkspace(workspace) {
-        return root.windowList.filter(win => win.workspace.id === workspace);
-    }
-
-    function clientForToplevel(toplevel) {
-        if (!toplevel?.HyprlandToplevel)
-            return null;
-        return root.windowByAddress[`0x${toplevel.HyprlandToplevel.address}`];
-    }
 
     function biggestWindowForWorkspace(workspaceId) {
         return root.windowList
@@ -302,7 +283,6 @@ Singleton {
                     byAddress[wins[i].address] = wins[i];
                 root.windowList = wins;
                 root.windowByAddress = byAddress;
-                root.addresses = wins.map(w => w.address);
                 root.recomputeRecoveryCandidates();
                 root._recoveryRefreshDone(root._recoveryClientsBit);
             }

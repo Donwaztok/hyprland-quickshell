@@ -718,16 +718,19 @@ Item {
     Shortcut {
         sequences: ["Ctrl+D"]
         context: Qt.WindowShortcut
+        enabled: !root.confirmOpen && !root.saveAsOpen // edits would land behind the dialog
         onActivated: root.deleteLine()
     }
     Shortcut {
         sequences: ["Ctrl+]"]
         context: Qt.WindowShortcut
+        enabled: !root.confirmOpen && !root.saveAsOpen // edits would land behind the dialog
         onActivated: root.indentBlock(false)
     }
     Shortcut {
         sequences: ["Ctrl+["]
         context: Qt.WindowShortcut
+        enabled: !root.confirmOpen && !root.saveAsOpen // edits would land behind the dialog
         onActivated: root.indentBlock(true)
     }
     Shortcut {
