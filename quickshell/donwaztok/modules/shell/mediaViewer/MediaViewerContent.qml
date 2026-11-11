@@ -19,6 +19,7 @@ Item {
     property real zoom: 0 // 0 = fit to window
     property bool fullscreen: false
     property bool chromeShown: false
+    property bool renaming: false
 
     readonly property var imageExts: ["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg", "ico", "avif", "tif", "tiff"]
     readonly property var playExts: ["mp4", "mkv", "webm", "mov", "avi", "m4v", "mpg", "mpeg", "ogv", "wmv", "flv",
@@ -57,6 +58,8 @@ Item {
 
     function step(delta: int): void {
         const n = folder.count;
+        if (root.renaming)
+            return;
         if (!n || (n === 1 && root.index === 0))
             return;
         const i = root.index < 0 ? 0 : (root.index + delta + n) % n;
@@ -72,6 +75,33 @@ Item {
         flick.contentX = cx * next / old + img.x - px;
         flick.contentY = cy * next / old + img.y - py;
         flick.returnToBounds();
+    }
+
+    function beginRename(): void {
+        renameField.text = root.fileName;
+        root.renaming = true;
+        renameField.forceActiveFocus();
+        const dot = root.fileName.lastIndexOf(".");
+        renameField.select(0, dot > 0 ? dot : root.fileName.length);
+    }
+
+    function commitRename(): void {
+        const name = renameField.text.trim();
+        root.renaming = false;
+        if (!name.length || name === root.fileName)
+            return;
+        if (name.includes("/") || name === "." || name === "..") {
+            FileManagerService.notifyOwnerError(null, qsTr("Invalid name"));
+            return;
+        }
+        const dir = root.filePath.slice(0, root.filePath.lastIndexOf("/"));
+        FileManagerService.runQuick(FileManagerService.fm(["rename", root.filePath, `${dir}/${name}`]), "rename", "", root);
+    }
+
+    // Called by FileManagerService when the rename job succeeds; failures toast on their own.
+    function onJobDone(kind: string, data: var): void {
+        if (kind === "rename" && data.path)
+            root.filePath = data.path;
     }
 
     function formatTime(ms: real): string {
@@ -111,7 +141,12 @@ Item {
     }
     Shortcut {
         sequences: ["Escape"]
-        onActivated: root.fullscreen ? root.requestFullscreen() : root.requestClose()
+        onActivated: root.renaming ? root.renaming = false : root.fullscreen ? root.requestFullscreen() : root.requestClose()
+    }
+    Shortcut {
+        sequences: ["F2"]
+        enabled: root.filePath.length > 0 && !root.renaming
+        onActivated: root.beginRename()
     }
     Shortcut {
         sequences: ["F", "F11"]
@@ -326,6 +361,22 @@ Item {
                     return qsTr("Could not open %1").arg(root.fileName);
                 return "";
             }
+        }
+    }
+
+    // Rename (F2) ---------------------------------------------------------------
+
+    StyledTextField {
+        id: renameField
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Appearance.padding.large
+        width: Math.min(root.width - Appearance.padding.large * 2, 480)
+        visible: root.renaming
+        onAccepted: root.commitRename()
+        onActiveFocusChanged: {
+            if (!activeFocus)
+                root.renaming = false;
         }
     }
 
