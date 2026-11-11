@@ -51,6 +51,11 @@ Item {
     }
 
     onFilePathChanged: root.zoom = 0
+    // A hidden field keeps active focus and swallows the arrow keys before the Shortcuts see them.
+    onRenamingChanged: {
+        if (!root.renaming)
+            root.forceActiveFocus();
+    }
 
     function fileUrl(path: string): string {
         return path.length ? "file://" + path.split("/").map(encodeURIComponent).join("/") : "";
