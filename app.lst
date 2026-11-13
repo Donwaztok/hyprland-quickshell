@@ -8,6 +8,8 @@ pavucontrol-qt                    # PulseAudio volume control (Qt)
 pipewire-pulse                    # PipeWire PulseAudio compatibility
 playerctl                         # media player control (play/pause/next)
 wireplumber                       # session manager for PipeWire
+whisper-cpp                       # local speech-to-text (Super+Y dictation)
+ggml-vulkan                       # GPU backend for whisper-cpp
 
 # --------------------------------------------------- // Backlight / display
 brightnessctl                     # screen backlight control

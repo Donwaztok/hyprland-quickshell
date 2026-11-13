@@ -8,6 +8,7 @@ import qs.modules.background as DwBackground
 import qs.modules.shell.audioOutputSwitcher
 import qs.modules.shell.bluetoothAgent
 import qs.modules.shell.cheatsheet
+import qs.modules.shell.dictation
 import qs.modules.shell.fileManager
 import qs.modules.shell.textEditor
 import qs.modules.shell.mediaViewer
@@ -22,6 +23,7 @@ Scope {
     DwDrawers.Drawers {}
     DwBackground.Background {}
     Cheatsheet {}
+    Dictation {}
     DonwaztokLockPanel {}
     OnScreenDisplay {}
     AudioOutputSwitcher {}

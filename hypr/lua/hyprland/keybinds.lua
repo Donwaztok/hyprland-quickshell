@@ -69,6 +69,17 @@ hl.bind("SUPER + SHIFT + S", hl.dsp.global("donwaztok:regionScreenshot"), { desc
 hl.bind("SUPER + SHIFT + A", hl.dsp.global("donwaztok:regionSearch"), { description = "Utilities: Google Lens snip" })
 hl.bind("SUPER + SHIFT + X", hl.dsp.global("donwaztok:regionOcr"), { description = "Utilities: OCR to clipboard" })
 hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"), { description = "Utilities: Color picker" })
+hl.bind("SUPER + Y", hl.dsp.global("donwaztok:dictationToggle"), { description = "Utilities: Dictate (types as you speak)" })
+
+-- Entered by Dictation.qml while its modal is up, which never takes the keyboard. Esc closes it (the
+-- pending phrase is still typed); the modal resets the submap when it closes, Esc too in case it never does.
+hl.define_submap("dictation", function()
+    hl.bind("Escape", function()
+        hl.dispatch(hl.dsp.global("donwaztok:dictationDismiss"))
+        hl.dispatch(hl.dsp.submap("reset"))
+    end)
+    hl.bind("SUPER + Y", hl.dsp.global("donwaztok:dictationToggle"))
+end)
 
 -- Esc cancels. Ctrl uses non_consuming so Qt still sees ControlModifier for window-pick.
 hl.define_submap("regionSelector", function()
