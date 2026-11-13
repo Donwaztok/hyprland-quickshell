@@ -12,7 +12,6 @@ pauses, types each phrase into the focused window with wtype, and prints one eve
   error <message>
 SIGTERM finishes (the phrase in progress is still typed), SIGINT cancels it. After a few seconds of
 silence it stops by itself. ffmpeg and whisper-server die with this process, so nothing stays loaded.
-Each session logs every frame's level and its events to $XDG_RUNTIME_DIR/donwaztok-dictation.log.
 """
 
 import array
@@ -48,13 +47,9 @@ MODEL = os.path.expanduser("~/.local/share/donwaztok/whisper/ggml-large-v3-turbo
 MODEL_URL = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/" + os.path.basename(MODEL)
 LEVEL_EVERY = 3  # frames per waveform update (~100 ms): faster reads as flicker
 
-LOG = open(os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "donwaztok-dictation.log"), "w", buffering=1)
-
 
 def emit(kind, value=""):
     print(f"{kind} {value}".rstrip(), flush=True)
-    if kind != "level":
-        LOG.write(f"# {kind} {value}\n")
 
 
 class Segmenter:
@@ -257,15 +252,12 @@ def main():
                 emit("error", "the microphone stopped")
             break
         db = level_db(frame)
-        LOG.write(f"{seg.t:.2f} {db:.0f}{' *' if db > SPEECH_DB else ''}\n")
         loudest.append(db)
         if len(loudest) == LEVEL_EVERY:
             emit("level", f"{max(loudest):.1f}")
             loudest.clear()
         for job in seg.feed(frame, db):
-            LOG.write(f"# {job[0]} {len(job[1]) / 2 / RATE:.1f}s of audio\n")
             jobs.put(job)
-    LOG.write(f"# stopped at {seg.t:.2f}s: {state['stop'] or ('idle' if seg.idle() else 'mic')}\n")
     rec.terminate()
     if state["stop"] == "cancel":
         while not jobs.empty():
