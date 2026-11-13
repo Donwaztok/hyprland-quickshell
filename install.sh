@@ -153,6 +153,18 @@ if [ ! -d /boot/grub/themes/Particle-circle ] 2>/dev/null; then
   ) || true
 fi
 
+# Boot screen: bootvine instead of Plymouth (both draw on the console during boot)
+if pacman -Q bootvine &>/dev/null && ! grep -q '^HOOKS=.*sd-bootvine' /etc/mkinitcpio.conf; then
+  echo -e "\033[0;32m[BOOT]\033[0m Replacing Plymouth with bootvine..."
+  sudo sed -i -E '/^HOOKS=/{s/ plymouth//; s/\bsystemd\b/systemd sd-bootvine/}' /etc/mkinitcpio.conf
+  sudo sed -i -E '/^GRUB_CMDLINE_LINUX_DEFAULT=/s/ ?\bsplash\b//' /etc/default/grub
+  PLYMOUTH=$(pacman -Qq plymouth cachyos-plymouth-bootanimation cachyos-plymouth-theme 2>/dev/null || true)
+  [ -n "$PLYMOUTH" ] && sudo pacman -Rns --noconfirm $PLYMOUTH
+  sudo systemctl enable bootvine.service bootvine-shutdown.service
+  sudo mkinitcpio -P
+  sudo grub-mkconfig -o /boot/grub/grub.cfg
+fi
+
 # -----------------------------------------------------------------------------
 # 6b. Donwaztok file-manager helper (Rust fm)
 # -----------------------------------------------------------------------------
