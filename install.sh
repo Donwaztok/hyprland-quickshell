@@ -165,6 +165,13 @@ if pacman -Q bootvine &>/dev/null && ! grep -q '^HOOKS=.*sd-bootvine' /etc/mkini
   sudo grub-mkconfig -o /boot/grub/grub.cfg
 fi
 
+# GRUB: boot the default entry at once, no menu (the LTS kernel stays reachable with grub-reboot). No Windows, so no os-prober.
+if [ -f /etc/default/grub ] && ! grep -q '^GRUB_TIMEOUT_STYLE=hidden' /etc/default/grub; then
+  echo -e "\033[0;32m[GRUB]\033[0m Hiding the boot menu..."
+  sudo sed -i -E "s/^GRUB_DEFAULT=.*/GRUB_DEFAULT=saved/; s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT='0'/; s/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/; s/^GRUB_DISABLE_OS_PROBER=.*/GRUB_DISABLE_OS_PROBER='true'/" /etc/default/grub
+  sudo grub-mkconfig -o /boot/grub/grub.cfg
+fi
+
 # -----------------------------------------------------------------------------
 # 6b. Donwaztok file-manager helper (Rust fm)
 # -----------------------------------------------------------------------------
