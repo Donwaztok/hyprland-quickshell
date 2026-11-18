@@ -190,6 +190,10 @@ pub fn list_mounts() {
             if !is_useful_mount(point) {
                 continue;
             }
+            // A disk mounted inside the home (e.g. ~/Games/Emulators) is a folder of Home, not another drive.
+            if !is_removable(rm, hot, &tran, point) && point.starts_with(&format!("{home}/")) {
+                continue;
+            }
             if !fstype.is_empty()
                 && !REAL_FS.contains(&fstype.as_str())
                 && !fstype.starts_with("fuse")
