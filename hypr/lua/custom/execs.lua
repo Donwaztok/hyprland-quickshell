@@ -6,6 +6,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("gtk-launch zen")
     -- WhatsApp as a Zen web app; waits so Zen is up and the second launch reuses its process
     hl.exec_cmd("sleep 3; gtk-launch zen.webapp-eb053312-1790-456f-be26-fae75391f1a0")
+    hl.exec_cmd("sleep 3; gtk-launch zen.webapp-87943065-240a-486c-969a-c13989ac9843") -- Ducke Admin
     hl.exec_cmd("gtk-launch org.mozilla.Thunderbird")
 
     -- Put windows back where the saved layout has them (no saved layout: does nothing)
